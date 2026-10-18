@@ -1,0 +1,25 @@
+{
+  "doc-lock-guard": {
+    "PreToolUse": [
+      {
+        "matcher": ".*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "node ../scripts/doc-lock-guard.mjs",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  },
+  "stop-guard": {
+    "Stop": [
+      {
+        "type": "command",
+        "command": "node ../scripts/guard.mjs worktree",
+        "timeout": 15
+      }
+    ]
+  }
+}
