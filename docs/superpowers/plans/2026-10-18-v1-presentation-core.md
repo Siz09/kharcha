@@ -33,11 +33,11 @@
 - Produces: `EntryRow(entry: LedgerEntry, categoryName: String, onClick: () -> Unit)`
 - Produces: `EmptyState(message: String, actionLabel: String?, onAction: (() -> Unit)?)`
 
-- [ ] **Step 1: Populate `strings.xml` with all navigation and UI labels**
-- [ ] **Step 2: Implement `DateFormatter` utility**
-- [ ] **Step 3: Implement `AmountText`, `EntryRow`, and `EmptyState` with light/dark previews**
-- [ ] **Step 4: Run `bash scripts/guard-strings.sh` to ensure zero hardcoded strings**
-- [ ] **Step 5: Commit Task 1**
+- [x] **Step 1: Populate `strings.xml` with all navigation and UI labels**
+- [x] **Step 2: Implement `DateFormatter` utility**
+- [x] **Step 3: Implement `AmountText`, `EntryRow`, and `EmptyState` with light/dark previews**
+- [x] **Step 4: Run `bash scripts/guard-strings.sh` to ensure zero hardcoded strings**
+- [x] **Step 5: Commit Task 1**
 
 ---
 
@@ -53,11 +53,11 @@
 - Produces: `Screen` sealed destinations (Home, Entries, Summary, Settings).
 - Produces: `KharchaApp` main scaffold with bottom navigation bar and FAB.
 
-- [ ] **Step 1: Define `Screen` route classes and bottom navigation items**
-- [ ] **Step 2: Build `KharchaNavHost` and root `KharchaApp` scaffold**
-- [ ] **Step 3: Wire `MainActivity` to render `KharchaApp`**
-- [ ] **Step 4: Verify build with `./gradlew compileDebugKotlin`**
-- [ ] **Step 5: Commit Task 2**
+- [x] **Step 1: Define `Screen` route classes and bottom navigation items**
+- [x] **Step 2: Build `KharchaNavHost` and root `KharchaApp` scaffold**
+- [x] **Step 3: Wire `MainActivity` to render `KharchaApp`**
+- [x] **Step 4: Verify build with `./gradlew compileDebugKotlin`**
+- [x] **Step 5: Commit Task 2**
 
 ---
 
@@ -72,11 +72,11 @@
 **Interfaces:**
 - Produces: `HomeViewModel`, `HomeScreen` composable with monthly summary card and recent entries list.
 
-- [ ] **Step 1: Write failing unit test for `HomeViewModel` (seeds categories, calculates totals)**
-- [ ] **Step 2: Run test to confirm failure (RED)**
-- [ ] **Step 3: Implement `HomeUiState`, `HomeViewModel`, and `HomeScreen`**
-- [ ] **Step 4: Run test to confirm green (GREEN)**
-- [ ] **Step 5: Commit Task 3**
+- [x] **Step 1: Write failing unit test for `HomeViewModel` (seeds categories, calculates totals)**
+- [x] **Step 2: Run test to confirm failure (RED)**
+- [x] **Step 3: Implement `HomeUiState`, `HomeViewModel`, and `HomeScreen`**
+- [x] **Step 4: Run test to confirm green (GREEN)**
+- [x] **Step 5: Commit Task 3**
 
 ---
 
@@ -91,9 +91,9 @@
 **Interfaces:**
 - Produces: `EntriesViewModel`, `EntriesScreen` with search bar and filter chips.
 
-- [ ] **Step 1: Write failing unit test for `EntriesViewModel` (filter by type/category, search)**
-- [ ] **Step 2: Run test to confirm failure (RED)**
-- [ ] **Step 3: Implement `EntriesUiState`, `EntriesViewModel`, and `EntriesScreen`**
-- [ ] **Step 4: Run test to confirm green (GREEN)**
-- [ ] **Step 5: Run `bash scripts/check.sh` full verification gate**
-- [ ] **Step 6: Commit Task 4 & Push to `origin main`**
+- [x] **Step 1: Write failing unit test for `EntriesViewModel` (filter by type/category, search)**
+- [x] **Step 2: Run test to confirm failure (RED)**
+- [x] **Step 3: Implement `EntriesUiState`, `EntriesViewModel`, and `EntriesScreen`**
+- [x] **Step 4: Run test to confirm green (GREEN)**
+- [x] **Step 5: Run `bash scripts/check.sh` full verification gate**
+- [x] **Step 6: Commit Task 4 & Push to `origin main`**
