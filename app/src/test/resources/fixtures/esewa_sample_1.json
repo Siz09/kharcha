@@ -1,0 +1,8 @@
+{
+  "source": "esewa",
+  "expectedAmountPaisa": 325000,
+  "expectedDateEpochMillis": 1792318500000,
+  "expectedTransactionId": "TXN1029384756",
+  "expectedMerchant": "Kathmandu Electric Store",
+  "expectedFeePaisa": 0
+}

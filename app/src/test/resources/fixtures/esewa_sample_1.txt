@@ -1,0 +1,12 @@
+eSewa
+Payment Completed
+Transaction ID
+TXN1029384756
+Paid To
+Kathmandu Electric Store
+Total Amount
+Rs. 3,250.00
+Service Charge
+Rs. 0.00
+Date & Time
+2026-10-18 10:15:00

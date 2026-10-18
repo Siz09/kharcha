@@ -36,12 +36,12 @@
 - Produces: `Validator.validateDate(epochMillis: Long?): ParsedField<Long>`
 - Produces: `Validator.validateTransactionId(id: String?): ParsedField<String>`
 
-- [ ] **Step 1: Write failing unit tests for `NormalizerTest` and `ValidatorTest` (RED)**
-- [ ] **Step 2: Implement OCR and parse domain models (`OcrResult`, `ParseResult`, `ParsedField`)**
-- [ ] **Step 3: Implement `Normalizer` (Devanagari numerals, currency stripping, lookalikes)**
-- [ ] **Step 4: Implement `Validator` (strict paisa > 0, date sanity, transaction pattern)**
-- [ ] **Step 5: Run tests to confirm green (GREEN)**
-- [ ] **Step 6: Commit Task 1**
+- [x] **Step 1: Write failing unit tests for `NormalizerTest` and `ValidatorTest` (RED)**
+- [x] **Step 2: Implement OCR and parse domain models (`OcrResult`, `ParseResult`, `ParsedField`)**
+- [x] **Step 3: Implement `Normalizer` (Devanagari numerals, currency stripping, lookalikes)**
+- [x] **Step 4: Implement `Validator` (strict paisa > 0, date sanity, transaction pattern)**
+- [x] **Step 5: Run tests to confirm green (GREEN)**
+- [x] **Step 6: Commit Task 1**
 
 ---
 
@@ -58,11 +58,11 @@
 - Produces: `ReceiptStorage.getImageUri(filePath: String): Uri` (via FileProvider)
 - Produces: `ReceiptStorage.deleteImage(filePath: String): Boolean`
 
-- [ ] **Step 1: Write failing unit test for `ReceiptStorageTest` (save, retrieve URI, delete) (RED)**
-- [ ] **Step 2: Implement `ReceiptStorage` and `ReceiptStorageImpl` in app-private files directory**
-- [ ] **Step 3: Wire Hilt bindings in `StorageModule`**
-- [ ] **Step 4: Run test to confirm green (GREEN)**
-- [ ] **Step 5: Commit Task 2**
+- [x] **Step 1: Write failing unit test for `ReceiptStorageTest` (save, retrieve URI, delete) (RED)**
+- [x] **Step 2: Implement `ReceiptStorage` and `ReceiptStorageImpl` in app-private files directory**
+- [x] **Step 3: Wire Hilt bindings in `StorageModule`**
+- [x] **Step 4: Run test to confirm green (GREEN)**
+- [x] **Step 5: Commit Task 2**
 
 ---
 
@@ -80,11 +80,11 @@
 - Produces: `EsewaParser` extracting amount, txn ID, date, note, and fee from eSewa OCR text.
 - Produces: `ReceiptProcessingPipeline` orchestrating parser selection and fallback.
 
-- [ ] **Step 1: Write failing unit test for `EsewaParserTest` (RED)**
-- [ ] **Step 2: Implement `ReceiptParser`, `EsewaParser`, and `ReceiptProcessingPipeline`**
-- [ ] **Step 3: Register in `ParserModule`**
-- [ ] **Step 4: Run test to confirm green (GREEN)**
-- [ ] **Step 5: Commit Task 3**
+- [x] **Step 1: Write failing unit test for `EsewaParserTest` (RED)**
+- [x] **Step 2: Implement `ReceiptParser`, `EsewaParser`, and `ReceiptProcessingPipeline`**
+- [x] **Step 3: Register in `ParserModule`**
+- [x] **Step 4: Run test to confirm green (GREEN)**
+- [x] **Step 5: Commit Task 3**
 
 ---
 
@@ -98,8 +98,8 @@
 **Interfaces:**
 - Produces: Automated fixture test suite verifying 99% accuracy on amount, date, txn ID.
 
-- [ ] **Step 1: Create redacted fixture sample matching eSewa receipt layout**
-- [ ] **Step 2: Implement `ReceiptParserFixtureTest` comparing extracted vs expected JSON**
-- [ ] **Step 3: Verify zero silent error behavior on malformed input**
-- [ ] **Step 4: Run full verification gate (`scripts/check.sh`)**
-- [ ] **Step 5: Commit Task 4 & Push to `origin main`**
+- [x] **Step 1: Create redacted fixture sample matching eSewa receipt layout**
+- [x] **Step 2: Implement `ReceiptParserFixtureTest` comparing extracted vs expected JSON**
+- [x] **Step 3: Verify zero silent error behavior on malformed input**
+- [x] **Step 4: Run full verification gate (`scripts/check.sh`)**
+- [x] **Step 5: Commit Task 4 & Push to `origin main`**
