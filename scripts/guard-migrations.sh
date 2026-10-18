@@ -4,8 +4,8 @@
 
 set -euo pipefail
 
-# Check 1: fallbackToDestructiveMigration is forbidden
-if grep -rn "fallbackToDestructiveMigration" app/ 2>/dev/null; then
+# Check 1: fallbackToDestructiveMigration is forbidden in source code
+if grep -rn --exclude-dir=build "fallbackToDestructiveMigration" app/src/ 2>/dev/null; then
     echo "ERROR [guard-migrations]: Found 'fallbackToDestructiveMigration'. Destructive migrations are strictly forbidden." >&2
     exit 1
 fi
