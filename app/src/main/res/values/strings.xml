@@ -1,3 +1,46 @@
 <resources>
     <string name="app_name">Kharcha</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_entries">Entries</string>
+    <string name="nav_summary">Summary</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Actions -->
+    <string name="action_add">Add</string>
+    <string name="action_scan">Scan</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_filter">Filter</string>
+    <string name="action_search">Search</string>
+    <string name="action_add_first_entry">Add your first entry</string>
+
+    <!-- Home Screen -->
+    <string name="home_monthly_summary">Monthly Summary</string>
+    <string name="home_total_income">Income</string>
+    <string name="home_total_expense">Expense</string>
+    <string name="home_net_balance">Net Balance</string>
+    <string name="home_recent_entries">Recent Entries</string>
+    <string name="home_view_all">View All</string>
+    <string name="home_empty_entries">No entries recorded this month.</string>
+
+    <!-- Entries Screen -->
+    <string name="entries_title">All Entries</string>
+    <string name="entries_search_hint">Search by note or merchant…</string>
+    <string name="entries_filter_all">All</string>
+    <string name="entries_filter_expense">Expense</string>
+    <string name="entries_filter_income">Income</string>
+    <string name="entries_no_results">No matching entries found.</string>
+
+    <!-- Content Descriptions -->
+    <string name="cd_add_entry">Add new manual entry</string>
+    <string name="cd_scan_receipt">Scan receipt</string>
+    <string name="cd_search">Search entries</string>
+    <string name="cd_clear_search">Clear search</string>
+    <string name="cd_filter">Filter entries</string>
+    <string name="cd_entry_icon">Transaction icon</string>
+    <string name="cd_empty_state_icon">Empty list icon</string>
 </resources>
