@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Git pre-commit hook for Kharcha
+set -e
+
+if command -v node >/dev/null 2>&1 && [ -f "scripts/guard.mjs" ]; then
+    node scripts/guard.mjs precommit
+else
+    bash scripts/guard-manifest.sh
+    bash scripts/guard-money.sh
+    bash scripts/guard-migrations.sh
+    bash scripts/guard-secrets.sh
+fi

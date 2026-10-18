@@ -1,0 +1,39 @@
+name: Kharcha Agent Guard & CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: gradle
+
+      - name: Make scripts executable
+        run: chmod +x gradlew scripts/*.sh
+
+      - name: Run Manifest Guard
+        run: bash scripts/guard-manifest.sh
+
+      - name: Run Money Types Guard
+        run: bash scripts/guard-money.sh
+
+      - name: Run Migrations Guard
+        run: bash scripts/guard-migrations.sh
+
+      - name: Run Secrets Guard
+        run: bash scripts/guard-secrets.sh
+
+      - name: Run Full Build & Test Suite
+        run: bash scripts/check.sh

@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+# Git pre-push hook for Kharcha
+set -e
+
+echo "==> Running pre-push checks..."
+bash scripts/check.sh
