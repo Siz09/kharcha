@@ -59,4 +59,7 @@ interface LedgerDao {
         startDate: Long?,
         endDate: Long?
     ): Flow<List<LedgerEntryEntity>>
+
+    @Query("DELETE FROM ledger_entries")
+    suspend fun deleteAllEntries()
 }

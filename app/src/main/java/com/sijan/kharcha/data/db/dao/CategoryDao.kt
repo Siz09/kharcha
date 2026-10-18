@@ -36,4 +36,7 @@ interface CategoryDao {
 
     @Query("SELECT COUNT(*) FROM ledger_entries WHERE categoryId = :categoryId")
     suspend fun countEntriesForCategory(categoryId: Long): Long
+
+    @Query("DELETE FROM categories")
+    suspend fun deleteAllCategories()
 }
