@@ -16,3 +16,4 @@ output-metadata.json
 !*.sample
 .serena/
 graphify-out/
+.agents/memory/
