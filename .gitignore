@@ -14,3 +14,4 @@ output-metadata.json
 .env*
 !*.example
 !*.sample
+.serena/
