@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.ReceiptLong
+import androidx.compose.material.icons.automirrored.outlined.ReceiptLong
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -30,7 +30,7 @@ import com.sijan.kharcha.ui.theme.KharchaTheme
 fun EmptyState(
     message: String,
     modifier: Modifier = Modifier,
-    icon: ImageVector = Icons.Outlined.ReceiptLong,
+    icon: ImageVector = Icons.AutoMirrored.Outlined.ReceiptLong,
     actionLabel: String? = null,
     onAction: (() -> Unit)? = null
 ) {
@@ -38,7 +38,7 @@ fun EmptyState(
         modifier = modifier
             .fillMaxWidth()
             .padding(24.dp),
-        horizontalAlignment = Alignment.CenterVertically,
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
         Icon(
