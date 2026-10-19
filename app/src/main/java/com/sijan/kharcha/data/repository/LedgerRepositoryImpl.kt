@@ -55,8 +55,7 @@ class LedgerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun seedDefaultCategories() {
-        val existing = categoryDao.getAllCategories().first()
-        if (existing.isNotEmpty()) return
+        if (categoryDao.countCategories() > 0) return
 
         val defaultExpense = listOf(
             "Food & Dining",

@@ -43,4 +43,60 @@
     <string name="cd_filter">Filter entries</string>
     <string name="cd_entry_icon">Transaction icon</string>
     <string name="cd_empty_state_icon">Empty list icon</string>
+    <string name="cd_back">Navigate back</string>
+    <string name="cd_receipt_preview">Receipt preview image</string>
+    <string name="cd_select_date">Select date</string>
+    <string name="cd_delete_entry">Delete entry</string>
+
+    <!-- Scan Source Sheet -->
+    <string name="scan_source_title">Add Transaction</string>
+    <string name="scan_source_photo_picker">Choose Receipt from Gallery</string>
+    <string name="scan_source_photo_picker_desc">Import an eSewa screenshot or photo</string>
+    <string name="scan_source_camera">Scan Paper Receipt</string>
+    <string name="scan_source_camera_desc">Crop and straighten with camera</string>
+    <string name="scan_source_manual">Manual Entry</string>
+    <string name="scan_source_manual_desc">Add expense or income without a receipt</string>
+
+    <!-- Confirm Scan Screen -->
+    <string name="confirm_scan_title">Confirm Receipt</string>
+    <string name="confirm_scan_preview_title">Receipt Image</string>
+    <string name="confirm_scan_duplicate_title">Duplicate Transaction Detected</string>
+    <string name="confirm_scan_duplicate_warning">A transaction with ID %s already exists in your ledger.</string>
+    <string name="confirm_scan_view_existing">View existing</string>
+    <string name="confirm_scan_save_anyway">Save anyway</string>
+    <string name="confirm_scan_ocr_failed_title">Receipt partially parsed</string>
+    <string name="confirm_scan_ocr_failed_desc">Could not detect all fields automatically. Please review and fill them in.</string>
+    <string name="confirm_scan_processing">Reading receipt…</string>
+
+    <!-- Form Fields & Labels -->
+    <string name="field_amount">Amount</string>
+    <string name="field_amount_hint">0.00</string>
+    <string name="field_currency_prefix">Rs.</string>
+    <string name="field_date">Date</string>
+    <string name="field_category">Category</string>
+    <string name="field_transaction_id">Transaction ID</string>
+    <string name="field_transaction_id_hint">e.g. 1A2B3C4D</string>
+    <string name="field_merchant">Merchant / Payee</string>
+    <string name="field_merchant_hint">e.g. Nepal Electricity Authority</string>
+    <string name="field_fee">Fee</string>
+    <string name="field_fee_hint">0.00</string>
+    <string name="field_note">Note / Description</string>
+    <string name="field_note_hint">Add a note or remark…</string>
+    <string name="field_type">Transaction Type</string>
+
+    <!-- Field Validation Errors -->
+    <string name="error_amount_required">Amount must be greater than zero</string>
+    <string name="error_category_required">Please select a category</string>
+    <string name="error_date_future">Date cannot be in the future</string>
+    <string name="error_amount_format">Invalid amount format (max 2 decimal places)</string>
+
+    <!-- Add / Edit Entry Screen -->
+    <string name="add_entry_title">Add Entry</string>
+    <string name="edit_entry_title">Edit Entry</string>
+    <string name="entry_type_expense">Expense</string>
+    <string name="entry_type_income">Income</string>
+    <string name="delete_entry_dialog_title">Delete Entry?</string>
+    <string name="delete_entry_dialog_message">Are you sure you want to delete this entry? This action cannot be undone.</string>
+    <string name="entry_saved_message">Entry saved successfully</string>
+    <string name="entry_deleted_message">Entry deleted</string>
 </resources>

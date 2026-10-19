@@ -3,6 +3,7 @@ package com.sijan.kharcha.ui.navigation
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Settings
@@ -38,7 +39,30 @@ sealed class Screen(
         icon = Icons.Default.Settings
     )
 
+    data object AddEntry : Screen(
+        route = "add_entry",
+        labelRes = R.string.add_entry_title,
+        icon = Icons.Default.Add
+    )
+
+    data object EditEntry : Screen(
+        route = "edit_entry/{entryId}",
+        labelRes = R.string.edit_entry_title,
+        icon = Icons.Default.Add
+    ) {
+        fun createRoute(entryId: Long): String = "edit_entry/$entryId"
+    }
+
+    data object ConfirmScan : Screen(
+        route = "confirm_scan?imageUri={imageUri}",
+        labelRes = R.string.confirm_scan_title,
+        icon = Icons.Default.Add
+    ) {
+        fun createRoute(imageUri: String): String = "confirm_scan?imageUri=${android.net.Uri.encode(imageUri)}"
+    }
+
     companion object {
         val bottomNavItems = listOf(Home, Entries, Summary, Settings)
     }
 }
+
