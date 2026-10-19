@@ -2,7 +2,9 @@ package com.sijan.kharcha.ui.home
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sijan.kharcha.data.preferences.UserPreferencesRepository
 import com.sijan.kharcha.data.repository.LedgerRepository
+import com.sijan.kharcha.domain.model.FinancialHealthStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,6 +12,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -21,7 +24,8 @@ import javax.inject.Inject
 @OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val repository: LedgerRepository
+    private val repository: LedgerRepository,
+    private val userPreferencesRepository: UserPreferencesRepository
 ) : ViewModel() {
 
     private val nowCalendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
@@ -36,35 +40,63 @@ class HomeViewModel @Inject constructor(
         }
     }
 
-    val uiState: StateFlow<HomeUiState> = selectedMonthYear
-        .flatMapLatest { (year, month) ->
-            val (startMillis, endMillis) = calculateMonthBounds(year, month)
-            val monthEntriesFlow = repository.getFilteredEntries(startDate = startMillis, endDate = endMillis)
-            val summaryFlow = repository.getMonthlySummary(year, month)
-            val categoriesFlow = repository.getAllCategories()
+    val uiState: StateFlow<HomeUiState> = combine(
+        selectedMonthYear,
+        userPreferencesRepository.preferences
+    ) { (year, month), prefs ->
+        Triple(year, month, prefs.rolloverEnabled)
+    }.flatMapLatest { (year, month, rolloverEnabled) ->
+        val (startMillis, endMillis) = calculateMonthBounds(year, month)
+        val monthEntriesFlow = repository.getFilteredEntries(startDate = startMillis, endDate = endMillis)
+        val summaryFlow = repository.getMonthlySummary(year, month)
+        val categoriesFlow = repository.getAllCategories()
+        val openingBalanceFlow = if (rolloverEnabled) {
+            repository.getOpeningBalance(startMillis)
+        } else {
+            flowOf(0L)
+        }
 
-            combine(summaryFlow, monthEntriesFlow, categoriesFlow) { summary, entries, categories ->
-                HomeUiState(
-                    monthlySummary = summary,
-                    recentEntries = entries.take(10),
-                    categoriesMap = categories.associateBy { it.id },
-                    selectedYear = year,
-                    selectedMonth = month,
-                    selectedMonthLabel = formatMonthLabel(year, month),
-                    isCurrentMonth = (year == realCurrentYear && month == realCurrentMonth),
-                    isLoading = false
-                )
-            }
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(5_000),
-            initialValue = HomeUiState(
-                selectedYear = realCurrentYear,
-                selectedMonth = realCurrentMonth,
-                selectedMonthLabel = formatMonthLabel(realCurrentYear, realCurrentMonth),
-                isCurrentMonth = true
+        combine(summaryFlow, monthEntriesFlow, categoriesFlow, openingBalanceFlow) { summary, entries, categories, openingBal ->
+            val isCurrent = (year == realCurrentYear && month == realCurrentMonth)
+            val isFuture = (year > realCurrentYear) || (year == realCurrentYear && month > realCurrentMonth)
+            val (savingsRate, healthStatus) = calculateSavingsRateAndHealth(
+                incomePaisa = summary.totalIncomePaisa,
+                expensePaisa = summary.totalExpensePaisa
             )
+            val burnRate = calculateDailyBurnRate(
+                expensePaisa = summary.totalExpensePaisa,
+                year = year,
+                month = month,
+                isCurrentMonth = isCurrent,
+                isFutureMonth = isFuture
+            )
+
+            HomeUiState(
+                monthlySummary = summary,
+                recentEntries = entries.take(10),
+                categoriesMap = categories.associateBy { it.id },
+                selectedYear = year,
+                selectedMonth = month,
+                selectedMonthLabel = formatMonthLabel(year, month),
+                isCurrentMonth = isCurrent,
+                savingsRatePercent = savingsRate,
+                dailyBurnRatePaisa = burnRate,
+                financialHealth = healthStatus,
+                openingBalancePaisa = openingBal,
+                rolloverEnabled = rolloverEnabled,
+                isLoading = false
+            )
+        }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = HomeUiState(
+            selectedYear = realCurrentYear,
+            selectedMonth = realCurrentMonth,
+            selectedMonthLabel = formatMonthLabel(realCurrentYear, realCurrentMonth),
+            isCurrentMonth = true
         )
+    )
 
     fun selectMonth(year: Int, month: Int) {
         selectedMonthYear.value = Pair(year, month)
@@ -73,6 +105,54 @@ class HomeViewModel @Inject constructor(
     fun resetToCurrentMonth() {
         val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
         selectedMonthYear.value = Pair(now.get(Calendar.YEAR), now.get(Calendar.MONTH) + 1)
+    }
+
+    private fun calculateSavingsRateAndHealth(
+        incomePaisa: Long,
+        expensePaisa: Long
+    ): Pair<Int?, FinancialHealthStatus> {
+        return when {
+            incomePaisa > 0L -> {
+                val rate = (((incomePaisa - expensePaisa) * 100) / incomePaisa).toInt()
+                val status = when {
+                    rate > 30 -> FinancialHealthStatus.HEALTHY
+                    rate in 10..30 -> FinancialHealthStatus.MODERATE
+                    rate in 0..9 -> FinancialHealthStatus.SLIM
+                    else -> FinancialHealthStatus.DEFICIT
+                }
+                Pair(rate, status)
+            }
+            expensePaisa > 0L -> {
+                Pair(-100, FinancialHealthStatus.DEFICIT)
+            }
+            else -> {
+                Pair(null, FinancialHealthStatus.HEALTHY)
+            }
+        }
+    }
+
+    private fun calculateDailyBurnRate(
+        expensePaisa: Long,
+        year: Int,
+        month: Int,
+        isCurrentMonth: Boolean,
+        isFutureMonth: Boolean
+    ): Long {
+        if (isFutureMonth || expensePaisa <= 0L) return 0L
+
+        val daysCount = if (isCurrentMonth) {
+            val now = Calendar.getInstance(TimeZone.getTimeZone("UTC"))
+            now.get(Calendar.DAY_OF_MONTH).coerceAtLeast(1)
+        } else {
+            val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+                clear()
+                set(Calendar.YEAR, year)
+                set(Calendar.MONTH, month - 1)
+                set(Calendar.DAY_OF_MONTH, 1)
+            }
+            cal.getActualMaximum(Calendar.DAY_OF_MONTH).coerceAtLeast(1)
+        }
+        return expensePaisa / daysCount
     }
 
     private fun calculateMonthBounds(year: Int, month: Int): Pair<Long, Long> {

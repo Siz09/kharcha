@@ -53,6 +53,7 @@ class SettingsViewModel @Inject constructor(
             autoBackupEnabled = prefs.autoBackupEnabled,
             autoBackupFolderUri = prefs.autoBackupFolderUri,
             lastBackupTimestamp = prefs.lastBackupTimestamp,
+            rolloverEnabled = prefs.rolloverEnabled,
             pendingRestoreSummary = summary,
             isRestoreDialogOpen = isRestoreOpen
         )
@@ -77,6 +78,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setAutoBackupFolderUri(uri: String?): Job = viewModelScope.launch {
         userPreferencesRepository.setAutoBackupFolderUri(uri)
+    }
+
+    fun setRolloverEnabled(enabled: Boolean): Job = viewModelScope.launch {
+        userPreferencesRepository.setRolloverEnabled(enabled)
     }
 
     fun backupNow(onResult: (Result<String>) -> Unit) {

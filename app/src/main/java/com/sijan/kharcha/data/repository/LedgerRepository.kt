@@ -1,5 +1,6 @@
 package com.sijan.kharcha.data.repository
 
+import com.sijan.kharcha.domain.model.Bill
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
@@ -29,4 +30,12 @@ interface LedgerRepository {
 
     suspend fun checkDuplicateTransaction(transactionId: String): List<LedgerEntry>
     fun getMonthlySummary(year: Int, month: Int): Flow<MonthlySummary>
+    fun getOpeningBalance(beforeDate: Long): Flow<Long>
+
+    fun getAllBills(): Flow<List<Bill>>
+    fun getBillById(id: Long): Flow<Bill?>
+    suspend fun saveBill(bill: Bill): Result<Long>
+    suspend fun updateBill(bill: Bill): Result<Unit>
+    suspend fun deleteBill(id: Long): Result<Unit>
+    suspend fun payBill(billId: Long, note: String? = null): Result<LedgerEntry>
 }

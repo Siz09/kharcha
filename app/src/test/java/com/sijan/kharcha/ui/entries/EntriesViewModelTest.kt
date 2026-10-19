@@ -41,7 +41,7 @@ class EntriesViewModelTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao())
+        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao(), db.billDao())
         viewModel = EntriesViewModel(repository)
     }
 

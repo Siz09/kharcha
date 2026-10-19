@@ -30,7 +30,7 @@ class LedgerRepositoryTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao())
+        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao(), db.billDao())
     }
 
     @After
@@ -93,5 +93,32 @@ class LedgerRepositoryTest {
         val duplicates = repository.checkDuplicateTransaction("ESEWA_TXN_001")
         assertEquals(1, duplicates.size)
         assertEquals("ESEWA_TXN_001", duplicates[0].transactionId)
+    }
+
+    @Test
+    fun saveBillAndPayBillCreatesLedgerEntry() = runBlocking {
+        repository.seedDefaultCategories()
+        val cat = repository.getAllCategories().first().first { it.type == EntryType.EXPENSE }
+
+        val billId = repository.saveBill(
+            com.sijan.kharcha.domain.model.Bill(
+                name = "WorldLink Internet",
+                amountPaisa = 150000L,
+                categoryId = cat.id,
+                dueDayOfMonth = 15
+            )
+        ).getOrThrow()
+
+        val bills = repository.getAllBills().first()
+        assertEquals(1, bills.size)
+        assertEquals("WorldLink Internet", bills[0].name)
+
+        val paidEntry = repository.payBill(billId).getOrThrow()
+        assertEquals(150000L, paidEntry.amountPaisa)
+        assertEquals(EntryType.EXPENSE, paidEntry.type)
+        assertEquals("bill_payment", paidEntry.source)
+
+        val updatedBill = repository.getBillById(billId).first()!!
+        assertTrue(updatedBill.lastPaidDate != null)
     }
 }

@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.sijan.kharcha.ui.calendar.CashFlowCalendarScreen
 import com.sijan.kharcha.ui.entries.AddEditEntryScreen
 import com.sijan.kharcha.ui.entries.EntriesScreen
 import com.sijan.kharcha.ui.home.HomeScreen
@@ -40,6 +41,13 @@ fun KharchaNavHost(
         composable(Screen.Home.route) {
             HomeScreen(
                 onNavigateToEntries = onNavigateToEntries,
+                onNavigateToCalendar = { navController.navigate(Screen.Calendar.route) },
+                onEntryClick = onEntryClick
+            )
+        }
+        composable(Screen.Calendar.route) {
+            CashFlowCalendarScreen(
+                onNavigateBack = { navController.popBackStack() },
                 onEntryClick = onEntryClick
             )
         }
@@ -55,7 +63,15 @@ fun KharchaNavHost(
             SettingsScreen(
                 onNavigateToCategories = {
                     navController.navigate(Screen.Categories.route)
+                },
+                onNavigateToBills = {
+                    navController.navigate(Screen.Bills.route)
                 }
+            )
+        }
+        composable(Screen.Bills.route) {
+            com.sijan.kharcha.ui.bills.BillsScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
         composable(Screen.Categories.route) {

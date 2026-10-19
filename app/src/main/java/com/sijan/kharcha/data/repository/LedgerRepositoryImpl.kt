@@ -1,9 +1,12 @@
 package com.sijan.kharcha.data.repository
 
+import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.entity.BillEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
+import com.sijan.kharcha.domain.model.Bill
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
@@ -21,7 +24,8 @@ import javax.inject.Singleton
 @Singleton
 class LedgerRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
-    private val ledgerDao: LedgerDao
+    private val ledgerDao: LedgerDao,
+    private val billDao: BillDao
 ) : LedgerRepository {
 
     override fun getAllCategories(): Flow<List<Category>> {
@@ -94,37 +98,44 @@ class LedgerRepositoryImpl @Inject constructor(
         startDate: Long?,
         endDate: Long?
     ): Flow<List<LedgerEntry>> {
-        return ledgerDao.getEntriesFiltered(type, categoryId, startDate, endDate)
-            .map { list -> list.map { it.toDomain() } }
+        return ledgerDao.getEntriesFiltered(type, categoryId, startDate, endDate).map { list ->
+            list.map { it.toDomain() }
+        }
     }
 
     override fun searchEntries(query: String): Flow<List<LedgerEntry>> {
-        val formattedQuery = query.trim().split("\\s+".toRegex()).joinToString(" ") { "$it*" }
-        return ledgerDao.searchEntries(formattedQuery).map { list -> list.map { it.toDomain() } }
+        val sanitized = query.trim().replace(Regex("[^a-zA-Z0-9 ]"), "").trim()
+        if (sanitized.isEmpty()) {
+            return getAllEntries()
+        }
+        val ftsQuery = "$sanitized*"
+        return ledgerDao.searchEntries(ftsQuery).map { list -> list.map { it.toDomain() } }
     }
 
     override suspend fun saveEntry(entry: LedgerEntry): Result<Long> = runCatching {
-        require(entry.amountPaisa > 0) { "Entry amount in paisa must be greater than zero" }
-        ledgerDao.insertEntry(LedgerEntryEntity.fromDomain(entry))
+        require(entry.amountPaisa > 0) { "Amount must be greater than zero" }
+        require(entry.categoryId > 0) { "Category must be specified" }
+        val now = System.currentTimeMillis()
+        val toInsert = entry.copy(
+            createdAt = if (entry.createdAt == 0L) now else entry.createdAt,
+            updatedAt = now
+        )
+        ledgerDao.insertEntry(LedgerEntryEntity.fromDomain(toInsert))
     }
 
     override suspend fun updateEntry(entry: LedgerEntry): Result<Unit> = runCatching {
-        require(entry.amountPaisa > 0) { "Entry amount in paisa must be greater than zero" }
-        ledgerDao.updateEntry(LedgerEntryEntity.fromDomain(entry.copy(updatedAt = System.currentTimeMillis())))
+        require(entry.id > 0) { "Cannot update entry without ID" }
+        require(entry.amountPaisa > 0) { "Amount must be greater than zero" }
+        val toUpdate = entry.copy(updatedAt = System.currentTimeMillis())
+        ledgerDao.updateEntry(LedgerEntryEntity.fromDomain(toUpdate))
     }
 
     override suspend fun deleteEntry(id: Long): Result<Unit> = runCatching {
-        val entity = ledgerDao.getEntryById(id).first()
-            ?: throw NoSuchElementException("Ledger entry with ID $id not found")
-
+        val entity = ledgerDao.getEntryById(id).first() ?: return@runCatching
         entity.receiptPath?.let { path ->
-            try {
+            runCatching {
                 val file = File(path)
-                if (file.exists()) {
-                    file.delete()
-                }
-            } catch (ignored: Exception) {
-                // Best effort image deletion
+                if (file.exists()) file.delete()
             }
         }
 
@@ -167,5 +178,60 @@ class LedgerRepositoryImpl @Inject constructor(
                 balancePaisa = inc - exp
             )
         }
+    }
+
+    override fun getOpeningBalance(beforeDate: Long): Flow<Long> {
+        return ledgerDao.getNetBalanceBefore(beforeDate).map { it ?: 0L }
+    }
+
+    override fun getAllBills(): Flow<List<Bill>> {
+        return billDao.getAllBills().map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun getBillById(id: Long): Flow<Bill?> {
+        return billDao.getBillById(id).map { it?.toDomain() }
+    }
+
+    override suspend fun saveBill(bill: Bill): Result<Long> = runCatching {
+        require(bill.name.isNotBlank()) { "Bill name cannot be blank" }
+        require(bill.amountPaisa > 0L) { "Bill amount must be positive" }
+        require(bill.dueDayOfMonth in 1..31) { "Due day must be between 1 and 31" }
+        billDao.insertBill(BillEntity.fromDomain(bill))
+    }
+
+    override suspend fun updateBill(bill: Bill): Result<Unit> = runCatching {
+        require(bill.name.isNotBlank()) { "Bill name cannot be blank" }
+        require(bill.amountPaisa > 0L) { "Bill amount must be positive" }
+        require(bill.dueDayOfMonth in 1..31) { "Due day must be between 1 and 31" }
+        billDao.updateBill(BillEntity.fromDomain(bill))
+    }
+
+    override suspend fun deleteBill(id: Long): Result<Unit> = runCatching {
+        val entity = billDao.getBillById(id).first() ?: return@runCatching
+        billDao.deleteBill(entity)
+    }
+
+    override suspend fun payBill(billId: Long, note: String?): Result<LedgerEntry> = runCatching {
+        val billEntity = billDao.getBillById(billId).first()
+            ?: throw IllegalArgumentException("Bill with id $billId not found")
+
+        val now = System.currentTimeMillis()
+        val entry = LedgerEntry(
+            id = 0L,
+            amountPaisa = billEntity.amountPaisa,
+            type = EntryType.EXPENSE,
+            categoryId = billEntity.categoryId,
+            note = note ?: "Bill: ${billEntity.name}",
+            date = now,
+            source = "bill_payment",
+            createdAt = now,
+            updatedAt = now
+        )
+
+        val entryId = ledgerDao.insertEntry(LedgerEntryEntity.fromDomain(entry))
+        val updatedBill = billEntity.copy(lastPaidDate = now, updatedAt = now)
+        billDao.updateBill(updatedBill)
+
+        entry.copy(id = entryId)
     }
 }

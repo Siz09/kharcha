@@ -4,9 +4,11 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.sijan.kharcha.R
@@ -66,6 +68,18 @@ sealed class Screen(
         route = "categories",
         labelRes = R.string.categories_title,
         icon = Icons.Default.Category
+    )
+
+    data object Calendar : Screen(
+        route = "calendar",
+        labelRes = R.string.calendar_title,
+        icon = Icons.Default.CalendarToday
+    )
+
+    data object Bills : Screen(
+        route = "bills",
+        labelRes = R.string.bills_title,
+        icon = Icons.Default.Receipt
     )
 
     companion object {

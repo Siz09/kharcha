@@ -41,18 +41,18 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 | 7 | Backup and restore | JSON backup with schema version to a user-picked folder. Restore validates before writing. CSV export. |
 | 8 | Auto-backup | Scheduled backup through WorkManager to the chosen folder. Built last in v1. Moves to v1.1 if v1 slips. |
 
-## 7. v1.1
+## 7. v1.1 (Active)
 
-- **Home Header & Status Strip**: App title branding with live date (Gregorian + BS), daily burn rate indicator, and backup status.
-- **Monthly Saving Index**: Savings rate percentage `((Income - Expense) / Income) * 100%` with health status indicator.
-- **Rollover / Carryover Balance**: Option to roll previous month's surplus/deficit into opening balance of the next month.
-- **Cash Flow Calendar**: Monthly calendar grid with color-coded day markers (income/expense) and date filter drill-down.
-- **Bills & Subscriptions Tracker**: Offline recurring bill manager (ISP, NEA electricity, Khanepani, rent) with local WorkManager due-date reminders and one-tap payment recording.
-- **Bikram Sambat (BS) Dates**: Dual BS/AD date conversion, display, and Nepali calendar date picker.
-- **Per-Category Budgets**: Monthly budget limits per category with local threshold warning notifications.
-- **Recurring Entries**: Scheduled automated templates for regular income or recurring expenses.
-- **Audit Log Table**: Dedicated local `AuditLog` table tracking entity edits and deletions.
-- **Fixture Corpus Expansion**: Growing parser test suite derived from user corrections.
+- [x] **Home Header & Status Strip**: App title branding with live date, daily burn rate indicator, and backup status.
+- [x] **Monthly Saving Index**: Savings rate percentage `((Income - Expense) / Income) * 100%` with health status indicator (`Healthy`, `Moderate`, `Slim`, `Deficit`).
+- [x] **Rollover / Carryover Balance**: Option (`rollover_enabled` preference) to roll previous month's surplus/deficit into opening balance of the next month.
+- [x] **Cash Flow Calendar**: Monthly calendar grid with color-coded day markers (income/expense) and date filter drill-down (`CashFlowCalendarScreen`).
+- [x] **Bills & Subscriptions Tracker**: Offline recurring bill manager (ISP, NEA electricity, Khanepani, rent) with local WorkManager due-date reminders, one-tap payment recording, and Room schema v2 migration (`BillsScreen`).
+- [ ] **Bikram Sambat (BS) Dates**: Dual BS/AD date conversion, display, and Nepali calendar date picker.
+- [ ] **Per-Category Budgets**: Monthly budget limits per category with local threshold warning notifications.
+- [ ] **Recurring Entries**: Scheduled automated templates for regular income or recurring expenses.
+- [ ] **Audit Log Table**: Dedicated local `AuditLog` table tracking entity edits and deletions.
+- [ ] **Fixture Corpus Expansion**: Growing parser test suite derived from user corrections.
 
 ## 8. v2
 

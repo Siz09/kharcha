@@ -46,6 +46,13 @@ interface LedgerDao {
     fun getMonthlyTotalPaisa(type: EntryType, startDate: Long, endDate: Long): Flow<Long?>
 
     @Query("""
+        SELECT SUM(CASE WHEN type = 'INCOME' THEN amountPaisa ELSE -amountPaisa END)
+        FROM ledger_entries
+        WHERE date < :beforeDate
+    """)
+    fun getNetBalanceBefore(beforeDate: Long): Flow<Long?>
+
+    @Query("""
         SELECT * FROM ledger_entries
         WHERE (:type IS NULL OR type = :type)
           AND (:categoryId IS NULL OR categoryId = :categoryId)

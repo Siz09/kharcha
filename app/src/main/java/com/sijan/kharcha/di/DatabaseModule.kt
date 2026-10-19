@@ -3,8 +3,10 @@ package com.sijan.kharcha.di
 import android.content.Context
 import androidx.room.Room
 import com.sijan.kharcha.data.db.AppDatabase
+import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.migration.MIGRATION_1_2
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
 import dagger.Binds
@@ -26,7 +28,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).build()
+        ).addMigrations(MIGRATION_1_2).build()
     }
 
     @Provides
@@ -37,6 +39,11 @@ object DatabaseModule {
     @Provides
     fun provideLedgerDao(database: AppDatabase): LedgerDao {
         return database.ledgerDao()
+    }
+
+    @Provides
+    fun provideBillDao(database: AppDatabase): BillDao {
+        return database.billDao()
     }
 }
 

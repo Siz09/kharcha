@@ -138,6 +138,7 @@
     <string name="settings_section_data">Data Management</string>
     <string name="settings_manage_categories">Manage Categories</string>
     <string name="settings_manage_categories_desc">Add, rename, or remove categories</string>
+    <string name="settings_bills_desc">Track recurring bills and due dates</string>
     <string name="settings_section_about">About Kharcha</string>
     <string name="settings_about_desc">100% offline personal finance tracker for Nepal. Zero network access, all data stored locally on device.</string>
     <string name="settings_app_version">Version %s</string>
@@ -172,4 +173,49 @@
     <string name="cd_select_month">Select viewing month</string>
     <string name="cd_previous_year">Previous year</string>
     <string name="cd_next_year">Next year</string>
+
+    <!-- Financial Health & Savings Index -->
+    <string name="financial_health_healthy">Healthy</string>
+    <string name="financial_health_moderate">Moderate</string>
+    <string name="financial_health_slim">Slim</string>
+    <string name="financial_health_deficit">Deficit</string>
+    <string name="financial_health_status_format">%1$s (%2$d%%)</string>
+    <string name="financial_health_status_format_no_rate">%1$s</string>
+    <string name="financial_health_burn_format">Burn: %1$s/day</string>
+    <string name="cd_financial_health_badge">Financial health status</string>
+
+    <!-- Rollover Settings & Card -->
+    <string name="settings_rollover_balance">Monthly Rollover</string>
+    <string name="settings_rollover_balance_desc">Carry forward previous month\'s balance into current month</string>
+    <string name="home_opening_balance">Opening Balance</string>
+    <string name="home_net_balance_with_rollover">Total Available</string>
+
+    <!-- Cash Flow Calendar -->
+    <string name="calendar_title">Cash Flow Calendar</string>
+    <string name="calendar_daily_flow">Daily Cash Flow</string>
+    <string name="calendar_no_entries_for_day">No transactions on this day</string>
+    <string name="cd_calendar_previous_month">Previous month</string>
+    <string name="cd_calendar_next_month">Next month</string>
+    <string name="nav_calendar">Calendar</string>
+
+    <!-- Bills & Subscriptions -->
+    <string name="bills_title">Bills &amp; Subscriptions</string>
+    <string name="bills_empty">No bills or subscriptions tracked</string>
+    <string name="bills_add">Add Bill</string>
+    <string name="bills_edit">Edit Bill</string>
+    <string name="bills_due_day">Due Day: %1$d</string>
+    <string name="bills_due_today">Due Today</string>
+    <string name="bills_due_in_days">Due in %1$d days</string>
+    <string name="bills_overdue">Overdue</string>
+    <string name="bills_paid_this_month">Paid this month</string>
+    <string name="bills_mark_paid">Mark as Paid</string>
+    <string name="bills_pay_action">Pay &amp; Record</string>
+    <string name="bills_paid_success">Recorded payment for %1$s</string>
+    <string name="bills_name_label">Bill Name</string>
+    <string name="bills_name_hint">e.g. WiFi, Electricity, Netflix</string>
+    <string name="bills_day_of_month_label">Day of Month (1-31)</string>
+    <string name="bills_notification_title">Upcoming Bill Reminder</string>
+    <string name="bills_notification_content">%1$s is due soon (%2$s)</string>
+    <string name="cd_bills">Bills</string>
+    <string name="cd_add_bill">Add new bill</string>
 </resources>

@@ -4,9 +4,12 @@ import android.content.Context
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.sijan.kharcha.data.db.AppDatabase
+import com.sijan.kharcha.data.preferences.UserPreferencesRepository
+import com.sijan.kharcha.data.preferences.UserPreferencesRepositoryImpl
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
 import com.sijan.kharcha.domain.model.EntryType
+import com.sijan.kharcha.domain.model.FinancialHealthStatus
 import com.sijan.kharcha.domain.model.LedgerEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -34,6 +37,7 @@ class HomeViewModelTest {
 
     private lateinit var db: AppDatabase
     private lateinit var repository: LedgerRepository
+    private lateinit var preferencesRepo: UserPreferencesRepository
     private lateinit var viewModel: HomeViewModel
 
     @Before
@@ -43,8 +47,9 @@ class HomeViewModelTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao())
-        viewModel = HomeViewModel(repository)
+        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao(), db.billDao())
+        preferencesRepo = UserPreferencesRepositoryImpl(context)
+        viewModel = HomeViewModel(repository, preferencesRepo)
     }
 
     @After
@@ -90,6 +95,42 @@ class HomeViewModelTest {
     }
 
     @Test
+    fun savingsRateAndBurnRateCalculatedCorrectly() = runTest(testDispatcher) {
+        val initialState = viewModel.uiState.first { it.categoriesMap.isNotEmpty() }
+        val expenseCatId = initialState.categoriesMap.values.first { it.type == EntryType.EXPENSE }.id
+        val incomeCatId = initialState.categoriesMap.values.first { it.type == EntryType.INCOME }.id
+
+        val now = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
+
+        // Add 100,000 paisa income (Rs 1,000) and 40,000 paisa expense (Rs 400) -> 60% savings rate -> Healthy (>30%)
+        repository.saveEntry(
+            LedgerEntry(
+                id = 0,
+                amountPaisa = 100000L,
+                type = EntryType.INCOME,
+                categoryId = incomeCatId,
+                date = now,
+                note = "Freelance"
+            )
+        )
+        repository.saveEntry(
+            LedgerEntry(
+                id = 0,
+                amountPaisa = 40000L,
+                type = EntryType.EXPENSE,
+                categoryId = expenseCatId,
+                date = now,
+                note = "Groceries"
+            )
+        )
+
+        val updatedState = viewModel.uiState.first { it.recentEntries.size == 2 }
+        assertEquals(60, updatedState.savingsRatePercent)
+        assertEquals(FinancialHealthStatus.HEALTHY, updatedState.financialHealth)
+        assertTrue(updatedState.dailyBurnRatePaisa > 0L)
+    }
+
+    @Test
     fun selectMonthUpdatesActiveMonthAndFiltersEntries() = runTest(testDispatcher) {
         val initialState = viewModel.uiState.first { it.categoriesMap.isNotEmpty() }
         assertTrue(initialState.isCurrentMonth)
@@ -107,5 +148,37 @@ class HomeViewModelTest {
         viewModel.resetToCurrentMonth()
         val resetState = viewModel.uiState.first { it.isCurrentMonth }
         assertTrue(resetState.isCurrentMonth)
+    }
+
+    @Test
+    fun rolloverBalanceCarriesOverWhenEnabled() = runTest(testDispatcher) {
+        val initialState = viewModel.uiState.first { it.categoriesMap.isNotEmpty() }
+        val incomeCatId = initialState.categoriesMap.values.first { it.type == EntryType.INCOME }.id
+
+        // Create an entry in January 2024 (income 500,000 paisa)
+        val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+            clear()
+            set(2024, Calendar.JANUARY, 15, 12, 0, 0)
+        }
+        repository.saveEntry(
+            LedgerEntry(
+                id = 0,
+                amountPaisa = 500000L,
+                type = EntryType.INCOME,
+                categoryId = incomeCatId,
+                date = cal.timeInMillis,
+                note = "January salary"
+            )
+        )
+
+        // Enable rollover
+        preferencesRepo.setRolloverEnabled(true)
+
+        // View February 2024
+        viewModel.selectMonth(2024, 2)
+
+        val febState = viewModel.uiState.first { it.selectedYear == 2024 && it.selectedMonth == 2 && it.rolloverEnabled }
+        assertTrue(febState.rolloverEnabled)
+        assertEquals(500000L, febState.openingBalancePaisa)
     }
 }

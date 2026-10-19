@@ -10,6 +10,7 @@ data class SettingsUiState(
     val lastBackupTimestamp: Long? = null,
     val pendingRestoreSummary: BackupSummary? = null,
     val isRestoreDialogOpen: Boolean = false,
+    val rolloverEnabled: Boolean = false,
     val appVersion: String = "1.0.0",
     val isLoading: Boolean = false
 )
