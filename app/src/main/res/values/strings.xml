@@ -163,4 +163,13 @@
     <string name="categories_empty">No categories found</string>
     <string name="cd_edit_category">Edit category</string>
     <string name="cd_delete_category">Delete category</string>
+
+    <!-- Month Picker Component -->
+    <string name="home_current_month_badge">Current Month</string>
+    <string name="home_viewing_month_badge">Viewing: %s</string>
+    <string name="home_select_month_dialog_title">Select Month</string>
+    <string name="home_reset_to_current_month">Current Month</string>
+    <string name="cd_select_month">Select viewing month</string>
+    <string name="cd_previous_year">Previous year</string>
+    <string name="cd_next_year">Next year</string>
 </resources>

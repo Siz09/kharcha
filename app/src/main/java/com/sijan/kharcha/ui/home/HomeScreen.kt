@@ -37,6 +37,7 @@ import com.sijan.kharcha.ui.components.AmountText
 import com.sijan.kharcha.ui.components.DateFormatter
 import com.sijan.kharcha.ui.components.EmptyState
 import com.sijan.kharcha.ui.components.EntryRow
+import com.sijan.kharcha.ui.components.MonthPickerFilterCard
 import com.sijan.kharcha.ui.theme.KharchaTheme
 
 @Composable
@@ -52,7 +53,9 @@ fun HomeScreen(
         uiState = uiState,
         modifier = modifier,
         onNavigateToEntries = onNavigateToEntries,
-        onEntryClick = onEntryClick
+        onEntryClick = onEntryClick,
+        onSelectMonth = viewModel::selectMonth,
+        onResetCurrentMonth = viewModel::resetToCurrentMonth
     )
 }
 
@@ -61,7 +64,9 @@ fun HomeScreenContent(
     uiState: HomeUiState,
     modifier: Modifier = Modifier,
     onNavigateToEntries: () -> Unit = {},
-    onEntryClick: (Long) -> Unit = {}
+    onEntryClick: (Long) -> Unit = {},
+    onSelectMonth: (year: Int, month: Int) -> Unit = { _, _ -> },
+    onResetCurrentMonth: () -> Unit = {}
 ) {
     if (uiState.isLoading) {
         Column(
@@ -89,11 +94,14 @@ fun HomeScreenContent(
                     fontWeight = FontWeight.ExtraBold,
                     color = MaterialTheme.colorScheme.onBackground
                 )
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = DateFormatter.formatDate(System.currentTimeMillis()),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                Spacer(modifier = Modifier.height(6.dp))
+                MonthPickerFilterCard(
+                    selectedMonthLabel = uiState.selectedMonthLabel,
+                    isCurrentMonth = uiState.isCurrentMonth,
+                    onSelectMonth = onSelectMonth,
+                    onResetCurrentMonth = onResetCurrentMonth,
+                    currentYear = uiState.selectedYear,
+                    currentMonth = uiState.selectedMonth
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))

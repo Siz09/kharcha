@@ -10,5 +10,9 @@ data class HomeUiState(
     val monthlySummary: MonthlySummary = MonthlySummary(),
     val recentEntries: List<LedgerEntry> = emptyList(),
     val categoriesMap: Map<Long, Category> = emptyMap(),
+    val selectedYear: Int = 0,
+    val selectedMonth: Int = 0,
+    val selectedMonthLabel: String = "",
+    val isCurrentMonth: Boolean = true,
     val isLoading: Boolean = true
 )

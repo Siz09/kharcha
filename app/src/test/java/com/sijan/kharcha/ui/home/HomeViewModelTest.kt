@@ -88,4 +88,24 @@ class HomeViewModelTest {
         assertEquals(50000L, updatedState.monthlySummary.totalExpensePaisa)
         assertEquals("Bhatbhateni groceries", updatedState.recentEntries.first().note)
     }
+
+    @Test
+    fun selectMonthUpdatesActiveMonthAndFiltersEntries() = runTest(testDispatcher) {
+        val initialState = viewModel.uiState.first { it.categoriesMap.isNotEmpty() }
+        assertTrue(initialState.isCurrentMonth)
+
+        // Select a past month (e.g., year 2024, month 5)
+        viewModel.selectMonth(2024, 5)
+
+        val pastState = viewModel.uiState.first { it.selectedYear == 2024 && it.selectedMonth == 5 }
+        assertFalse(pastState.isCurrentMonth)
+        assertEquals("May 2024", pastState.selectedMonthLabel)
+        assertEquals(0, pastState.recentEntries.size)
+        assertEquals(0L, pastState.monthlySummary.totalExpensePaisa)
+
+        // Reset back to current month
+        viewModel.resetToCurrentMonth()
+        val resetState = viewModel.uiState.first { it.isCurrentMonth }
+        assertTrue(resetState.isCurrentMonth)
+    }
 }
