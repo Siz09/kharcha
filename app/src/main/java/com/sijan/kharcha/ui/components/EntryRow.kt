@@ -49,10 +49,11 @@ fun EntryRow(
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        val (icon, tint) = when (entry.type) {
-            EntryType.INCOME -> Icons.Default.ArrowDownward to IncomeGreen
-            EntryType.EXPENSE -> Icons.Default.ArrowUpward to ExpenseRed
+        val tint = when (entry.type) {
+            EntryType.INCOME -> IncomeGreen
+            EntryType.EXPENSE -> ExpenseRed
         }
+        val iconRes = CategoryIconHelper.getIconRes(categoryName)
 
         Surface(
             shape = CircleShape,
@@ -60,7 +61,7 @@ fun EntryRow(
             modifier = Modifier.size(40.dp)
         ) {
             Icon(
-                imageVector = icon,
+                painter = androidx.compose.ui.res.painterResource(id = iconRes),
                 contentDescription = stringResource(R.string.cd_entry_icon),
                 tint = tint,
                 modifier = Modifier

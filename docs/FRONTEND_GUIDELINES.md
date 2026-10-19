@@ -88,3 +88,14 @@ Each feature package holds its screen composable, its ViewModel, and its UI stat
 - Provide a `@Preview` for each shared component, in light and dark.
 - Strings live in `strings.xml`. No hard-coded user text.
 - Keep composables under roughly 100 lines. Extract when larger.
+
+## 12. Animotion MCP Design System Integration
+
+All icons, animations, and micro-interactions in Kharcha frontend use the Animotion MCP catalog:
+- **Vector Icons**: Real SVGs sourced from Lucide, Tabler, or Heroicons via `animotion.search_icons` and converted to Android vector drawables.
+- **Fintech & Dashboard Animations**:
+  - `FN07` (Bar Grow, 800ms `FastOutSlowInEasing` / `cubic-bezier(0.4, 0.0, 0.2, 1)`): Category spend percentage bars.
+  - `FN08` (Value Counter, 1000ms ease-out): Metric and balance number interpolations.
+  - `FN10` (Transaction Slide, 300ms ease-out): Staggered entry row entrance.
+- **Attention Animations**: Pulse/shake transitions for duplicate transaction IDs and invalid inputs.
+- **Button Micro-Interactions**: Spring physics (`spring(dampingRatio = 0.6f, stiffness = Spring.StiffnessMedium)`) on FAB and action button taps.

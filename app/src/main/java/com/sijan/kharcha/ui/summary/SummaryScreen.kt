@@ -238,8 +238,16 @@ fun SummaryScreen(
                                     verticalAlignment = Alignment.CenterVertically,
                                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                                 ) {
+                                    val animatedProgress by androidx.compose.animation.core.animateFloatAsState(
+                                        targetValue = item.percentage,
+                                        animationSpec = androidx.compose.animation.core.tween(
+                                            durationMillis = 800,
+                                            easing = androidx.compose.animation.core.FastOutSlowInEasing
+                                        ),
+                                        label = "category_bar_grow"
+                                    )
                                     LinearProgressIndicator(
-                                        progress = { item.percentage },
+                                        progress = { animatedProgress },
                                         modifier = Modifier
                                             .weight(1f)
                                             .height(8.dp),

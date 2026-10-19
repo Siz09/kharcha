@@ -34,6 +34,7 @@ import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
 import com.sijan.kharcha.ui.components.AmountText
+import com.sijan.kharcha.ui.components.DateFormatter
 import com.sijan.kharcha.ui.components.EmptyState
 import com.sijan.kharcha.ui.components.EntryRow
 import com.sijan.kharcha.ui.theme.KharchaTheme
@@ -80,7 +81,22 @@ fun HomeScreenContent(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Text(
+                    text = stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineLarge,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
+                Spacer(modifier = Modifier.height(2.dp))
+                Text(
+                    text = DateFormatter.formatDate(System.currentTimeMillis()),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Spacer(modifier = Modifier.height(12.dp))
             MonthlySummaryCard(summary = uiState.monthlySummary)
         }
 
