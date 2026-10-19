@@ -7,5 +7,6 @@ data class BackupPayload(
     val schemaVersion: Int = 1,
     val exportedAt: Long,
     val categories: List<BackupCategory>,
-    val entries: List<BackupEntry>
+    val entries: List<BackupEntry>,
+    val accounts: List<BackupAccount> = emptyList()
 )

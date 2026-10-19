@@ -57,7 +57,9 @@ class HomeViewModel @Inject constructor(
             flowOf(0L)
         }
 
-        combine(summaryFlow, monthEntriesFlow, categoriesFlow, openingBalanceFlow) { summary, entries, categories, openingBal ->
+        val accountsFlow = repository.getAccountsWithBalances()
+
+        combine(summaryFlow, monthEntriesFlow, categoriesFlow, openingBalanceFlow, accountsFlow) { summary, entries, categories, openingBal, accounts ->
             val isCurrent = (year == realCurrentYear && month == realCurrentMonth)
             val isFuture = (year > realCurrentYear) || (year == realCurrentYear && month > realCurrentMonth)
             val (savingsRate, healthStatus) = calculateSavingsRateAndHealth(
@@ -90,6 +92,8 @@ class HomeViewModel @Inject constructor(
                 emptyList()
             }
 
+            val netWorth = accounts.filter { it.account.isActive }.sumOf { it.currentBalancePaisa }
+
             HomeUiState(
                 monthlySummary = summary,
                 recentEntries = entries.take(10),
@@ -104,6 +108,8 @@ class HomeViewModel @Inject constructor(
                 financialHealth = healthStatus,
                 openingBalancePaisa = openingBal,
                 rolloverEnabled = rolloverEnabled,
+                accounts = accounts,
+                totalNetWorthPaisa = netWorth,
                 isLoading = false
             )
         }

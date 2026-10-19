@@ -1,17 +1,22 @@
 package com.sijan.kharcha.data.repository
 
+import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.AuditLogDao
 import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
+import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.AuditLogEntity
 import com.sijan.kharcha.data.db.entity.BillEntity
 import com.sijan.kharcha.data.db.entity.BudgetEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
 import com.sijan.kharcha.data.db.entity.RecurringEntryEntity
+import com.sijan.kharcha.domain.model.Account
+import com.sijan.kharcha.domain.model.AccountType
+import com.sijan.kharcha.domain.model.AccountWithBalance
 import com.sijan.kharcha.domain.model.Bill
 import com.sijan.kharcha.domain.model.Budget
 import com.sijan.kharcha.domain.model.Category
@@ -19,9 +24,12 @@ import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
 import com.sijan.kharcha.domain.model.RecurringEntry
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import java.io.File
 import java.util.Calendar
@@ -29,6 +37,7 @@ import java.util.TimeZone
 import javax.inject.Inject
 import javax.inject.Singleton
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Singleton
 class LedgerRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
@@ -36,7 +45,8 @@ class LedgerRepositoryImpl @Inject constructor(
     private val billDao: BillDao,
     private val budgetDao: BudgetDao,
     private val auditLogDao: AuditLogDao,
-    private val recurringEntryDao: RecurringEntryDao
+    private val recurringEntryDao: RecurringEntryDao,
+    private val accountDao: AccountDao
 ) : LedgerRepository {
 
     override fun getAllCategories(): Flow<List<Category>> {
@@ -112,7 +122,159 @@ class LedgerRepositoryImpl @Inject constructor(
         ).map { CategoryEntity(name = it, type = EntryType.INCOME) }
 
         categoryDao.insertAll(defaultExpense + defaultIncome)
+        seedDefaultAccounts()
     }
+
+    override fun getAllAccounts(): Flow<List<Account>> {
+        return accountDao.getAllAccounts().map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun getActiveAccounts(): Flow<List<Account>> {
+        return accountDao.getActiveAccounts().map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun getAccountById(id: Long): Flow<Account?> {
+        return accountDao.getAccountById(id).map { it?.toDomain() }
+    }
+
+    override fun getAccountWithBalance(id: Long): Flow<AccountWithBalance?> {
+        return combine(accountDao.getAccountById(id), ledgerDao.getAccountBalance(id)) { accountEntity, balance ->
+            accountEntity?.let {
+                AccountWithBalance(
+                    account = it.toDomain(),
+                    currentBalancePaisa = balance ?: it.openingBalancePaisa
+                )
+            }
+        }
+    }
+
+    override fun getAccountsWithBalances(): Flow<List<AccountWithBalance>> {
+        return accountDao.getAllAccounts().flatMapLatest { accounts ->
+            if (accounts.isEmpty()) {
+                flowOf(emptyList())
+            } else {
+                combine(accounts.map { account ->
+                    ledgerDao.getAccountBalance(account.id).map { balance ->
+                        AccountWithBalance(
+                            account = account.toDomain(),
+                            currentBalancePaisa = balance ?: account.openingBalancePaisa
+                        )
+                    }
+                }) { array -> array.toList() }
+            }
+        }
+    }
+
+    override fun getTotalNetWorth(): Flow<Long> {
+        return getAccountsWithBalances().map { list ->
+            list.filter { it.account.isActive }.sumOf { it.currentBalancePaisa }
+        }
+    }
+
+    override suspend fun saveAccount(account: Account): Result<Long> = runCatching {
+        require(account.name.isNotBlank()) { "Account name cannot be blank" }
+        require(account.openingBalancePaisa >= 0L) { "Opening balance cannot be negative" }
+        val now = System.currentTimeMillis()
+        val toInsert = account.copy(
+            createdAt = if (account.createdAt == 0L) now else account.createdAt,
+            updatedAt = now
+        )
+        val id = accountDao.insertAccount(AccountEntity.fromDomain(toInsert))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ACCOUNT",
+            entityId = id,
+            action = "INSERT",
+            details = "Added account ${account.name} (${account.type}) with opening balance ${account.openingBalancePaisa} paisa"
+        ))
+        id
+    }
+
+    override suspend fun updateAccount(account: Account): Result<Unit> = runCatching {
+        require(account.id > 0) { "Cannot update account without ID" }
+        require(account.name.isNotBlank()) { "Account name cannot be blank" }
+        require(account.openingBalancePaisa >= 0L) { "Opening balance cannot be negative" }
+        val toUpdate = account.copy(updatedAt = System.currentTimeMillis())
+        accountDao.updateAccount(AccountEntity.fromDomain(toUpdate))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ACCOUNT",
+            entityId = account.id,
+            action = "UPDATE",
+            details = "Updated account ${account.id}: ${account.name}"
+        ))
+    }
+
+    override suspend fun deleteAccount(id: Long): Result<Unit> = runCatching {
+        val entryCount = ledgerDao.countEntriesForAccount(id)
+        if (entryCount > 0) {
+            throw IllegalStateException("Cannot delete account in use by $entryCount existing entries")
+        }
+        val account = accountDao.getAccountByIdDirect(id)
+            ?: throw NoSuchElementException("Account with ID $id not found")
+        accountDao.deleteAccount(account)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ACCOUNT",
+            entityId = id,
+            action = "DELETE",
+            details = "Deleted account ${account.name}"
+        ))
+    }
+
+    override suspend fun seedDefaultAccounts() {
+        if (accountDao.countAccounts() > 0) return
+        val now = System.currentTimeMillis()
+        val defaultAccounts = listOf(
+            AccountEntity(name = "Cash in Hand", type = AccountType.CASH, openingBalancePaisa = 0L, isActive = true, createdAt = now, updatedAt = now),
+            AccountEntity(name = "eSewa Wallet", type = AccountType.WALLET, openingBalancePaisa = 0L, isActive = true, createdAt = now, updatedAt = now),
+            AccountEntity(name = "Bank Account", type = AccountType.BANK, openingBalancePaisa = 0L, isActive = true, createdAt = now, updatedAt = now)
+        )
+        accountDao.insertAll(defaultAccounts)
+    }
+
+    override suspend fun transfer(
+        fromAccountId: Long,
+        toAccountId: Long,
+        amountPaisa: Long,
+        note: String,
+        date: Long
+    ): Result<Long> = runCatching {
+        require(fromAccountId != toAccountId) { "Source and destination accounts must be different" }
+        require(amountPaisa > 0L) { "Transfer amount must be strictly positive" }
+        val from = accountDao.getAccountByIdDirect(fromAccountId)
+            ?: throw IllegalArgumentException("Source account $fromAccountId not found")
+        val to = accountDao.getAccountByIdDirect(toAccountId)
+            ?: throw IllegalArgumentException("Destination account $toAccountId not found")
+
+        val categories = categoryDao.getAllCategories().first()
+        val transferCategory = categories.find { it.name.equals("Transfer", ignoreCase = true) }
+            ?: run {
+                val newCatId = categoryDao.insertCategory(CategoryEntity(name = "Transfer", type = EntryType.EXPENSE))
+                categoryDao.getCategoryById(newCatId) ?: throw IllegalStateException("Failed to create Transfer category")
+            }
+
+        val now = System.currentTimeMillis()
+        val entry = LedgerEntry(
+            id = 0L,
+            amountPaisa = amountPaisa,
+            type = EntryType.TRANSFER,
+            categoryId = transferCategory.id,
+            accountId = fromAccountId,
+            toAccountId = toAccountId,
+            note = if (note.isBlank()) "Transfer from ${from.name} to ${to.name}" else note.trim(),
+            date = date,
+            source = "transfer",
+            createdAt = now,
+            updatedAt = now
+        )
+        val entryId = ledgerDao.insertEntry(LedgerEntryEntity.fromDomain(entry))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ENTRY",
+            entityId = entryId,
+            action = "TRANSFER",
+            details = "Transferred $amountPaisa paisa from ${from.name} to ${to.name}"
+        ))
+        entryId
+    }
+
 
     override fun getEntryById(id: Long): Flow<LedgerEntry?> {
         return ledgerDao.getEntryById(id).map { it?.toDomain() }
@@ -145,6 +307,7 @@ class LedgerRepositoryImpl @Inject constructor(
     override suspend fun saveEntry(entry: LedgerEntry): Result<Long> = runCatching {
         require(entry.amountPaisa > 0) { "Amount must be greater than zero" }
         require(entry.categoryId > 0) { "Category must be specified" }
+        seedDefaultAccounts()
         val now = System.currentTimeMillis()
         val toInsert = entry.copy(
             createdAt = if (entry.createdAt == 0L) now else entry.createdAt,
@@ -280,6 +443,7 @@ class LedgerRepositoryImpl @Inject constructor(
     }
 
     override suspend fun payBill(billId: Long, note: String?): Result<LedgerEntry> = runCatching {
+        seedDefaultAccounts()
         val billEntity = billDao.getBillById(billId).first()
             ?: throw IllegalArgumentException("Bill with id $billId not found")
 

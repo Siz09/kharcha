@@ -53,7 +53,8 @@ class HomeViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         preferencesRepo = UserPreferencesRepositoryImpl(context)
         viewModel = HomeViewModel(repository, preferencesRepo)

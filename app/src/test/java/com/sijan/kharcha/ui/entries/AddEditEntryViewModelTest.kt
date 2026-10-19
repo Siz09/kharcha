@@ -52,7 +52,8 @@ class AddEditEntryViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
     }
 

@@ -36,7 +36,8 @@ class LedgerRepositoryTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
     }
 
@@ -127,5 +128,101 @@ class LedgerRepositoryTest {
 
         val updatedBill = repository.getBillById(billId).first()!!
         assertTrue(updatedBill.lastPaidDate != null)
+    }
+
+    @Test
+    fun seedDefaultAccountsPopulatesExpectedAccounts() = runBlocking {
+        repository.seedDefaultAccounts()
+        val accounts = repository.getAllAccounts().first()
+        assertEquals(3, accounts.size)
+        assertEquals("Cash in Hand", accounts[0].name)
+        assertEquals(com.sijan.kharcha.domain.model.AccountType.CASH, accounts[0].type)
+        assertEquals("eSewa Wallet", accounts[1].name)
+        assertEquals(com.sijan.kharcha.domain.model.AccountType.WALLET, accounts[1].type)
+        assertEquals("Bank Account", accounts[2].name)
+        assertEquals(com.sijan.kharcha.domain.model.AccountType.BANK, accounts[2].type)
+    }
+
+    @Test
+    fun accountBalanceTracksIncomeExpenseAndTransfersAccurately() = runBlocking {
+        repository.seedDefaultAccounts()
+        repository.seedDefaultCategories()
+
+        val cashAccount = repository.getAllAccounts().first().first { it.type == com.sijan.kharcha.domain.model.AccountType.CASH }
+        val walletAccount = repository.getAllAccounts().first().first { it.type == com.sijan.kharcha.domain.model.AccountType.WALLET }
+        val expenseCat = repository.getAllCategories().first().first { it.type == EntryType.EXPENSE }
+        val incomeCat = repository.getAllCategories().first().first { it.type == EntryType.INCOME }
+
+        // Set cash opening balance by updating account
+        repository.updateAccount(cashAccount.copy(openingBalancePaisa = 100000L)).getOrThrow() // Rs 1,000
+
+        // Income of Rs 500 (50000 paisa) into Cash
+        repository.saveEntry(
+            LedgerEntry(
+                amountPaisa = 50000L,
+                type = EntryType.INCOME,
+                categoryId = incomeCat.id,
+                accountId = cashAccount.id,
+                date = 1000L
+            )
+        ).getOrThrow()
+
+        // Expense of Rs 200 (20000 paisa) from Cash
+        repository.saveEntry(
+            LedgerEntry(
+                amountPaisa = 20000L,
+                type = EntryType.EXPENSE,
+                categoryId = expenseCat.id,
+                accountId = cashAccount.id,
+                date = 2000L
+            )
+        ).getOrThrow()
+
+        // Balance of Cash: 100000 + 50000 - 20000 = 130000 paisa
+        val cashBalanceBeforeTransfer = repository.getAccountWithBalance(cashAccount.id).first()!!
+        assertEquals(130000L, cashBalanceBeforeTransfer.currentBalancePaisa)
+
+        // Transfer Rs 300 (30000 paisa) from Cash to eSewa Wallet
+        repository.transfer(
+            fromAccountId = cashAccount.id,
+            toAccountId = walletAccount.id,
+            amountPaisa = 30000L,
+            note = "Load wallet",
+            date = 3000L
+        ).getOrThrow()
+
+        // Cash: 130000 - 30000 = 100000 paisa
+        val cashBalanceAfter = repository.getAccountWithBalance(cashAccount.id).first()!!
+        assertEquals(100000L, cashBalanceAfter.currentBalancePaisa)
+
+        // Wallet: 0 + 30000 = 30000 paisa
+        val walletBalanceAfter = repository.getAccountWithBalance(walletAccount.id).first()!!
+        assertEquals(30000L, walletBalanceAfter.currentBalancePaisa)
+
+        // Total Net Worth: 100000 + 30000 = 130000 paisa
+        val netWorth = repository.getTotalNetWorth().first()
+        assertEquals(130000L, netWorth)
+    }
+
+    @Test
+    fun deleteAccountFailsWhenEntriesExist() = runBlocking {
+        repository.seedDefaultAccounts()
+        repository.seedDefaultCategories()
+
+        val cashAccount = repository.getAllAccounts().first().first { it.type == com.sijan.kharcha.domain.model.AccountType.CASH }
+        val cat = repository.getAllCategories().first().first { it.type == EntryType.EXPENSE }
+
+        repository.saveEntry(
+            LedgerEntry(
+                amountPaisa = 10000L,
+                type = EntryType.EXPENSE,
+                categoryId = cat.id,
+                accountId = cashAccount.id,
+                date = 1000L
+            )
+        ).getOrThrow()
+
+        val deleteResult = repository.deleteAccount(cashAccount.id)
+        assertTrue(deleteResult.isFailure)
     }
 }

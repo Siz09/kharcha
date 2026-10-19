@@ -67,6 +67,27 @@ interface LedgerDao {
         endDate: Long?
     ): Flow<List<LedgerEntryEntity>>
 
+    @Query("""
+        SELECT (
+            SELECT openingBalancePaisa FROM accounts WHERE id = :accountId
+        ) + COALESCE((
+            SELECT SUM(amountPaisa) FROM ledger_entries WHERE accountId = :accountId AND type = 'INCOME'
+        ), 0) - COALESCE((
+            SELECT SUM(amountPaisa) FROM ledger_entries WHERE accountId = :accountId AND type = 'EXPENSE'
+        ), 0) - COALESCE((
+            SELECT SUM(amountPaisa) FROM ledger_entries WHERE accountId = :accountId AND type = 'TRANSFER'
+        ), 0) + COALESCE((
+            SELECT SUM(amountPaisa) FROM ledger_entries WHERE toAccountId = :accountId AND type = 'TRANSFER'
+        ), 0)
+    """)
+    fun getAccountBalance(accountId: Long): Flow<Long?>
+
+    @Query("SELECT COUNT(*) FROM ledger_entries WHERE accountId = :accountId OR toAccountId = :accountId")
+    suspend fun countEntriesForAccount(accountId: Long): Int
+
+    @Query("SELECT * FROM ledger_entries WHERE accountId = :accountId OR toAccountId = :accountId ORDER BY date DESC, id DESC")
+    fun getEntriesByAccount(accountId: Long): Flow<List<LedgerEntryEntity>>
+
     @Query("DELETE FROM ledger_entries")
     suspend fun deleteAllEntries()
 }

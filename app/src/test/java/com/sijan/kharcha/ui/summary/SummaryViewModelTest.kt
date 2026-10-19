@@ -49,7 +49,8 @@ class SummaryViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         viewModel = SummaryViewModel(repository)
     }

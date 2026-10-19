@@ -34,6 +34,16 @@ class AppDatabaseTest {
             .build()
         categoryDao = db.categoryDao()
         ledgerDao = db.ledgerDao()
+        runBlocking {
+            db.accountDao().insertAccount(
+                com.sijan.kharcha.data.db.entity.AccountEntity(
+                    id = 1L,
+                    name = "Cash in Hand",
+                    type = com.sijan.kharcha.domain.model.AccountType.CASH,
+                    openingBalancePaisa = 0L
+                )
+            )
+        }
     }
 
     @After

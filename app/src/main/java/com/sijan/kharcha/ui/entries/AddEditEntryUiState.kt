@@ -22,6 +22,8 @@ data class AddEditEntryUiState(
     val note: String = "",
     val transactionId: String = "",
     val receiptPath: String? = null,
+    val accounts: List<com.sijan.kharcha.domain.model.Account> = emptyList(),
+    val selectedAccountId: Long = 1L,
     val showDeleteConfirmDialog: Boolean = false,
     val isSaving: Boolean = false,
     val isDeleting: Boolean = false

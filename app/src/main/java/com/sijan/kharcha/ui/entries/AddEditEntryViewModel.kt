@@ -47,6 +47,19 @@ class AddEditEntryViewModel @Inject constructor(
         } else {
             loadCategoriesForType(EntryType.EXPENSE)
         }
+
+        viewModelScope.launch {
+            ledgerRepository.getActiveAccounts().collect { accounts ->
+                _uiState.update { state ->
+                    val selectedId = if (accounts.any { it.id == state.selectedAccountId }) {
+                        state.selectedAccountId
+                    } else {
+                        accounts.firstOrNull()?.id ?: 1L
+                    }
+                    state.copy(accounts = accounts, selectedAccountId = selectedId)
+                }
+            }
+        }
     }
 
     private fun loadEntry(id: Long) {
@@ -68,6 +81,7 @@ class AddEditEntryViewModel @Inject constructor(
                         type = entry.type,
                         amountText = formattedAmount,
                         selectedCategoryId = entry.categoryId,
+                        selectedAccountId = entry.accountId,
                         dateEpochMillis = entry.date,
                         note = entry.note,
                         transactionId = entry.transactionId ?: "",
@@ -163,6 +177,10 @@ class AddEditEntryViewModel @Inject constructor(
         _uiState.update { it.copy(transactionId = transactionId) }
     }
 
+    fun onAccountChanged(accountId: Long) {
+        _uiState.update { it.copy(selectedAccountId = accountId) }
+    }
+
     fun onDeleteClicked() {
         _uiState.update { it.copy(showDeleteConfirmDialog = true) }
     }
@@ -208,6 +226,7 @@ class AddEditEntryViewModel @Inject constructor(
                     amountPaisa = amountPaisa,
                     type = state.type,
                     categoryId = categoryId,
+                    accountId = state.selectedAccountId,
                     note = state.note.trim(),
                     date = state.dateEpochMillis,
                     transactionId = state.transactionId.trim().ifBlank { null }
@@ -218,6 +237,7 @@ class AddEditEntryViewModel @Inject constructor(
                     amountPaisa = amountPaisa,
                     type = state.type,
                     categoryId = categoryId,
+                    accountId = state.selectedAccountId,
                     note = state.note.trim(),
                     date = state.dateEpochMillis,
                     source = "manual",

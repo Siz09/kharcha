@@ -49,7 +49,8 @@ class CategoriesViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         viewModel = CategoriesViewModel(repository)
     }

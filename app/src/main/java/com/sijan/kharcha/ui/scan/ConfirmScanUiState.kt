@@ -41,6 +41,10 @@ data class ConfirmScanUiState(
     // Categories
     val categories: List<Category> = emptyList(),
 
+    // Accounts
+    val accounts: List<com.sijan.kharcha.domain.model.Account> = emptyList(),
+    val selectedAccountId: Long = 1L,
+
     // Duplicate detection
     val duplicateEntry: LedgerEntry? = null,
     val isDuplicateDismissed: Boolean = false,

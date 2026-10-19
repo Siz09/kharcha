@@ -1,5 +1,7 @@
 package com.sijan.kharcha.data.repository
 
+import com.sijan.kharcha.domain.model.Account
+import com.sijan.kharcha.domain.model.AccountWithBalance
 import com.sijan.kharcha.domain.model.Bill
 import com.sijan.kharcha.domain.model.Budget
 import com.sijan.kharcha.domain.model.Category
@@ -16,6 +18,18 @@ interface LedgerRepository {
     suspend fun renameCategory(id: Long, newName: String): Result<Unit>
     suspend fun deleteCategory(id: Long): Result<Unit>
     suspend fun seedDefaultCategories()
+
+    fun getAllAccounts(): Flow<List<Account>>
+    fun getActiveAccounts(): Flow<List<Account>>
+    fun getAccountById(id: Long): Flow<Account?>
+    fun getAccountWithBalance(id: Long): Flow<AccountWithBalance?>
+    fun getAccountsWithBalances(): Flow<List<AccountWithBalance>>
+    fun getTotalNetWorth(): Flow<Long>
+    suspend fun saveAccount(account: Account): Result<Long>
+    suspend fun updateAccount(account: Account): Result<Unit>
+    suspend fun deleteAccount(id: Long): Result<Unit>
+    suspend fun seedDefaultAccounts()
+    suspend fun transfer(fromAccountId: Long, toAccountId: Long, amountPaisa: Long, note: String, date: Long): Result<Long>
 
     fun getEntryById(id: Long): Flow<LedgerEntry?>
     fun getAllEntries(): Flow<List<LedgerEntry>>

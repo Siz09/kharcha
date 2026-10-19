@@ -50,6 +50,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sijan.kharcha.R
+import com.sijan.kharcha.domain.model.AccountWithBalance
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.ui.components.DateFormatter
@@ -158,6 +159,13 @@ fun HomeScreenContent(
                 rolloverEnabled = uiState.rolloverEnabled,
                 dailyBurnRatePaisa = uiState.dailyBurnRatePaisa
             )
+            if (uiState.accounts.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(12.dp))
+                AccountsSummaryCard(
+                    accounts = uiState.accounts,
+                    totalNetWorthPaisa = uiState.totalNetWorthPaisa
+                )
+            }
             Spacer(modifier = Modifier.height(12.dp))
             MonthlySavingIndexCard(
                 financialHealth = uiState.financialHealth,
@@ -762,6 +770,83 @@ private fun HomeScreenDarkPreview() {
                     isLoading = false
                 )
             )
+        }
+    }
+}
+
+@Composable
+fun AccountsSummaryCard(
+    accounts: List<AccountWithBalance>,
+    totalNetWorthPaisa: Long,
+    modifier: Modifier = Modifier
+) {
+    if (accounts.isEmpty()) return
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.account_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.semantics { heading() }
+                )
+                Text(
+                    text = "${stringResource(R.string.account_net_worth)}: ${Money.formatPaisa(totalNetWorthPaisa)}",
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                accounts.filter { it.account.isActive }.forEach { item ->
+                    Surface(
+                        modifier = Modifier.weight(1f),
+                        shape = MaterialTheme.shapes.small,
+                        color = MaterialTheme.colorScheme.surface,
+                        tonalElevation = 1.dp
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(8.dp),
+                            verticalArrangement = Arrangement.spacedBy(2.dp)
+                        ) {
+                            Text(
+                                text = item.account.name,
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                            Text(
+                                text = Money.formatPaisa(item.currentBalancePaisa),
+                                style = MaterialTheme.typography.bodySmall,
+                                fontWeight = FontWeight.Bold,
+                                color = if (item.currentBalancePaisa < 0) KharchaThemeDefaults.colors.expense else MaterialTheme.colorScheme.onSurface,
+                                maxLines = 1
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }

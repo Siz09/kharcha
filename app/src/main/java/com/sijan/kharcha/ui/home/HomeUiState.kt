@@ -29,5 +29,7 @@ data class HomeUiState(
     val financialHealth: FinancialHealthStatus = FinancialHealthStatus.HEALTHY,
     val openingBalancePaisa: Long = 0L,
     val rolloverEnabled: Boolean = false,
+    val accounts: List<com.sijan.kharcha.domain.model.AccountWithBalance> = emptyList(),
+    val totalNetWorthPaisa: Long = 0L,
     val isLoading: Boolean = true
 )

@@ -49,7 +49,8 @@ class BillsViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         scheduler = BillReminderScheduler(context)
         viewModel = BillsViewModel(repository, scheduler)

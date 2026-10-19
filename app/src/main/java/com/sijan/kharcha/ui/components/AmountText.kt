@@ -31,6 +31,7 @@ fun AmountText(
     val (displayText, textColor) = when (type) {
         EntryType.INCOME -> "+$formatted" to colors.income
         EntryType.EXPENSE -> "-$formatted" to colors.expense
+        EntryType.TRANSFER -> formatted to (colorOverride ?: MaterialTheme.colorScheme.onSurface)
         null -> {
             val text = if (isNegative) "-$formatted" else formatted
             val color = if (isNegative) colors.expense else (colorOverride ?: MaterialTheme.colorScheme.onSurface)

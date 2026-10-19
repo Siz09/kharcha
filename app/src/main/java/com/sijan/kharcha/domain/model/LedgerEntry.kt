@@ -5,6 +5,8 @@ data class LedgerEntry(
     val amountPaisa: Long,
     val type: EntryType,
     val categoryId: Long,
+    val accountId: Long = 1L,
+    val toAccountId: Long? = null,
     val note: String = "",
     val date: Long,
     val source: String = "manual",
@@ -16,5 +18,9 @@ data class LedgerEntry(
 ) {
     init {
         require(amountPaisa > 0) { "Ledger entry amount in paisa must be strictly greater than 0" }
+        if (type == EntryType.TRANSFER) {
+            require(toAccountId != null) { "Transfer requires destination account" }
+            require(toAccountId != accountId) { "Source and destination accounts must be different" }
+        }
     }
 }

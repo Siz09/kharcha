@@ -53,6 +53,7 @@ fun EntryRow(
         val tint = when (entry.type) {
             EntryType.INCOME -> colors.income
             EntryType.EXPENSE -> colors.expense
+            EntryType.TRANSFER -> MaterialTheme.colorScheme.primary
         }
         val iconRes = CategoryIconHelper.getIconRes(categoryName)
 

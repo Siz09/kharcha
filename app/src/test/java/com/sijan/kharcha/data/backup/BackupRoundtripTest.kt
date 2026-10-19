@@ -32,7 +32,17 @@ class BackupRoundtripTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), JsonBackupSerializer())
+        runBlocking {
+            db.accountDao().insertAccount(
+                com.sijan.kharcha.data.db.entity.AccountEntity(
+                    id = 1L,
+                    name = "Cash in Hand",
+                    type = com.sijan.kharcha.domain.model.AccountType.CASH,
+                    openingBalancePaisa = 0L
+                )
+            )
+        }
+        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), JsonBackupSerializer())
     }
 
     @After

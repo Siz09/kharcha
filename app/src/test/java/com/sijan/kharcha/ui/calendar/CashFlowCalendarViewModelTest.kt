@@ -49,7 +49,8 @@ class CashFlowCalendarViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         viewModel = CashFlowCalendarViewModel(repository)
     }

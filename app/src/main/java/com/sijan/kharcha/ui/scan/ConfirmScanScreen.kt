@@ -32,6 +32,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -102,6 +103,7 @@ fun ConfirmScanScreen(
         onAmountChanged = viewModel::onAmountChanged,
         onDateChanged = viewModel::onDateChanged,
         onCategorySelected = { viewModel.onCategorySelected(it.id) },
+        onAccountSelected = viewModel::onAccountSelected,
         onTransactionIdChanged = viewModel::onTransactionIdChanged,
         onMerchantChanged = viewModel::onMerchantChanged,
         onFeeChanged = viewModel::onFeeChanged,
@@ -122,6 +124,7 @@ fun ConfirmScanContent(
     onAmountChanged: (String) -> Unit,
     onDateChanged: (Long) -> Unit,
     onCategorySelected: (Category) -> Unit,
+    onAccountSelected: (Long) -> Unit,
     onTransactionIdChanged: (String) -> Unit,
     onMerchantChanged: (String) -> Unit,
     onFeeChanged: (String) -> Unit,
@@ -219,6 +222,7 @@ fun ConfirmScanContent(
                     onAmountChanged = onAmountChanged,
                     onDatePickerClick = { showDatePicker = true },
                     onCategorySelected = onCategorySelected,
+                    onAccountSelected = onAccountSelected,
                     onTransactionIdChanged = onTransactionIdChanged,
                     onMerchantChanged = onMerchantChanged,
                     onFeeChanged = onFeeChanged,
@@ -394,6 +398,7 @@ fun ConfirmScanForm(
     onAmountChanged: (String) -> Unit,
     onDatePickerClick: () -> Unit,
     onCategorySelected: (Category) -> Unit,
+    onAccountSelected: (Long) -> Unit,
     onTransactionIdChanged: (String) -> Unit,
     onMerchantChanged: (String) -> Unit,
     onFeeChanged: (String) -> Unit,
@@ -424,6 +429,29 @@ fun ConfirmScanForm(
             isError = uiState.categoryStatus == ValidationStatus.ERROR,
             errorMessage = uiState.categoryStatusMessage
         )
+
+        // Account selector
+        if (uiState.accounts.isNotEmpty()) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(
+                    text = stringResource(R.string.field_account),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.accounts.forEach { account ->
+                        FilterChip(
+                            selected = uiState.selectedAccountId == account.id,
+                            onClick = { onAccountSelected(account.id) },
+                            label = { Text(text = account.name) }
+                        )
+                    }
+                }
+            }
+        }
 
         // Date Field
         OutlinedTextField(
@@ -508,6 +536,7 @@ private fun ConfirmScanPreviewLight() {
             onAmountChanged = {},
             onDateChanged = {},
             onCategorySelected = {},
+            onAccountSelected = {},
             onTransactionIdChanged = {},
             onMerchantChanged = {},
             onFeeChanged = {},
@@ -544,6 +573,7 @@ private fun ConfirmScanPreviewDark() {
             onAmountChanged = {},
             onDateChanged = {},
             onCategorySelected = {},
+            onAccountSelected = {},
             onTransactionIdChanged = {},
             onMerchantChanged = {},
             onFeeChanged = {},

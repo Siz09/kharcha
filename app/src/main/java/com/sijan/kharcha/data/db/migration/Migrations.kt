@@ -93,3 +93,52 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
         """.trimIndent())
     }
 }
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `accounts` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `name` TEXT NOT NULL,
+                `type` TEXT NOT NULL,
+                `institutionName` TEXT,
+                `accountNumberLast4` TEXT,
+                `openingBalancePaisa` INTEGER NOT NULL,
+                `isActive` INTEGER NOT NULL,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL
+            )
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_accounts_name` ON `accounts` (`name`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_accounts_type` ON `accounts` (`type`)
+        """.trimIndent())
+
+        val now = System.currentTimeMillis()
+        db.execSQL("""
+            INSERT OR IGNORE INTO `accounts` (`id`, `name`, `type`, `institutionName`, `accountNumberLast4`, `openingBalancePaisa`, `isActive`, `createdAt`, `updatedAt`)
+            VALUES (1, 'Cash in Hand', 'CASH', NULL, NULL, 0, 1, $now, $now)
+        """.trimIndent())
+
+        db.execSQL("""
+            ALTER TABLE `ledger_entries` ADD COLUMN `accountId` INTEGER NOT NULL DEFAULT 1 REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT
+        """.trimIndent())
+
+        db.execSQL("""
+            ALTER TABLE `ledger_entries` ADD COLUMN `toAccountId` INTEGER DEFAULT NULL REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_ledger_entries_accountId` ON `ledger_entries` (`accountId`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_ledger_entries_toAccountId` ON `ledger_entries` (`toAccountId`)
+        """.trimIndent())
+    }
+}
+

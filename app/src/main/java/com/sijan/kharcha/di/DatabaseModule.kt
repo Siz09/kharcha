@@ -3,6 +3,7 @@ package com.sijan.kharcha.di
 import android.content.Context
 import androidx.room.Room
 import com.sijan.kharcha.data.db.AppDatabase
+import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.AuditLogDao
 import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
@@ -11,6 +12,7 @@ import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
 import com.sijan.kharcha.data.db.migration.MIGRATION_1_2
 import com.sijan.kharcha.data.db.migration.MIGRATION_2_3
+import com.sijan.kharcha.data.db.migration.MIGRATION_3_4
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
 import dagger.Binds
@@ -32,7 +34,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4).build()
     }
 
     @Provides
@@ -63,6 +65,11 @@ object DatabaseModule {
     @Provides
     fun provideRecurringEntryDao(database: AppDatabase): RecurringEntryDao {
         return database.recurringEntryDao()
+    }
+
+    @Provides
+    fun provideAccountDao(database: AppDatabase): AccountDao {
+        return database.accountDao()
     }
 }
 

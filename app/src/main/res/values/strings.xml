@@ -268,4 +268,24 @@
     <string name="home_expense_breakdown_empty">No expenses recorded this month</string>
     <string name="home_expense_breakdown_others">Others</string>
     <string name="home_expense_breakdown_total_format">Total: %s</string>
+
+    <!-- Accounts & Balance Tracking -->
+    <string name="account_title">Accounts</string>
+    <string name="account_net_worth">Total Net Worth</string>
+    <string name="account_cash">Cash</string>
+    <string name="account_wallet">Wallet</string>
+    <string name="account_bank">Bank</string>
+    <string name="account_add">Add Account</string>
+    <string name="account_edit">Edit Account</string>
+    <string name="account_name_label">Account Name</string>
+    <string name="account_type_label">Account Type</string>
+    <string name="account_opening_balance">Opening Balance</string>
+    <string name="account_institution">Bank / Provider Name</string>
+    <string name="account_number_last4">Last 4 Digits</string>
+    <string name="account_active_toggle">Active Account</string>
+    <string name="account_transfer_title">Transfer Money</string>
+    <string name="account_transfer_from">From</string>
+    <string name="account_transfer_to">To</string>
+    <string name="field_account">Account</string>
+    <string name="cd_accounts_card">Account balances and net worth</string>
 </resources>

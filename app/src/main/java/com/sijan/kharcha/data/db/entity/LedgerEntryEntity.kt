@@ -15,10 +15,24 @@ import com.sijan.kharcha.domain.model.LedgerEntry
             parentColumns = ["id"],
             childColumns = ["categoryId"],
             onDelete = ForeignKey.RESTRICT
+        ),
+        ForeignKey(
+            entity = AccountEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["accountId"],
+            onDelete = ForeignKey.RESTRICT
+        ),
+        ForeignKey(
+            entity = AccountEntity::class,
+            parentColumns = ["id"],
+            childColumns = ["toAccountId"],
+            onDelete = ForeignKey.RESTRICT
         )
     ],
     indices = [
         Index("categoryId"),
+        Index("accountId"),
+        Index("toAccountId"),
         Index("date"),
         Index("transactionId")
     ]
@@ -29,6 +43,8 @@ data class LedgerEntryEntity(
     val amountPaisa: Long,
     val type: EntryType,
     val categoryId: Long,
+    val accountId: Long = 1L,
+    val toAccountId: Long? = null,
     val note: String = "",
     val date: Long,
     val source: String = "manual",
@@ -43,6 +59,8 @@ data class LedgerEntryEntity(
         amountPaisa = amountPaisa,
         type = type,
         categoryId = categoryId,
+        accountId = accountId,
+        toAccountId = toAccountId,
         note = note,
         date = date,
         source = source,
@@ -59,6 +77,8 @@ data class LedgerEntryEntity(
             amountPaisa = entry.amountPaisa,
             type = entry.type,
             categoryId = entry.categoryId,
+            accountId = entry.accountId,
+            toAccountId = entry.toAccountId,
             note = entry.note,
             date = entry.date,
             source = entry.source,

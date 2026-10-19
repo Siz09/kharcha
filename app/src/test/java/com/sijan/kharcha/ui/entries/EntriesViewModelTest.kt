@@ -47,7 +47,8 @@ class EntriesViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         viewModel = EntriesViewModel(repository)
     }

@@ -1,14 +1,18 @@
 package com.sijan.kharcha.data.backup
 
 import androidx.room.withTransaction
+import com.sijan.kharcha.data.backup.model.BackupAccount
 import com.sijan.kharcha.data.backup.model.BackupCategory
 import com.sijan.kharcha.data.backup.model.BackupEntry
 import com.sijan.kharcha.data.backup.model.BackupPayload
 import com.sijan.kharcha.data.db.AppDatabase
+import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
+import com.sijan.kharcha.domain.model.AccountType
 import kotlinx.coroutines.flow.first
 import java.io.InputStream
 import java.io.OutputStream
@@ -24,6 +28,7 @@ class BackupServiceImpl @Inject constructor(
     private val db: AppDatabase,
     private val categoryDao: CategoryDao,
     private val ledgerDao: LedgerDao,
+    private val accountDao: AccountDao,
     private val serializer: JsonBackupSerializer
 ) : BackupService {
 
@@ -36,12 +41,28 @@ class BackupServiceImpl @Inject constructor(
             )
         }
 
+        val accounts = accountDao.getAllAccounts().first().map {
+            BackupAccount(
+                id = it.id,
+                name = it.name,
+                type = it.type,
+                institutionName = it.institutionName,
+                accountNumberLast4 = it.accountNumberLast4,
+                openingBalancePaisa = it.openingBalancePaisa,
+                isActive = it.isActive,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt
+            )
+        }
+
         val entries = ledgerDao.getAllEntries().first().map {
             BackupEntry(
                 id = it.id,
                 amountPaisa = it.amountPaisa,
                 type = it.type,
                 categoryId = it.categoryId,
+                accountId = it.accountId,
+                toAccountId = it.toAccountId,
                 note = it.note,
                 date = it.date,
                 source = it.source,
@@ -57,7 +78,8 @@ class BackupServiceImpl @Inject constructor(
             schemaVersion = JsonBackupSerializer.CURRENT_SCHEMA_VERSION,
             exportedAt = System.currentTimeMillis(),
             categories = categories,
-            entries = entries
+            entries = entries,
+            accounts = accounts
         )
 
         serializer.serialize(payload, outputStream).getOrThrow()
@@ -72,6 +94,7 @@ class BackupServiceImpl @Inject constructor(
         db.withTransaction {
             ledgerDao.deleteAllEntries()
             categoryDao.deleteAllCategories()
+            accountDao.deleteAllAccounts()
 
             for (category in payload.categories) {
                 categoryDao.insertCategory(
@@ -83,6 +106,38 @@ class BackupServiceImpl @Inject constructor(
                 )
             }
 
+            if (payload.accounts.isNotEmpty()) {
+                for (account in payload.accounts) {
+                    accountDao.insertAccount(
+                        AccountEntity(
+                            id = account.id,
+                            name = account.name,
+                            type = account.type,
+                            institutionName = account.institutionName,
+                            accountNumberLast4 = account.accountNumberLast4,
+                            openingBalancePaisa = account.openingBalancePaisa,
+                            isActive = account.isActive,
+                            createdAt = account.createdAt,
+                            updatedAt = account.updatedAt
+                        )
+                    )
+                }
+            } else {
+                // Backward compatibility: default Cash account for legacy v1 backups
+                val now = System.currentTimeMillis()
+                accountDao.insertAccount(
+                    AccountEntity(
+                        id = 1L,
+                        name = "Cash in Hand",
+                        type = AccountType.CASH,
+                        openingBalancePaisa = 0L,
+                        isActive = true,
+                        createdAt = now,
+                        updatedAt = now
+                    )
+                )
+            }
+
             for (entry in payload.entries) {
                 ledgerDao.insertEntry(
                     LedgerEntryEntity(
@@ -90,6 +145,8 @@ class BackupServiceImpl @Inject constructor(
                         amountPaisa = entry.amountPaisa,
                         type = entry.type,
                         categoryId = entry.categoryId,
+                        accountId = entry.accountId,
+                        toAccountId = entry.toAccountId,
                         note = entry.note,
                         date = entry.date,
                         source = entry.source,

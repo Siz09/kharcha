@@ -148,6 +148,7 @@ class SummaryViewModel @Inject constructor(
                     val catTotal = expenseCategoryTotals.getOrDefault(entry.categoryId, 0L)
                     expenseCategoryTotals[entry.categoryId] = catTotal + entry.amountPaisa
                 }
+                EntryType.TRANSFER -> Unit
             }
         }
 

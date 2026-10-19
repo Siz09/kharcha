@@ -15,6 +15,7 @@ import com.sijan.kharcha.domain.model.LedgerEntry
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -54,7 +55,17 @@ class SettingsViewModelTest {
         preferencesRepo = UserPreferencesRepositoryImpl(context)
         serializer = JsonBackupSerializer()
         scheduler = AutoBackupScheduler(context)
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), serializer)
+        runBlocking {
+            db.accountDao().insertAccount(
+                com.sijan.kharcha.data.db.entity.AccountEntity(
+                    id = 1L,
+                    name = "Cash in Hand",
+                    type = com.sijan.kharcha.domain.model.AccountType.CASH,
+                    openingBalancePaisa = 0L
+                )
+            )
+        }
+        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), serializer)
         viewModel = SettingsViewModel(
             context = context,
             userPreferencesRepository = preferencesRepo,

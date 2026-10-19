@@ -17,5 +17,6 @@ data class CategoriesUiState(
         get() = when (selectedTab) {
             EntryType.EXPENSE -> expenseCategories
             EntryType.INCOME -> incomeCategories
+            EntryType.TRANSFER -> emptyList()
         }
 }

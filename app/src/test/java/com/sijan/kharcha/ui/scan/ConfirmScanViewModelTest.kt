@@ -73,7 +73,8 @@ class ConfirmScanViewModelTest {
             db.billDao(),
             db.budgetDao(),
             db.auditLogDao(),
-            db.recurringEntryDao()
+            db.recurringEntryDao(),
+            db.accountDao()
         )
         storage = ReceiptStorageImpl(context)
         pipeline = ReceiptProcessingPipeline(setOf(EsewaParser()))
@@ -224,5 +225,41 @@ class ConfirmScanViewModelTest {
         assertEquals(sampleEsewaOcr, saved.rawOcrText)
         assertNotNull(saved.receiptPath)
         assertTrue(File(saved.receiptPath!!).exists())
+    }
+
+    @Test
+    fun saveEntryUsesSelectedAccountId() = runTest(testDispatcher) {
+        val imageUri = createTestImageFile()
+        val fakeScanner = object : ReceiptOcrScanner {
+            override suspend fun scanImage(uri: Uri): Result<OcrResult> {
+                return Result.success(OcrResult(fullText = sampleEsewaOcr))
+            }
+        }
+
+        val viewModel = ConfirmScanViewModel(
+            ledgerRepository = repository,
+            receiptStorage = storage,
+            pipeline = pipeline,
+            ocrScanner = fakeScanner,
+            savedStateHandle = SavedStateHandle(),
+            context = context
+        )
+
+        // Wait until accounts and categories are loaded
+        val loadedState = viewModel.uiState.first { it.accounts.size >= 2 && it.categories.isNotEmpty() }
+        val targetAccountId = loadedState.accounts[1].id
+        viewModel.onAccountSelected(targetAccountId)
+
+        viewModel.processImage(imageUri)
+        viewModel.uiState.first { !it.isLoading && it.amountText.isNotEmpty() }
+
+        val saveDeferred = async { viewModel.events.first() }
+        viewModel.saveEntry()
+        val saveEvent = saveDeferred.await()
+        assertEquals(ConfirmScanEvent.SaveSuccess, saveEvent)
+
+        val entries = repository.getAllEntries().first()
+        assertEquals(1, entries.size)
+        assertEquals(targetAccountId, entries[0].accountId)
     }
 }

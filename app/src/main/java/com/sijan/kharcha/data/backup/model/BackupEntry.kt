@@ -9,6 +9,8 @@ data class BackupEntry(
     val amountPaisa: Long,
     val type: EntryType,
     val categoryId: Long,
+    val accountId: Long = 1L,
+    val toAccountId: Long? = null,
     val note: String = "",
     val date: Long,
     val source: String = "manual",

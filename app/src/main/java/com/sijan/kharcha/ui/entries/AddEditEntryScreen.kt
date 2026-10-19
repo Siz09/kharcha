@@ -95,6 +95,7 @@ fun AddEditEntryScreen(
         onDeleteClicked = viewModel::onDeleteClicked,
         onDeleteDismissed = viewModel::onDeleteDismissed,
         onDeleteConfirmed = viewModel::onDeleteConfirmed,
+        onAccountChanged = viewModel::onAccountChanged,
         onSaveClicked = viewModel::saveEntry,
         modifier = modifier
     )
@@ -109,6 +110,7 @@ fun AddEditEntryContent(
     onTypeChanged: (EntryType) -> Unit,
     onAmountChanged: (String) -> Unit,
     onCategorySelected: (Category) -> Unit,
+    onAccountChanged: (Long) -> Unit = {},
     onDateChanged: (Long) -> Unit,
     onNoteChanged: (String) -> Unit,
     onTransactionIdChanged: (String) -> Unit,
@@ -237,6 +239,29 @@ fun AddEditEntryContent(
                     isError = uiState.categoryStatus == ValidationStatus.ERROR,
                     errorMessage = uiState.categoryStatusMessage
                 )
+
+                // Account selector
+                if (uiState.accounts.isNotEmpty()) {
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = stringResource(R.string.field_account),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            uiState.accounts.forEach { account ->
+                                FilterChip(
+                                    selected = uiState.selectedAccountId == account.id,
+                                    onClick = { onAccountChanged(account.id) },
+                                    label = { Text(text = account.name) }
+                                )
+                            }
+                        }
+                    }
+                }
 
                 // Date
                 OutlinedTextField(

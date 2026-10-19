@@ -46,10 +46,26 @@ class ConfirmScanViewModel @Inject constructor(
 
     init {
         loadCategories()
+        loadAccounts()
 
         val imageUriString: String? = savedStateHandle["imageUri"]
         if (!imageUriString.isNullOrBlank()) {
             processImage(Uri.parse(imageUriString))
+        }
+    }
+
+    private fun loadAccounts() {
+        viewModelScope.launch {
+            ledgerRepository.getActiveAccounts().collect { accounts ->
+                _uiState.update { state ->
+                    val selectedId = if (accounts.any { it.id == state.selectedAccountId }) {
+                        state.selectedAccountId
+                    } else {
+                        accounts.firstOrNull()?.id ?: 1L
+                    }
+                    state.copy(accounts = accounts, selectedAccountId = selectedId)
+                }
+            }
         }
     }
 
@@ -235,6 +251,10 @@ class ConfirmScanViewModel @Inject constructor(
         }
     }
 
+    fun onAccountSelected(accountId: Long) {
+        _uiState.update { it.copy(selectedAccountId = accountId) }
+    }
+
     fun saveEntry() {
         val state = _uiState.value
         if (!state.isSaveEnabled) return
@@ -256,6 +276,7 @@ class ConfirmScanViewModel @Inject constructor(
                 amountPaisa = amountPaisa,
                 type = EntryType.EXPENSE,
                 categoryId = categoryId,
+                accountId = state.selectedAccountId,
                 note = note,
                 date = state.dateEpochMillis,
                 source = "receipt:${state.source}",
