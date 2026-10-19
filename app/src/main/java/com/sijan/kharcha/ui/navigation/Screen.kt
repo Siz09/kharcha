@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ListAlt
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Settings
@@ -60,6 +61,12 @@ sealed class Screen(
     ) {
         fun createRoute(imageUri: String): String = "confirm_scan?imageUri=${android.net.Uri.encode(imageUri)}"
     }
+
+    data object Categories : Screen(
+        route = "categories",
+        labelRes = R.string.categories_title,
+        icon = Icons.Default.Category
+    )
 
     companion object {
         val bottomNavItems = listOf(Home, Entries, Summary, Settings)

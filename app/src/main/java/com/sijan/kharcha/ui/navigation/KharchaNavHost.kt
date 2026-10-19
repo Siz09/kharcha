@@ -11,6 +11,7 @@ import com.sijan.kharcha.ui.entries.AddEditEntryScreen
 import com.sijan.kharcha.ui.entries.EntriesScreen
 import com.sijan.kharcha.ui.home.HomeScreen
 import com.sijan.kharcha.ui.scan.ConfirmScanScreen
+import com.sijan.kharcha.ui.settings.categories.CategoriesScreen
 import com.sijan.kharcha.ui.settings.SettingsScreen
 import com.sijan.kharcha.ui.summary.SummaryScreen
 
@@ -51,7 +52,16 @@ fun KharchaNavHost(
             SummaryScreen()
         }
         composable(Screen.Settings.route) {
-            SettingsScreen()
+            SettingsScreen(
+                onNavigateToCategories = {
+                    navController.navigate(Screen.Categories.route)
+                }
+            )
+        }
+        composable(Screen.Categories.route) {
+            CategoriesScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
         composable(Screen.AddEntry.route) {
             AddEditEntryScreen(
