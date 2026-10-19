@@ -337,4 +337,41 @@
     <string name="cd_udhar_card">Udhar summary and entries</string>
     <string name="home_udhar_title">Udhar (Credit/Debt)</string>
     <string name="home_udhar_summary_format">Receive %1$s • Give %2$s</string>
+
+    <!-- Savings Goals Tracker -->
+    <string name="savings_title">Savings Goals</string>
+    <string name="savings_empty">No savings goals created yet</string>
+    <string name="savings_add_btn">Add Goal</string>
+    <string name="savings_edit_btn">Edit Goal</string>
+    <string name="savings_delete_btn">Delete</string>
+    <string name="savings_delete_confirm_title">Delete Savings Goal?</string>
+    <string name="savings_delete_confirm_desc">Are you sure you want to delete this goal and all its recorded deposits?</string>
+    <string name="savings_name_label">Goal Name</string>
+    <string name="savings_name_hint">e.g. Dashain Vacation, Emergency Fund, Laptop</string>
+    <string name="savings_target_amount_label">Target Amount (NPR)</string>
+    <string name="savings_target_date_label">Target Date (Optional)</string>
+    <string name="savings_notes_label">Notes / Motivation</string>
+    <string name="savings_save_goal">Save Goal</string>
+    <string name="savings_record_deposit">Add Funds</string>
+    <string name="savings_deposit_dialog_title">Deposit to Goal</string>
+    <string name="savings_deposit_amount">Deposit Amount (NPR)</string>
+    <string name="savings_deposit_date">Deposit Date</string>
+    <string name="savings_deposit_notes">Deposit Note (Optional)</string>
+    <string name="savings_deposit_save">Confirm Deposit</string>
+    <string name="savings_history_title">%1$s — Deposit History</string>
+    <string name="savings_no_contributions">No deposits recorded yet</string>
+    <string name="savings_delete_contribution">Delete deposit</string>
+    <string name="savings_saved_of_target_format">%1$s saved of %2$s</string>
+    <string name="savings_remaining_format">%s to go</string>
+    <string name="savings_completed_badge">Goal Reached! 🎉</string>
+    <string name="savings_days_left_format">%1$d days left</string>
+    <string name="savings_overdue_days_format">Target date passed %1$d days ago</string>
+    <string name="savings_monthly_pace_format">Save ~%s / month</string>
+    <string name="savings_all_tab">All</string>
+    <string name="savings_active_tab">In Progress</string>
+    <string name="savings_completed_tab">Completed</string>
+    <string name="cd_savings_card">Savings goals summary and progress</string>
+    <string name="home_savings_title">Savings Goals</string>
+    <string name="home_savings_summary_format">%1$s of %2$s saved (%3$d%%)</string>
 </resources>
+

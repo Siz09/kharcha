@@ -15,6 +15,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -73,6 +74,7 @@ fun HomeScreen(
     onNavigateToEntries: () -> Unit = {},
     onNavigateToCalendar: () -> Unit = {},
     onNavigateToUdhar: () -> Unit = {},
+    onNavigateToSavings: () -> Unit = {},
     onEntryClick: (Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +85,7 @@ fun HomeScreen(
         onNavigateToEntries = onNavigateToEntries,
         onNavigateToCalendar = onNavigateToCalendar,
         onNavigateToUdhar = onNavigateToUdhar,
+        onNavigateToSavings = onNavigateToSavings,
         onEntryClick = onEntryClick,
         onSelectMonth = viewModel::selectMonth,
         onResetCurrentMonth = viewModel::resetToCurrentMonth
@@ -96,6 +99,7 @@ fun HomeScreenContent(
     onNavigateToEntries: () -> Unit = {},
     onNavigateToCalendar: () -> Unit = {},
     onNavigateToUdhar: () -> Unit = {},
+    onNavigateToSavings: () -> Unit = {},
     onEntryClick: (Long) -> Unit = {},
     onSelectMonth: (year: Int, month: Int) -> Unit = { _, _ -> },
     onResetCurrentMonth: () -> Unit = {}
@@ -150,6 +154,13 @@ fun HomeScreenContent(
                             Icon(
                                 imageVector = Icons.Default.Receipt,
                                 contentDescription = stringResource(R.string.udhar_title),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(onClick = onNavigateToSavings) {
+                            Icon(
+                                imageVector = Icons.Default.Savings,
+                                contentDescription = stringResource(R.string.savings_title),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }

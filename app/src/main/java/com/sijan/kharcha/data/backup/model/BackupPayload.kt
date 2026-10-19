@@ -10,5 +10,7 @@ data class BackupPayload(
     val entries: List<BackupEntry>,
     val accounts: List<BackupAccount> = emptyList(),
     val udhars: List<BackupUdhar> = emptyList(),
-    val udharSettlements: List<BackupUdharSettlement> = emptyList()
+    val udharSettlements: List<BackupUdharSettlement> = emptyList(),
+    val savingsGoals: List<BackupSavingsGoal> = emptyList(),
+    val savingsContributions: List<BackupSavingsContribution> = emptyList()
 )

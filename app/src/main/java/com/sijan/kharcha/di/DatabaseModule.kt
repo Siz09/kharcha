@@ -10,13 +10,17 @@ import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
+import com.sijan.kharcha.data.db.dao.SavingsGoalDao
 import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.migration.MIGRATION_1_2
 import com.sijan.kharcha.data.db.migration.MIGRATION_2_3
 import com.sijan.kharcha.data.db.migration.MIGRATION_3_4
 import com.sijan.kharcha.data.db.migration.MIGRATION_4_5
+import com.sijan.kharcha.data.db.migration.MIGRATION_5_6
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
+import com.sijan.kharcha.data.repository.SavingsGoalRepository
+import com.sijan.kharcha.data.repository.SavingsGoalRepositoryImpl
 import com.sijan.kharcha.data.repository.UdharRepository
 import com.sijan.kharcha.data.repository.UdharRepositoryImpl
 import dagger.Binds
@@ -38,7 +42,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
     }
 
     @Provides
@@ -80,6 +84,11 @@ object DatabaseModule {
     fun provideUdharDao(database: AppDatabase): UdharDao {
         return database.udharDao()
     }
+
+    @Provides
+    fun provideSavingsGoalDao(database: AppDatabase): SavingsGoalDao {
+        return database.savingsGoalDao()
+    }
 }
 
 @Module
@@ -97,4 +106,11 @@ abstract class RepositoryModule {
     abstract fun bindUdharRepository(
         udharRepositoryImpl: UdharRepositoryImpl
     ): UdharRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSavingsGoalRepository(
+        savingsGoalRepositoryImpl: SavingsGoalRepositoryImpl
+    ): SavingsGoalRepository
 }
+

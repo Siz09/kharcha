@@ -5,16 +5,21 @@ import com.sijan.kharcha.data.backup.model.BackupAccount
 import com.sijan.kharcha.data.backup.model.BackupCategory
 import com.sijan.kharcha.data.backup.model.BackupEntry
 import com.sijan.kharcha.data.backup.model.BackupPayload
-import com.sijan.kharcha.data.db.AppDatabase
+import com.sijan.kharcha.data.backup.model.BackupSavingsContribution
+import com.sijan.kharcha.data.backup.model.BackupSavingsGoal
 import com.sijan.kharcha.data.backup.model.BackupUdhar
 import com.sijan.kharcha.data.backup.model.BackupUdharSettlement
+import com.sijan.kharcha.data.db.AppDatabase
 import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.dao.SavingsGoalDao
 import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
+import com.sijan.kharcha.data.db.entity.SavingsContributionEntity
+import com.sijan.kharcha.data.db.entity.SavingsGoalEntity
 import com.sijan.kharcha.data.db.entity.UdharEntity
 import com.sijan.kharcha.data.db.entity.UdharSettlementEntity
 import com.sijan.kharcha.domain.model.AccountType
@@ -35,6 +40,7 @@ class BackupServiceImpl @Inject constructor(
     private val ledgerDao: LedgerDao,
     private val accountDao: AccountDao,
     private val udharDao: UdharDao,
+    private val savingsGoalDao: SavingsGoalDao,
     private val serializer: JsonBackupSerializer
 ) : BackupService {
 
@@ -107,6 +113,31 @@ class BackupServiceImpl @Inject constructor(
             )
         }
 
+        val goals = savingsGoalDao.getAllGoals().first().map {
+            BackupSavingsGoal(
+                id = it.id,
+                name = it.name,
+                targetAmountPaisa = it.targetAmountPaisa,
+                savedAmountPaisa = it.savedAmountPaisa,
+                targetDateEpochMillis = it.targetDateEpochMillis,
+                notes = it.notes,
+                isCompleted = it.isCompleted,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt
+            )
+        }
+
+        val contributions = savingsGoalDao.getAllContributions().first().map {
+            BackupSavingsContribution(
+                id = it.id,
+                goalId = it.goalId,
+                amountPaisa = it.amountPaisa,
+                dateEpochMillis = it.dateEpochMillis,
+                notes = it.notes,
+                createdAt = it.createdAt
+            )
+        }
+
         val payload = BackupPayload(
             schemaVersion = JsonBackupSerializer.CURRENT_SCHEMA_VERSION,
             exportedAt = System.currentTimeMillis(),
@@ -114,7 +145,9 @@ class BackupServiceImpl @Inject constructor(
             entries = entries,
             accounts = accounts,
             udhars = udhars,
-            udharSettlements = settlements
+            udharSettlements = settlements,
+            savingsGoals = goals,
+            savingsContributions = contributions
         )
 
         serializer.serialize(payload, outputStream).getOrThrow()
@@ -132,6 +165,8 @@ class BackupServiceImpl @Inject constructor(
             accountDao.deleteAllAccounts()
             udharDao.deleteAllSettlements()
             udharDao.deleteAllUdhars()
+            savingsGoalDao.deleteAllContributions()
+            savingsGoalDao.deleteAllGoals()
 
             for (category in payload.categories) {
                 categoryDao.insertCategory(
@@ -223,6 +258,35 @@ class BackupServiceImpl @Inject constructor(
                         dateEpochMillis = settlement.dateEpochMillis,
                         notes = settlement.notes,
                         createdAt = settlement.createdAt
+                    )
+                )
+            }
+
+            for (goal in payload.savingsGoals) {
+                savingsGoalDao.insertGoal(
+                    SavingsGoalEntity(
+                        id = goal.id,
+                        name = goal.name,
+                        targetAmountPaisa = goal.targetAmountPaisa,
+                        savedAmountPaisa = goal.savedAmountPaisa,
+                        targetDateEpochMillis = goal.targetDateEpochMillis,
+                        notes = goal.notes,
+                        isCompleted = goal.isCompleted,
+                        createdAt = goal.createdAt,
+                        updatedAt = goal.updatedAt
+                    )
+                )
+            }
+
+            for (contribution in payload.savingsContributions) {
+                savingsGoalDao.insertContribution(
+                    SavingsContributionEntity(
+                        id = contribution.id,
+                        goalId = contribution.goalId,
+                        amountPaisa = contribution.amountPaisa,
+                        dateEpochMillis = contribution.dateEpochMillis,
+                        notes = contribution.notes,
+                        createdAt = contribution.createdAt
                     )
                 )
             }

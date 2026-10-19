@@ -198,4 +198,55 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
     }
 }
 
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `savings_goals` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `name` TEXT NOT NULL,
+                `targetAmountPaisa` INTEGER NOT NULL,
+                `savedAmountPaisa` INTEGER NOT NULL,
+                `targetDateEpochMillis` INTEGER,
+                `notes` TEXT NOT NULL,
+                `isCompleted` INTEGER NOT NULL,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL
+            )
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_savings_goals_name` ON `savings_goals` (`name`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_savings_goals_isCompleted` ON `savings_goals` (`isCompleted`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_savings_goals_targetDateEpochMillis` ON `savings_goals` (`targetDateEpochMillis`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `savings_contributions` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `goalId` INTEGER NOT NULL,
+                `amountPaisa` INTEGER NOT NULL,
+                `dateEpochMillis` INTEGER NOT NULL,
+                `notes` TEXT,
+                `createdAt` INTEGER NOT NULL,
+                FOREIGN KEY(`goalId`) REFERENCES `savings_goals`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_savings_contributions_goalId` ON `savings_contributions` (`goalId`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_savings_contributions_dateEpochMillis` ON `savings_contributions` (`dateEpochMillis`)
+        """.trimIndent())
+    }
+}
+
+
 

@@ -9,6 +9,7 @@ import androidx.compose.material.icons.filled.Category
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.PieChart
 import androidx.compose.material.icons.filled.Receipt
+import androidx.compose.material.icons.filled.Savings
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 import com.sijan.kharcha.R
@@ -104,6 +105,12 @@ sealed class Screen(
         route = "udhar",
         labelRes = R.string.udhar_title,
         icon = Icons.Default.Receipt
+    )
+
+    data object SavingsGoals : Screen(
+        route = "savings_goals",
+        labelRes = R.string.savings_title,
+        icon = Icons.Default.Savings
     )
 
     companion object {

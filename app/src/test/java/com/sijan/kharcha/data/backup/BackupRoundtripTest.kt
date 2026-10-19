@@ -42,7 +42,7 @@ class BackupRoundtripTest {
                 )
             )
         }
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), JsonBackupSerializer())
+        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), JsonBackupSerializer())
     }
 
     @After
@@ -173,5 +173,61 @@ class BackupRoundtripTest {
         assertEquals(30000L, restoredSettlements[0].amountPaisa)
         assertEquals("First payment", restoredSettlements[0].notes)
     }
+
+    @Test
+    fun roundtripBackupRestoresSavingsGoalsAndContributions() = runBlocking {
+        val goalId = db.savingsGoalDao().insertGoal(
+            com.sijan.kharcha.data.db.entity.SavingsGoalEntity(
+                name = "Dashain Vacation",
+                targetAmountPaisa = 10000000L,
+                savedAmountPaisa = 4000000L,
+                targetDateEpochMillis = 1800000000000L,
+                notes = "Trip to Pokhara",
+                isCompleted = false,
+                createdAt = 1000L,
+                updatedAt = 1000L
+            )
+        )
+
+        db.savingsGoalDao().insertContribution(
+            com.sijan.kharcha.data.db.entity.SavingsContributionEntity(
+                goalId = goalId,
+                amountPaisa = 4000000L,
+                dateEpochMillis = 2000L,
+                notes = "First deposit",
+                createdAt = 2000L
+            )
+        )
+
+        val outStream = ByteArrayOutputStream()
+        val exportResult = backupService.exportBackup(outStream)
+        assertTrue(exportResult.isSuccess)
+
+        // Clear DB
+        db.savingsGoalDao().deleteAllContributions()
+        db.savingsGoalDao().deleteAllGoals()
+        assertEquals(0, db.savingsGoalDao().getAllGoals().first().size)
+        assertEquals(0, db.savingsGoalDao().getAllContributions().first().size)
+
+        // Restore
+        val inStream = ByteArrayInputStream(outStream.toByteArray())
+        val restoreResult = backupService.restoreBackup(inStream)
+        assertTrue(restoreResult.isSuccess)
+
+        val restoredGoals = db.savingsGoalDao().getAllGoals().first()
+        val restoredContributions = db.savingsGoalDao().getAllContributions().first()
+
+        assertEquals(1, restoredGoals.size)
+        assertEquals("Dashain Vacation", restoredGoals[0].name)
+        assertEquals(10000000L, restoredGoals[0].targetAmountPaisa)
+        assertEquals(4000000L, restoredGoals[0].savedAmountPaisa)
+        assertEquals("Trip to Pokhara", restoredGoals[0].notes)
+        assertFalse(restoredGoals[0].isCompleted)
+
+        assertEquals(1, restoredContributions.size)
+        assertEquals(4000000L, restoredContributions[0].amountPaisa)
+        assertEquals("First deposit", restoredContributions[0].notes)
+    }
 }
+
 
