@@ -95,3 +95,20 @@ Accuracy targets on the fixture corpus: 99% per field for screenshots, 95% for c
 1. Verify min SDK 26 against real target phones.
 2. Decide on the Devanagari recognizer after testing samples.
 3. Write the parser specification from 5 or more redacted eSewa receipts.
+
+## 10. Flexible ORM & Layout-Aware Extraction Architecture (v2)
+
+### 10.1 Flexible Room Schema Evolution
+To support diverse payment channels and statement sources without frequent schema churn:
+- `paymentSource`: String enum (`CASH`, `ESEWA`, `KHALTI`, `BANK_NABIL`, `BANK_NIC_ASIA`, etc.) defaulting to `CASH`.
+- `sourceTemplateId`: String identifying the layout format used (e.g., `esewa_slip_v2`, `khalti_wallet_v1`, `fonepay_qr_v1`, `nabil_sms_v1`).
+- `extraMetadataJson`: Nullable JSON string for auxiliary non-indexed fields (e.g., PAN/VAT number, counterparty bank, trace reference).
+- Preserves all invariants: `amountPaisa` remains strictly `Long`, dates remain UTC epoch milliseconds.
+
+### 10.2 Layout-Aware Template Extraction Engine
+Instead of rigid global regexes:
+- **Anchor Detection**: Scans OCR blocks for unique anchor signatures (e.g. `["Transaction Code", "eSewa ID"]`, `["Khalti", "Txn ID"]`, `["Fonepay", "Trace ID"]`, `["A/C debited", "NABIL"]`).
+- **Spatial Extraction**: Uses ML Kit bounding boxes (`Rect`) to extract values relative to anchor positions (e.g. amount token directly below `"Total NPR"`).
+- **Template Registry**: Local definition registry of known templates with anchor coordinates and field matching heuristics.
+- **On-Device Layout Memory**: When a user corrects or validates an unparsed field on the Confirm screen, the engine records the token offset relative to the nearest anchor to refine confidence for subsequent receipts matching that `sourceTemplateId`.
+- **On-Device SMS Parser**: Strictly local `BroadcastReceiver` matching bank debit SMS templates with zero internet permission, prompting user to confirm adding the transaction.
