@@ -57,7 +57,7 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 ## 8. v2
 
 - **Flexible ORM & Layout-Aware Extraction Engine**: Spatial anchor-matching engine to parse and remember varied statement/receipt layouts for digital wallets (eSewa, Khalti) and bank slips (Fonepay, commercial banks).
-- **Payment Source Separation**: Categorize transactions by payment channel (`Cash in Wallet`, `eSewa`, `Khalti`, `Bank Account`) to track physical vs digital balances.
+- **Payment Source & Account Architecture**: Model explicit `AccountEntity` (Cash, eSewa, Khalti, Bank accounts) to track balances accurately and prepare for v3 reconciliation.
 - **On-Device Bank SMS Expense Detection**: Optional local `RECEIVE_SMS` receiver (zero internet) parsing debit SMS from Nepali banks and prompting user confirmation.
 - **Spending Reports & Deep Analytics**: Category breakdown charts, month-over-month trend analysis, day-of-week spend patterns, and printable offline PDF monthly statements.
 - **Udhar (Credit/Debt) Ledger**: Track borrowed and lent money with contact linking, due dates, and partial settlement logs.
@@ -67,14 +67,24 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 - **Launcher Widgets & Shortcuts**: Home screen quick-add widget and Android App Shortcuts.
 - **Biometric Security Lock**: Fingerprint and Face Unlock via Android `BiometricPrompt`.
 
-## 9. Data accuracy requirements
+## 9. v3
+
+- **Account Reconciliation**: Set opening balance, reconcile Kharcha records against actual bank/wallet/cash balances, and investigate discrepancies.
+- **Offline Statement Import & Matching**: Local CSV statement import with customizable column mappings, duplicate detection, and explicit user-confirmed merge.
+- **Split Transactions**: Divide a single receipt/payment across multiple categories with strict validation (`sum(splits) == parent`).
+- **Explainable Spending Insights**: Transparent, deterministic local financial observations without black-box AI.
+- **Personal Categorization Rules**: Configurable deterministic text/merchant rules for category suggestions without silent auto-updates.
+- **Encrypted & Verifiable Backups**: Passphrase-protected AES-GCM backup archives with integrity validation and dry-run recovery check.
+- **Festival & Occasion Planning**: Tailored seasonal budgeting for Dashain, Tihar, travel home, and school admissions.
+
+## 10. Data accuracy requirements
 
 - Money is stored as an integer number of paisa. No floating point.
 - No scanned entry is saved without the user confirming it.
 - A failed validation check blocks one-tap confirm and highlights the field.
 - Duplicate transaction IDs warn the user. They are never merged automatically.
 
-## 10. Success metrics
+## 11. Success metrics
 
 - Screenshot scan field accuracy: 99% target on the fixture corpus.
 - Camera scan field accuracy: 95% target.
@@ -82,7 +92,7 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 - Restore from backup works on a clean install, checked by an automated test.
 - Time from share to saved entry: under 10 seconds on a clean parse.
 
-## 11. Risks
+## 12. Risks
 
 | Risk | Mitigation |
 |------|------------|
@@ -91,7 +101,7 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 | Data loss again | Backup ships before OCR. Git from day one |
 | Wrong Bikram Sambat dates | Own lookup table with unit tests against known dates |
 
-## 12. Open questions
+## 13. Open questions
 
 - Exact eSewa receipt fields and layout (needs 5 redacted text samples).
 - Whether receipts contain Devanagari text.
