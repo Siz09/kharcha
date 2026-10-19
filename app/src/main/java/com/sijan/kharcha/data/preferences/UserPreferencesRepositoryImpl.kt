@@ -32,6 +32,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val AUTO_BACKUP_FOLDER_URI = stringPreferencesKey("auto_backup_folder_uri")
         val LAST_BACKUP_TIMESTAMP = longPreferencesKey("last_backup_timestamp")
         val ROLLOVER_ENABLED = booleanPreferencesKey("rollover_enabled")
+        val SMS_DETECTION_ENABLED = booleanPreferencesKey("sms_detection_enabled")
     }
 
     override val preferences: Flow<UserPreferences> = context.userDataStore.data
@@ -54,13 +55,15 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             val autoBackupFolderUri = prefs[PreferencesKeys.AUTO_BACKUP_FOLDER_URI]
             val lastBackupTimestamp = prefs[PreferencesKeys.LAST_BACKUP_TIMESTAMP]
             val rolloverEnabled = prefs[PreferencesKeys.ROLLOVER_ENABLED] ?: false
+            val smsDetectionEnabled = prefs[PreferencesKeys.SMS_DETECTION_ENABLED] ?: true
 
             UserPreferences(
                 theme = theme,
                 autoBackupEnabled = autoBackupEnabled,
                 autoBackupFolderUri = autoBackupFolderUri,
                 lastBackupTimestamp = lastBackupTimestamp,
-                rolloverEnabled = rolloverEnabled
+                rolloverEnabled = rolloverEnabled,
+                smsDetectionEnabled = smsDetectionEnabled
             )
         }
 
@@ -95,6 +98,12 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setRolloverEnabled(enabled: Boolean) {
         context.userDataStore.edit { prefs ->
             prefs[PreferencesKeys.ROLLOVER_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun setSmsDetectionEnabled(enabled: Boolean) {
+        context.userDataStore.edit { prefs ->
+            prefs[PreferencesKeys.SMS_DETECTION_ENABLED] = enabled
         }
     }
 }

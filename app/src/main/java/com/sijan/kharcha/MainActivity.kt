@@ -32,6 +32,20 @@ class MainActivity : ComponentActivity() {
             IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
         } else null
 
+        val initialSmsTransaction = if (intent?.hasExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_AMOUNT_PAISA) == true) {
+            val amount = intent.getLongExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_AMOUNT_PAISA, 0L)
+            if (amount > 0L) {
+                com.sijan.kharcha.domain.model.SmsPrefillData(
+                    amountPaisa = amount,
+                    note = intent.getStringExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_NOTE).orEmpty(),
+                    type = intent.getStringExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_TYPE) ?: "EXPENSE",
+                    date = intent.getLongExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_DATE, System.currentTimeMillis()),
+                    transactionId = intent.getStringExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_TXN_ID),
+                    source = intent.getStringExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_SOURCE) ?: "sms:bank"
+                )
+            } else null
+        } else null
+
         setContent {
             val prefs by preferencesRepository.preferences.collectAsStateWithLifecycle(
                 initialValue = UserPreferences()
@@ -44,7 +58,10 @@ class MainActivity : ComponentActivity() {
             }
 
             KharchaTheme(darkTheme = darkTheme) {
-                KharchaApp(initialImageUri = initialImageUri)
+                KharchaApp(
+                    initialImageUri = initialImageUri,
+                    initialSmsPrefill = initialSmsTransaction
+                )
             }
         }
     }

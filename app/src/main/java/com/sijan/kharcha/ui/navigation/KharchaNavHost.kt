@@ -79,7 +79,41 @@ fun KharchaNavHost(
                 onNavigateBack = { navController.popBackStack() }
             )
         }
-        composable(Screen.AddEntry.route) {
+        composable(
+            route = Screen.AddEntry.route,
+            arguments = listOf(
+                navArgument("prefillAmountPaisa") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("prefillNote") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("prefillType") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("prefillDate") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("prefillTxnId") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+                navArgument("prefillSource") {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                }
+            )
+        ) {
             AddEditEntryScreen(
                 onNavigateBack = { navController.popBackStack() }
             )

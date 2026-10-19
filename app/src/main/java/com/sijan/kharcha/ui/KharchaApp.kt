@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 fun KharchaApp(
     modifier: Modifier = Modifier,
     initialImageUri: Uri? = null,
+    initialSmsPrefill: com.sijan.kharcha.domain.model.SmsPrefillData? = null,
     onEntryClick: (Long) -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -88,6 +89,22 @@ fun KharchaApp(
     LaunchedEffect(initialImageUri) {
         if (initialImageUri != null) {
             navController.navigate(Screen.ConfirmScan.createRoute(initialImageUri.toString()))
+        }
+    }
+
+    // Handle initial SMS transaction prefill
+    LaunchedEffect(initialSmsPrefill) {
+        if (initialSmsPrefill != null) {
+            navController.navigate(
+                Screen.AddEntry.createRoute(
+                    amountPaisa = initialSmsPrefill.amountPaisa,
+                    note = initialSmsPrefill.note,
+                    type = initialSmsPrefill.type,
+                    date = initialSmsPrefill.date,
+                    txnId = initialSmsPrefill.transactionId,
+                    source = initialSmsPrefill.source
+                )
+            )
         }
     }
 

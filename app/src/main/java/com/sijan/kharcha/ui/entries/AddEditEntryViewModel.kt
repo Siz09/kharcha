@@ -38,12 +38,41 @@ class AddEditEntryViewModel @Inject constructor(
     private var existingEntry: LedgerEntry? = null
 
     init {
-        val entryIdArg: Long? = savedStateHandle.get<Long>("entryId")
-            ?: savedStateHandle.get<String>("entryId")?.toLongOrNull()
+        val parseLongArg: (String) -> Long? = { key ->
+            when (val raw = savedStateHandle.get<Any>(key)) {
+                is Long -> raw
+                is Number -> raw.toLong()
+                is String -> raw.toLongOrNull()
+                else -> null
+            }
+        }
+        val entryIdArg: Long? = parseLongArg("entryId")
+        val prefillAmountPaisa: Long? = parseLongArg("prefillAmountPaisa")
+        val prefillNote: String? = savedStateHandle.get<String>("prefillNote")
+        val prefillTypeStr: String? = savedStateHandle.get<String>("prefillType")
+        val prefillDate: Long? = parseLongArg("prefillDate")
+        val prefillTxnId: String? = savedStateHandle.get<String>("prefillTxnId")
 
         if (entryIdArg != null && entryIdArg > 0L) {
             _uiState.update { it.copy(isEditMode = true, entryId = entryIdArg, isLoading = true) }
             loadEntry(entryIdArg)
+        } else if (prefillAmountPaisa != null && prefillAmountPaisa > 0L) {
+            val prefillType = if (prefillTypeStr == EntryType.INCOME.name) EntryType.INCOME else EntryType.EXPENSE
+            val rupees = prefillAmountPaisa / 100
+            val remPaisa = prefillAmountPaisa % 100
+            val formattedAmount = if (remPaisa == 0L) rupees.toString() else String.format(Locale.US, "%d.%02d", rupees, remPaisa)
+
+            _uiState.update {
+                it.copy(
+                    type = prefillType,
+                    amountText = formattedAmount,
+                    amountStatus = ValidationStatus.VALID,
+                    note = prefillNote ?: "",
+                    dateEpochMillis = prefillDate ?: System.currentTimeMillis(),
+                    transactionId = prefillTxnId ?: ""
+                )
+            }
+            loadCategoriesForType(prefillType)
         } else {
             loadCategoriesForType(EntryType.EXPENSE)
         }

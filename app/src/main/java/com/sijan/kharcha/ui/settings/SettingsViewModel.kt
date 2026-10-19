@@ -54,6 +54,7 @@ class SettingsViewModel @Inject constructor(
             autoBackupFolderUri = prefs.autoBackupFolderUri,
             lastBackupTimestamp = prefs.lastBackupTimestamp,
             rolloverEnabled = prefs.rolloverEnabled,
+            smsDetectionEnabled = prefs.smsDetectionEnabled,
             pendingRestoreSummary = summary,
             isRestoreDialogOpen = isRestoreOpen
         )
@@ -62,6 +63,10 @@ class SettingsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = SettingsUiState()
     )
+
+    fun setSmsDetectionEnabled(enabled: Boolean): Job = viewModelScope.launch {
+        userPreferencesRepository.setSmsDetectionEnabled(enabled)
+    }
 
     fun setTheme(theme: AppTheme): Job = viewModelScope.launch {
         userPreferencesRepository.setTheme(theme)

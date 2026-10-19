@@ -11,6 +11,7 @@ data class SettingsUiState(
     val pendingRestoreSummary: BackupSummary? = null,
     val isRestoreDialogOpen: Boolean = false,
     val rolloverEnabled: Boolean = false,
+    val smsDetectionEnabled: Boolean = true,
     val appVersion: String = "1.0.0",
     val isLoading: Boolean = false
 )

@@ -203,4 +203,28 @@ class AddEditEntryViewModelTest {
         val deleted = repository.getEntryById(entryId).first()
         assertNull(deleted)
     }
+
+    @Test
+    fun prefillParametersFromSmsIntentInitializeCorrectly() = runTest(testDispatcher) {
+        repository.seedDefaultCategories()
+
+        val handle = SavedStateHandle(
+            mapOf(
+                "prefillAmountPaisa" to "250000",
+                "prefillNote" to "Bhatbhateni Supermarket",
+                "prefillType" to "EXPENSE",
+                "prefillDate" to "1792332000000",
+                "prefillTxnId" to "TXN998811"
+            )
+        )
+        val viewModel = AddEditEntryViewModel(repository, handle)
+        val state = viewModel.uiState.first { it.amountText.isNotEmpty() }
+
+        assertEquals("2500", state.amountText)
+        assertEquals(ValidationStatus.VALID, state.amountStatus)
+        assertEquals("Bhatbhateni Supermarket", state.note)
+        assertEquals(EntryType.EXPENSE, state.type)
+        assertEquals(1792332000000L, state.dateEpochMillis)
+        assertEquals("TXN998811", state.transactionId)
+    }
 }

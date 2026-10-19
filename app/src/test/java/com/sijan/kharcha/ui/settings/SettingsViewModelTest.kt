@@ -188,4 +188,15 @@ class SettingsViewModelTest {
         val state = viewModel.uiState.first()
         assertFalse(state.isRestoreDialogOpen)
     }
+
+    @Test
+    fun smsDetectionToggleUpdatesPreference() = runTest(testDispatcher) {
+        viewModel.setSmsDetectionEnabled(false)
+        val disabledState = viewModel.uiState.first { !it.smsDetectionEnabled }
+        assertFalse(disabledState.smsDetectionEnabled)
+
+        viewModel.setSmsDetectionEnabled(true)
+        val enabledState = viewModel.uiState.first { it.smsDetectionEnabled }
+        assertTrue(enabledState.smsDetectionEnabled)
+    }
 }

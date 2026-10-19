@@ -11,4 +11,5 @@ interface UserPreferencesRepository {
     suspend fun setAutoBackupFolderUri(uri: String?)
     suspend fun setLastBackupTimestamp(timestamp: Long)
     suspend fun setRolloverEnabled(enabled: Boolean)
+    suspend fun setSmsDetectionEnabled(enabled: Boolean)
 }

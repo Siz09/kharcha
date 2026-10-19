@@ -43,10 +43,28 @@ sealed class Screen(
     )
 
     data object AddEntry : Screen(
-        route = "add_entry",
+        route = "add_entry?prefillAmountPaisa={prefillAmountPaisa}&prefillNote={prefillNote}&prefillType={prefillType}&prefillDate={prefillDate}&prefillTxnId={prefillTxnId}&prefillSource={prefillSource}",
         labelRes = R.string.add_entry_title,
         icon = Icons.Default.Add
-    )
+    ) {
+        fun createRoute(
+            amountPaisa: Long? = null,
+            note: String? = null,
+            type: String? = null,
+            date: Long? = null,
+            txnId: String? = null,
+            source: String? = null
+        ): String {
+            val params = mutableListOf<String>()
+            if (amountPaisa != null && amountPaisa > 0) params.add("prefillAmountPaisa=$amountPaisa")
+            if (!note.isNullOrBlank()) params.add("prefillNote=${android.net.Uri.encode(note)}")
+            if (!type.isNullOrBlank()) params.add("prefillType=${android.net.Uri.encode(type)}")
+            if (date != null && date > 0) params.add("prefillDate=$date")
+            if (!txnId.isNullOrBlank()) params.add("prefillTxnId=${android.net.Uri.encode(txnId)}")
+            if (!source.isNullOrBlank()) params.add("prefillSource=${android.net.Uri.encode(source)}")
+            return if (params.isEmpty()) "add_entry" else "add_entry?${params.joinToString("&")}"
+        }
+    }
 
     data object EditEntry : Screen(
         route = "edit_entry/{entryId}",

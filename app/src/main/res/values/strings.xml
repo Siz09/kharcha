@@ -288,4 +288,12 @@
     <string name="account_transfer_to">To</string>
     <string name="field_account">Account</string>
     <string name="cd_accounts_card">Account balances and net worth</string>
+
+    <!-- Bank SMS Detection -->
+    <string name="settings_sms_detection">Detect Bank SMS</string>
+    <string name="settings_sms_detection_desc">Detect bank transaction SMS and prompt to review before saving</string>
+    <string name="notification_sms_channel_name">Bank Transactions</string>
+    <string name="notification_sms_channel_desc">Alerts when a bank transaction SMS is detected</string>
+    <string name="notification_sms_title">Bank Transaction Detected (%s)</string>
+    <string name="notification_sms_body">%1$s — Tap to review and confirm</string>
 </resources>
