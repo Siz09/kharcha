@@ -13,6 +13,7 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -122,7 +123,9 @@ fun KharchaApp(
         floatingActionButton = {
             if (shouldShowFab) {
                 FloatingActionButton(
-                    onClick = { showScanSheet = true }
+                    onClick = { showScanSheet = true },
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 ) {
                     Icon(
                         imageVector = Icons.Default.Add,
