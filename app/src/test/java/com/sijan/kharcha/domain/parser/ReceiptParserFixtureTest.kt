@@ -24,7 +24,14 @@ data class ExpectedFixture(
 class ReceiptParserFixtureTest {
 
     private val json = Json { ignoreUnknownKeys = true }
-    private val parser = EsewaParser()
+    private val pipeline = ReceiptProcessingPipeline(
+        setOf(
+            EsewaParser(),
+            KhaltiParser(),
+            FonepayParser(),
+            GenericReceiptParser()
+        )
+    )
 
     private fun assertFixtureMatches(fixtureName: String) {
         val rawTextStream = javaClass.classLoader?.getResourceAsStream("fixtures/$fixtureName.txt")
@@ -37,9 +44,7 @@ class ReceiptParserFixtureTest {
         val expected = json.decodeFromString<ExpectedFixture>(jsonText)
 
         val ocr = OcrResult(fullText = rawText)
-        assertTrue("Parser must recognize $fixtureName", parser.canParse(ocr))
-
-        val result = parser.parse(ocr)
+        val result = pipeline.process(ocr)
 
         assertEquals(expected.source, result.source)
         assertEquals(expected.expectedAmountPaisa, result.amountPaisa.value)
@@ -79,6 +84,21 @@ class ReceiptParserFixtureTest {
     }
 
     @Test
+    fun evaluateKhaltiSample1FixtureAccuracy() {
+        assertFixtureMatches("khalti_sample_1")
+    }
+
+    @Test
+    fun evaluateFonepaySample1FixtureAccuracy() {
+        assertFixtureMatches("fonepay_sample_1")
+    }
+
+    @Test
+    fun evaluateGenericSample1FixtureAccuracy() {
+        assertFixtureMatches("generic_sample_1")
+    }
+
+    @Test
     fun malformedReceiptDoesNotSilentlySucceed() {
         val corruptedText = """
             eSewa
@@ -88,7 +108,7 @@ class ReceiptParserFixtureTest {
         """.trimIndent()
 
         val ocr = OcrResult(fullText = corruptedText)
-        val result = parser.parse(ocr)
+        val result = pipeline.process(ocr)
 
         // Must reject amount and mark error, never silently 0 or valid
         assertEquals(ValidationStatus.ERROR, result.amountPaisa.status)

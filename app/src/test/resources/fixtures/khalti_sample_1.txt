@@ -1,0 +1,12 @@
+Khalti
+Payment Successful
+Transaction ID
+KHLTI987654321
+Paid To
+Subisu Cablenet
+Total Amount
+Rs. 1,750.00
+Cashback
+Rs. 35.00
+Date & Time
+2026-10-18 14:00:00

@@ -1,5 +1,6 @@
 package com.sijan.kharcha.domain.parser
 
+import com.sijan.kharcha.domain.parser.layout.SpatialLayoutExtractor
 import com.sijan.kharcha.domain.parser.model.OcrResult
 import com.sijan.kharcha.domain.parser.model.ParseResult
 import com.sijan.kharcha.domain.parser.model.ParsedField
@@ -15,18 +16,20 @@ class EsewaParser @Inject constructor() : ReceiptParser {
 
     override fun canParse(ocr: OcrResult): Boolean {
         val lower = ocr.fullText.lowercase(Locale.ROOT)
+        if (lower.contains("khalti") || lower.contains("fonepay")) return false
         return lower.contains("esewa") || (lower.contains("transaction id") && lower.contains("amount"))
     }
 
     override fun parse(ocr: OcrResult): ParseResult {
+        val spatial = SpatialLayoutExtractor(ocr)
         val rawLines = ocr.lines.map { it.trim() }.filter { it.isNotEmpty() }
         val normalizedLines = rawLines.map { Normalizer.toAsciiDigits(it) }
 
-        val amountField = extractAmount(rawLines, normalizedLines)
-        val txnIdField = extractTransactionId(rawLines, normalizedLines)
-        val dateField = extractDate(rawLines, normalizedLines)
-        val merchantField = extractMerchant(rawLines, normalizedLines)
-        val feeField = extractFee(rawLines, normalizedLines)
+        val amountField = extractAmount(spatial, rawLines, normalizedLines)
+        val txnIdField = extractTransactionId(spatial, rawLines, normalizedLines)
+        val dateField = extractDate(spatial, rawLines, normalizedLines)
+        val merchantField = extractMerchant(spatial, rawLines, normalizedLines)
+        val feeField = extractFee(spatial, rawLines, normalizedLines)
 
         return ParseResult(
             source = sourceName,
@@ -40,8 +43,21 @@ class EsewaParser @Inject constructor() : ReceiptParser {
     }
 
     // TODO(parser-spec): Adjust amount keyword heuristics once expanded sample set is available
-    private fun extractAmount(rawLines: List<String>, normalizedLines: List<String>): ParsedField<Long> {
+    private fun extractAmount(
+        spatial: SpatialLayoutExtractor,
+        rawLines: List<String>,
+        normalizedLines: List<String>
+    ): ParsedField<Long> {
         val amountKeyRegex = Regex("(?i).*(total\\s*amount|amount|paid\\s*amount).*")
+        if (spatial.hasBoundingBoxes) {
+            val spatialMatch = spatial.extractField(amountKeyRegex) { candidate ->
+                val clean = Normalizer.toAsciiDigits(candidate)
+                Normalizer.parsePaisa(clean)
+            }
+            if (spatialMatch != null) {
+                return Validator.validateAmount(spatialMatch.first, raw = spatialMatch.second)
+            }
+        }
         for (i in normalizedLines.indices) {
             val line = normalizedLines[i]
             if (amountKeyRegex.matches(line)) {
@@ -75,8 +91,21 @@ class EsewaParser @Inject constructor() : ReceiptParser {
     }
 
     // TODO(parser-spec): Refine transaction ID regex patterns for merchant vs P2P transfers
-    private fun extractTransactionId(rawLines: List<String>, normalizedLines: List<String>): ParsedField<String> {
+    private fun extractTransactionId(
+        spatial: SpatialLayoutExtractor,
+        rawLines: List<String>,
+        normalizedLines: List<String>
+    ): ParsedField<String> {
         val txnKeyRegex = Regex("(?i).*(transaction\\s*id|txn\\s*id|ref\\s*id|transaction\\s*code).*")
+        if (spatial.hasBoundingBoxes) {
+            val spatialMatch = spatial.extractField(txnKeyRegex) { candidate ->
+                val clean = Normalizer.toAsciiDigits(candidate).trim()
+                if (clean.length >= 6) clean else null
+            }
+            if (spatialMatch != null) {
+                return Validator.validateTransactionId(spatialMatch.first, raw = spatialMatch.second)
+            }
+        }
         for (i in normalizedLines.indices) {
             val line = normalizedLines[i]
             if (txnKeyRegex.matches(line)) {
@@ -106,7 +135,11 @@ class EsewaParser @Inject constructor() : ReceiptParser {
     }
 
     // TODO(parser-spec): Add BS date converters in v1.1 if eSewa emits Nepali Sambat
-    private fun extractDate(rawLines: List<String>, normalizedLines: List<String>): ParsedField<Long> {
+    private fun extractDate(
+        spatial: SpatialLayoutExtractor,
+        rawLines: List<String>,
+        normalizedLines: List<String>
+    ): ParsedField<Long> {
         val dateFormats = listOf(
             SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") },
             SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") },
@@ -118,6 +151,15 @@ class EsewaParser @Inject constructor() : ReceiptParser {
         )
 
         val dateKeyRegex = Regex("(?i).*(date\\s*&?\\s*time|date|time).*")
+        if (spatial.hasBoundingBoxes) {
+            val spatialMatch = spatial.extractField(dateKeyRegex) { candidate ->
+                val clean = Normalizer.toAsciiDigits(candidate).trim()
+                parseDateWithFormats(clean, dateFormats)
+            }
+            if (spatialMatch != null) {
+                return Validator.validateDate(spatialMatch.first, raw = spatialMatch.second)
+            }
+        }
         for (i in normalizedLines.indices) {
             val line = normalizedLines[i]
             if (dateKeyRegex.matches(line)) {
@@ -161,8 +203,21 @@ class EsewaParser @Inject constructor() : ReceiptParser {
     }
 
     // TODO(parser-spec): Expand merchant labels (e.g., utility bills, ISP payments)
-    private fun extractMerchant(rawLines: List<String>, normalizedLines: List<String>): ParsedField<String> {
+    private fun extractMerchant(
+        spatial: SpatialLayoutExtractor,
+        rawLines: List<String>,
+        normalizedLines: List<String>
+    ): ParsedField<String> {
         val merchantKeyRegex = Regex("(?i).*(paid\\s*to|recipient|merchant|bill\\s*details|\\bto\\b).*")
+        if (spatial.hasBoundingBoxes) {
+            val spatialMatch = spatial.extractField(merchantKeyRegex) { candidate ->
+                val clean = candidate.trim()
+                if (clean.isNotBlank()) clean else null
+            }
+            if (spatialMatch != null) {
+                return ParsedField(value = spatialMatch.first, raw = spatialMatch.second, status = ValidationStatus.VALID)
+            }
+        }
         for (i in normalizedLines.indices) {
             val line = normalizedLines[i]
             if (merchantKeyRegex.matches(line)) {
@@ -183,8 +238,21 @@ class EsewaParser @Inject constructor() : ReceiptParser {
         return ParsedField(value = "", raw = "", status = ValidationStatus.WARNING)
     }
 
-    private fun extractFee(rawLines: List<String>, normalizedLines: List<String>): ParsedField<Long> {
+    private fun extractFee(
+        spatial: SpatialLayoutExtractor,
+        rawLines: List<String>,
+        normalizedLines: List<String>
+    ): ParsedField<Long> {
         val feeKeyRegex = Regex("(?i).*(service\\s*charge|fee|commission).*")
+        if (spatial.hasBoundingBoxes) {
+            val spatialMatch = spatial.extractField(feeKeyRegex) { candidate ->
+                val clean = Normalizer.toAsciiDigits(candidate).trim()
+                Normalizer.parsePaisa(clean)
+            }
+            if (spatialMatch != null) {
+                return ParsedField(value = spatialMatch.first, raw = spatialMatch.second, status = ValidationStatus.VALID)
+            }
+        }
         for (i in normalizedLines.indices) {
             val line = normalizedLines[i]
             if (feeKeyRegex.matches(line)) {

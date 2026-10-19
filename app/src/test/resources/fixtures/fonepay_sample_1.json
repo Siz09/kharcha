@@ -1,0 +1,8 @@
+{
+  "source": "fonepay",
+  "expectedAmountPaisa": 62000,
+  "expectedDateEpochMillis": 1792341000000,
+  "expectedTransactionId": "FP9988776655",
+  "expectedMerchant": "Himalayan Java Coffee",
+  "expectedFeePaisa": 0
+}

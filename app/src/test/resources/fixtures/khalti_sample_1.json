@@ -1,0 +1,8 @@
+{
+  "source": "khalti",
+  "expectedAmountPaisa": 175000,
+  "expectedDateEpochMillis": 1792332000000,
+  "expectedTransactionId": "KHLTI987654321",
+  "expectedMerchant": "Subisu Cablenet",
+  "expectedFeePaisa": 0
+}

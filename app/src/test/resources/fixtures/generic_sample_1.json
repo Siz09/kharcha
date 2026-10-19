@@ -1,0 +1,8 @@
+{
+  "source": "receipt",
+  "expectedAmountPaisa": 215000,
+  "expectedDateEpochMillis": 1792281600000,
+  "expectedTransactionId": "INV-88992",
+  "expectedMerchant": "Roadhouse Cafe",
+  "expectedFeePaisa": 0
+}
