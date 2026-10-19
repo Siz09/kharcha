@@ -22,11 +22,17 @@ fun AmountText(
     style: TextStyle = MaterialTheme.typography.titleMedium,
     colorOverride: Color? = null
 ) {
-    val formatted = Money.formatPaisa(amountPaisa)
+    val isNegative = amountPaisa < 0
+    val absPaisa = kotlin.math.abs(amountPaisa)
+    val formatted = Money.formatPaisa(absPaisa)
     val (displayText, textColor) = when (type) {
         EntryType.INCOME -> "+$formatted" to IncomeGreen
         EntryType.EXPENSE -> "-$formatted" to ExpenseRed
-        null -> formatted to (colorOverride ?: MaterialTheme.colorScheme.onSurface)
+        null -> {
+            val text = if (isNegative) "-$formatted" else formatted
+            val color = if (isNegative) ExpenseRed else (colorOverride ?: MaterialTheme.colorScheme.onSurface)
+            text to color
+        }
     }
 
     Text(

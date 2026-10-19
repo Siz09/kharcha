@@ -11,11 +11,12 @@ object Money {
      * Example: 15050L -> "Rs. 150.50"
      */
     fun formatPaisa(paisa: Long): String {
-        require(paisa >= 0) { "Money amount in paisa cannot be negative" }
-        val rupees = paisa / 100
-        val remainingPaisa = paisa % 100
+        val isNegative = paisa < 0
+        val absPaisa = kotlin.math.abs(paisa)
+        val rupees = absPaisa / 100
+        val remainingPaisa = absPaisa % 100
         val formattedNumber = String.format(Locale.US, "%,d.%02d", rupees, remainingPaisa)
-        return "$CURRENCY_PREFIX$formattedNumber"
+        return if (isNegative) "-$CURRENCY_PREFIX$formattedNumber" else "$CURRENCY_PREFIX$formattedNumber"
     }
 
     /**

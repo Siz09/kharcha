@@ -24,6 +24,12 @@ class MoneyTest {
     }
 
     @Test
+    fun `formatPaisa formats negative paisa amount`() {
+        assertEquals("-Rs. 150.50", Money.formatPaisa(-15050L))
+        assertEquals("-Rs. 1,000.00", Money.formatPaisa(-100000L))
+    }
+
+    @Test
     fun `parsePaisa parses valid decimal string`() {
         assertEquals(15050L, Money.parsePaisa("150.50"))
         assertEquals(10000L, Money.parsePaisa("100"))
