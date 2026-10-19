@@ -142,3 +142,60 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
     }
 }
 
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `udhars` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `personName` TEXT NOT NULL,
+                `phoneNumber` TEXT,
+                `type` TEXT NOT NULL,
+                `amountPaisa` INTEGER NOT NULL,
+                `settledPaisa` INTEGER NOT NULL,
+                `dueDate` INTEGER,
+                `notes` TEXT NOT NULL,
+                `status` TEXT NOT NULL,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL
+            )
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_udhars_personName` ON `udhars` (`personName`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_udhars_type` ON `udhars` (`type`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_udhars_status` ON `udhars` (`status`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_udhars_dueDate` ON `udhars` (`dueDate`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `udhar_settlements` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `udharId` INTEGER NOT NULL,
+                `amountPaisa` INTEGER NOT NULL,
+                `dateEpochMillis` INTEGER NOT NULL,
+                `notes` TEXT,
+                `createdAt` INTEGER NOT NULL,
+                FOREIGN KEY(`udharId`) REFERENCES `udhars`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_udhar_settlements_udharId` ON `udhar_settlements` (`udharId`)
+        """.trimIndent())
+
+        db.execSQL("""
+            CREATE INDEX IF NOT EXISTS `index_udhar_settlements_dateEpochMillis` ON `udhar_settlements` (`dateEpochMillis`)
+        """.trimIndent())
+    }
+}
+
+

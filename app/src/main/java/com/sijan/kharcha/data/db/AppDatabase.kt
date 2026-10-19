@@ -11,6 +11,7 @@ import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
+import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.AuditLogEntity
 import com.sijan.kharcha.data.db.entity.BillEntity
@@ -19,6 +20,8 @@ import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryFtsEntity
 import com.sijan.kharcha.data.db.entity.RecurringEntryEntity
+import com.sijan.kharcha.data.db.entity.UdharEntity
+import com.sijan.kharcha.data.db.entity.UdharSettlementEntity
 
 @Database(
     entities = [
@@ -29,9 +32,11 @@ import com.sijan.kharcha.data.db.entity.RecurringEntryEntity
         BudgetEntity::class,
         AuditLogEntity::class,
         RecurringEntryEntity::class,
-        AccountEntity::class
+        AccountEntity::class,
+        UdharEntity::class,
+        UdharSettlementEntity::class
     ],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -44,6 +49,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun auditLogDao(): AuditLogDao
     abstract fun recurringEntryDao(): RecurringEntryDao
     abstract fun accountDao(): AccountDao
+    abstract fun udharDao(): UdharDao
 
     companion object {
         const val DATABASE_NAME = "kharcha.db"

@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -71,6 +72,7 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
     onNavigateToEntries: () -> Unit = {},
     onNavigateToCalendar: () -> Unit = {},
+    onNavigateToUdhar: () -> Unit = {},
     onEntryClick: (Long) -> Unit = {}
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -80,6 +82,7 @@ fun HomeScreen(
         modifier = modifier,
         onNavigateToEntries = onNavigateToEntries,
         onNavigateToCalendar = onNavigateToCalendar,
+        onNavigateToUdhar = onNavigateToUdhar,
         onEntryClick = onEntryClick,
         onSelectMonth = viewModel::selectMonth,
         onResetCurrentMonth = viewModel::resetToCurrentMonth
@@ -92,6 +95,7 @@ fun HomeScreenContent(
     modifier: Modifier = Modifier,
     onNavigateToEntries: () -> Unit = {},
     onNavigateToCalendar: () -> Unit = {},
+    onNavigateToUdhar: () -> Unit = {},
     onEntryClick: (Long) -> Unit = {},
     onSelectMonth: (year: Int, month: Int) -> Unit = { _, _ -> },
     onResetCurrentMonth: () -> Unit = {}
@@ -134,12 +138,21 @@ fun HomeScreenContent(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
-                    IconButton(onClick = onNavigateToCalendar) {
-                        Icon(
-                            imageVector = Icons.Default.CalendarToday,
-                            contentDescription = stringResource(R.string.calendar_title),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onNavigateToCalendar) {
+                            Icon(
+                                imageVector = Icons.Default.CalendarToday,
+                                contentDescription = stringResource(R.string.calendar_title),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        IconButton(onClick = onNavigateToUdhar) {
+                            Icon(
+                                imageVector = Icons.Default.Receipt,
+                                contentDescription = stringResource(R.string.udhar_title),
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
                     }
                 }
                 Spacer(modifier = Modifier.height(6.dp))

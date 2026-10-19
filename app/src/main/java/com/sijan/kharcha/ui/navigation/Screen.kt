@@ -100,6 +100,12 @@ sealed class Screen(
         icon = Icons.Default.Receipt
     )
 
+    data object Udhar : Screen(
+        route = "udhar",
+        labelRes = R.string.udhar_title,
+        icon = Icons.Default.Receipt
+    )
+
     companion object {
         val bottomNavItems: List<Screen>
             get() = listOf(Home, Entries, Summary, Settings)

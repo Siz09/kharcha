@@ -42,6 +42,7 @@ fun KharchaNavHost(
             HomeScreen(
                 onNavigateToEntries = onNavigateToEntries,
                 onNavigateToCalendar = { navController.navigate(Screen.Calendar.route) },
+                onNavigateToUdhar = { navController.navigate(Screen.Udhar.route) },
                 onEntryClick = onEntryClick
             )
         }
@@ -66,11 +67,19 @@ fun KharchaNavHost(
                 },
                 onNavigateToBills = {
                     navController.navigate(Screen.Bills.route)
+                },
+                onNavigateToUdhar = {
+                    navController.navigate(Screen.Udhar.route)
                 }
             )
         }
         composable(Screen.Bills.route) {
             com.sijan.kharcha.ui.bills.BillsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.Udhar.route) {
+            com.sijan.kharcha.ui.udhar.UdharScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

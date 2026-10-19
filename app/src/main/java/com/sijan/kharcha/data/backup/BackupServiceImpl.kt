@@ -6,12 +6,17 @@ import com.sijan.kharcha.data.backup.model.BackupCategory
 import com.sijan.kharcha.data.backup.model.BackupEntry
 import com.sijan.kharcha.data.backup.model.BackupPayload
 import com.sijan.kharcha.data.db.AppDatabase
+import com.sijan.kharcha.data.backup.model.BackupUdhar
+import com.sijan.kharcha.data.backup.model.BackupUdharSettlement
 import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
+import com.sijan.kharcha.data.db.entity.UdharEntity
+import com.sijan.kharcha.data.db.entity.UdharSettlementEntity
 import com.sijan.kharcha.domain.model.AccountType
 import kotlinx.coroutines.flow.first
 import java.io.InputStream
@@ -29,6 +34,7 @@ class BackupServiceImpl @Inject constructor(
     private val categoryDao: CategoryDao,
     private val ledgerDao: LedgerDao,
     private val accountDao: AccountDao,
+    private val udharDao: UdharDao,
     private val serializer: JsonBackupSerializer
 ) : BackupService {
 
@@ -74,12 +80,41 @@ class BackupServiceImpl @Inject constructor(
             )
         }
 
+        val udhars = udharDao.getAllUdhars().first().map {
+            BackupUdhar(
+                id = it.id,
+                personName = it.personName,
+                phoneNumber = it.phoneNumber,
+                type = it.toDomain().type,
+                amountPaisa = it.amountPaisa,
+                settledPaisa = it.settledPaisa,
+                dueDate = it.dueDate,
+                notes = it.notes,
+                status = it.toDomain().status,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt
+            )
+        }
+
+        val settlements = udharDao.getAllSettlements().first().map {
+            BackupUdharSettlement(
+                id = it.id,
+                udharId = it.udharId,
+                amountPaisa = it.amountPaisa,
+                dateEpochMillis = it.dateEpochMillis,
+                notes = it.notes,
+                createdAt = it.createdAt
+            )
+        }
+
         val payload = BackupPayload(
             schemaVersion = JsonBackupSerializer.CURRENT_SCHEMA_VERSION,
             exportedAt = System.currentTimeMillis(),
             categories = categories,
             entries = entries,
-            accounts = accounts
+            accounts = accounts,
+            udhars = udhars,
+            udharSettlements = settlements
         )
 
         serializer.serialize(payload, outputStream).getOrThrow()
@@ -95,6 +130,8 @@ class BackupServiceImpl @Inject constructor(
             ledgerDao.deleteAllEntries()
             categoryDao.deleteAllCategories()
             accountDao.deleteAllAccounts()
+            udharDao.deleteAllSettlements()
+            udharDao.deleteAllUdhars()
 
             for (category in payload.categories) {
                 categoryDao.insertCategory(
@@ -155,6 +192,37 @@ class BackupServiceImpl @Inject constructor(
                         transactionId = entry.transactionId,
                         createdAt = entry.createdAt,
                         updatedAt = entry.updatedAt
+                    )
+                )
+            }
+
+            for (udhar in payload.udhars) {
+                udharDao.insertUdhar(
+                    UdharEntity(
+                        id = udhar.id,
+                        personName = udhar.personName,
+                        phoneNumber = udhar.phoneNumber,
+                        type = udhar.type.name,
+                        amountPaisa = udhar.amountPaisa,
+                        settledPaisa = udhar.settledPaisa,
+                        dueDate = udhar.dueDate,
+                        notes = udhar.notes,
+                        status = udhar.status.name,
+                        createdAt = udhar.createdAt,
+                        updatedAt = udhar.updatedAt
+                    )
+                )
+            }
+
+            for (settlement in payload.udharSettlements) {
+                udharDao.insertSettlement(
+                    UdharSettlementEntity(
+                        id = settlement.id,
+                        udharId = settlement.udharId,
+                        amountPaisa = settlement.amountPaisa,
+                        dateEpochMillis = settlement.dateEpochMillis,
+                        notes = settlement.notes,
+                        createdAt = settlement.createdAt
                     )
                 )
             }

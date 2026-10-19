@@ -42,7 +42,7 @@ class BackupRoundtripTest {
                 )
             )
         }
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), JsonBackupSerializer())
+        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), JsonBackupSerializer())
     }
 
     @After
@@ -117,4 +117,61 @@ class BackupRoundtripTest {
         assertEquals(initialCategoryCount, db.categoryDao().getAllCategories().first().size)
         assertEquals(initialEntryCount, db.ledgerDao().getAllEntries().first().size)
     }
+
+    @Test
+    fun roundtripBackupRestoresUdharsAndSettlements() = runBlocking {
+        val udharId = db.udharDao().insertUdhar(
+            com.sijan.kharcha.data.db.entity.UdharEntity(
+                personName = "Bikash Thapa",
+                phoneNumber = "9800000000",
+                type = "LENT",
+                amountPaisa = 100000L,
+                settledPaisa = 30000L,
+                dueDate = 1800000000000L,
+                notes = "Personal loan",
+                status = "PARTIAL",
+                createdAt = 1000L,
+                updatedAt = 1000L
+            )
+        )
+
+        db.udharDao().insertSettlement(
+            com.sijan.kharcha.data.db.entity.UdharSettlementEntity(
+                udharId = udharId,
+                amountPaisa = 30000L,
+                dateEpochMillis = 2000L,
+                notes = "First payment",
+                createdAt = 2000L
+            )
+        )
+
+        val outStream = ByteArrayOutputStream()
+        val exportResult = backupService.exportBackup(outStream)
+        assertTrue(exportResult.isSuccess)
+
+        // Clear DB
+        db.udharDao().deleteAllSettlements()
+        db.udharDao().deleteAllUdhars()
+        assertEquals(0, db.udharDao().getAllUdhars().first().size)
+        assertEquals(0, db.udharDao().getAllSettlements().first().size)
+
+        // Restore
+        val inStream = ByteArrayInputStream(outStream.toByteArray())
+        val restoreResult = backupService.restoreBackup(inStream)
+        assertTrue(restoreResult.isSuccess)
+
+        val restoredUdhars = db.udharDao().getAllUdhars().first()
+        val restoredSettlements = db.udharDao().getAllSettlements().first()
+
+        assertEquals(1, restoredUdhars.size)
+        assertEquals("Bikash Thapa", restoredUdhars[0].personName)
+        assertEquals(100000L, restoredUdhars[0].amountPaisa)
+        assertEquals(30000L, restoredUdhars[0].settledPaisa)
+        assertEquals("PARTIAL", restoredUdhars[0].status)
+
+        assertEquals(1, restoredSettlements.size)
+        assertEquals(30000L, restoredSettlements[0].amountPaisa)
+        assertEquals("First payment", restoredSettlements[0].notes)
+    }
 }
+

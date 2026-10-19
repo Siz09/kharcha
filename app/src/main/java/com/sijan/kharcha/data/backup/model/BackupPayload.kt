@@ -8,5 +8,7 @@ data class BackupPayload(
     val exportedAt: Long,
     val categories: List<BackupCategory>,
     val entries: List<BackupEntry>,
-    val accounts: List<BackupAccount> = emptyList()
+    val accounts: List<BackupAccount> = emptyList(),
+    val udhars: List<BackupUdhar> = emptyList(),
+    val udharSettlements: List<BackupUdharSettlement> = emptyList()
 )
