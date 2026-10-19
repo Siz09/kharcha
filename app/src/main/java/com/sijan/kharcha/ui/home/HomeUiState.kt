@@ -7,10 +7,19 @@ import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
 
 @Immutable
+data class HomeCategoryExpense(
+    val categoryId: Long,
+    val categoryName: String,
+    val amountPaisa: Long,
+    val percentage: Float
+)
+
+@Immutable
 data class HomeUiState(
     val monthlySummary: MonthlySummary = MonthlySummary(),
     val recentEntries: List<LedgerEntry> = emptyList(),
     val categoriesMap: Map<Long, Category> = emptyMap(),
+    val categoryExpenses: List<HomeCategoryExpense> = emptyList(),
     val selectedYear: Int = 0,
     val selectedMonth: Int = 0,
     val selectedMonthLabel: String = "",

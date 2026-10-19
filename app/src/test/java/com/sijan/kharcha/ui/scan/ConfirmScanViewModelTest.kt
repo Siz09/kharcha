@@ -67,7 +67,14 @@ class ConfirmScanViewModelTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao(), db.billDao())
+        repository = LedgerRepositoryImpl(
+            db.categoryDao(),
+            db.ledgerDao(),
+            db.billDao(),
+            db.budgetDao(),
+            db.auditLogDao(),
+            db.recurringEntryDao()
+        )
         storage = ReceiptStorageImpl(context)
         pipeline = ReceiptProcessingPipeline(setOf(EsewaParser()))
     }

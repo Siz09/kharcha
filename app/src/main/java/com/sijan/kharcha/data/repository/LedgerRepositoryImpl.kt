@@ -1,16 +1,24 @@
 package com.sijan.kharcha.data.repository
 
+import com.sijan.kharcha.data.db.dao.AuditLogDao
 import com.sijan.kharcha.data.db.dao.BillDao
+import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.dao.RecurringEntryDao
+import com.sijan.kharcha.data.db.entity.AuditLogEntity
 import com.sijan.kharcha.data.db.entity.BillEntity
+import com.sijan.kharcha.data.db.entity.BudgetEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
+import com.sijan.kharcha.data.db.entity.RecurringEntryEntity
 import com.sijan.kharcha.domain.model.Bill
+import com.sijan.kharcha.domain.model.Budget
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
+import com.sijan.kharcha.domain.model.RecurringEntry
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
@@ -25,7 +33,10 @@ import javax.inject.Singleton
 class LedgerRepositoryImpl @Inject constructor(
     private val categoryDao: CategoryDao,
     private val ledgerDao: LedgerDao,
-    private val billDao: BillDao
+    private val billDao: BillDao,
+    private val budgetDao: BudgetDao,
+    private val auditLogDao: AuditLogDao,
+    private val recurringEntryDao: RecurringEntryDao
 ) : LedgerRepository {
 
     override fun getAllCategories(): Flow<List<Category>> {
@@ -38,7 +49,14 @@ class LedgerRepositoryImpl @Inject constructor(
 
     override suspend fun insertCategory(name: String, type: EntryType): Result<Long> = runCatching {
         require(name.isNotBlank()) { "Category name cannot be blank" }
-        categoryDao.insertCategory(CategoryEntity(name = name.trim(), type = type))
+        val id = categoryDao.insertCategory(CategoryEntity(name = name.trim(), type = type))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "CATEGORY",
+            entityId = id,
+            action = "INSERT",
+            details = "Added $type category: $name"
+        ))
+        id
     }
 
     override suspend fun renameCategory(id: Long, newName: String): Result<Unit> = runCatching {
@@ -46,6 +64,12 @@ class LedgerRepositoryImpl @Inject constructor(
         val existing = categoryDao.getCategoryById(id)
             ?: throw NoSuchElementException("Category with ID $id not found")
         categoryDao.updateCategory(existing.copy(name = newName.trim()))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "CATEGORY",
+            entityId = id,
+            action = "UPDATE",
+            details = "Renamed category ${existing.name} to $newName"
+        ))
     }
 
     override suspend fun deleteCategory(id: Long): Result<Unit> = runCatching {
@@ -56,6 +80,12 @@ class LedgerRepositoryImpl @Inject constructor(
         val category = categoryDao.getCategoryById(id)
             ?: throw NoSuchElementException("Category with ID $id not found")
         categoryDao.deleteCategory(category)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "CATEGORY",
+            entityId = id,
+            action = "DELETE",
+            details = "Deleted category ${category.name}"
+        ))
     }
 
     override suspend fun seedDefaultCategories() {
@@ -120,7 +150,14 @@ class LedgerRepositoryImpl @Inject constructor(
             createdAt = if (entry.createdAt == 0L) now else entry.createdAt,
             updatedAt = now
         )
-        ledgerDao.insertEntry(LedgerEntryEntity.fromDomain(toInsert))
+        val id = ledgerDao.insertEntry(LedgerEntryEntity.fromDomain(toInsert))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ENTRY",
+            entityId = id,
+            action = "INSERT",
+            details = "Added ${entry.type} entry: ${entry.amountPaisa} paisa"
+        ))
+        id
     }
 
     override suspend fun updateEntry(entry: LedgerEntry): Result<Unit> = runCatching {
@@ -128,6 +165,12 @@ class LedgerRepositoryImpl @Inject constructor(
         require(entry.amountPaisa > 0) { "Amount must be greater than zero" }
         val toUpdate = entry.copy(updatedAt = System.currentTimeMillis())
         ledgerDao.updateEntry(LedgerEntryEntity.fromDomain(toUpdate))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ENTRY",
+            entityId = entry.id,
+            action = "UPDATE",
+            details = "Updated entry ${entry.id}: ${entry.amountPaisa} paisa"
+        ))
     }
 
     override suspend fun deleteEntry(id: Long): Result<Unit> = runCatching {
@@ -140,6 +183,12 @@ class LedgerRepositoryImpl @Inject constructor(
         }
 
         ledgerDao.deleteEntry(entity)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "ENTRY",
+            entityId = id,
+            action = "DELETE",
+            details = "Deleted entry $id"
+        ))
     }
 
     override suspend fun checkDuplicateTransaction(transactionId: String): List<LedgerEntry> {
@@ -196,7 +245,14 @@ class LedgerRepositoryImpl @Inject constructor(
         require(bill.name.isNotBlank()) { "Bill name cannot be blank" }
         require(bill.amountPaisa > 0L) { "Bill amount must be positive" }
         require(bill.dueDayOfMonth in 1..31) { "Due day must be between 1 and 31" }
-        billDao.insertBill(BillEntity.fromDomain(bill))
+        val id = billDao.insertBill(BillEntity.fromDomain(bill))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "BILL",
+            entityId = id,
+            action = "INSERT",
+            details = "Added bill ${bill.name} for ${bill.amountPaisa} paisa"
+        ))
+        id
     }
 
     override suspend fun updateBill(bill: Bill): Result<Unit> = runCatching {
@@ -204,11 +260,23 @@ class LedgerRepositoryImpl @Inject constructor(
         require(bill.amountPaisa > 0L) { "Bill amount must be positive" }
         require(bill.dueDayOfMonth in 1..31) { "Due day must be between 1 and 31" }
         billDao.updateBill(BillEntity.fromDomain(bill))
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "BILL",
+            entityId = bill.id,
+            action = "UPDATE",
+            details = "Updated bill ${bill.name}"
+        ))
     }
 
     override suspend fun deleteBill(id: Long): Result<Unit> = runCatching {
         val entity = billDao.getBillById(id).first() ?: return@runCatching
         billDao.deleteBill(entity)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "BILL",
+            entityId = id,
+            action = "DELETE",
+            details = "Deleted bill ${entity.name}"
+        ))
     }
 
     override suspend fun payBill(billId: Long, note: String?): Result<LedgerEntry> = runCatching {
@@ -232,6 +300,118 @@ class LedgerRepositoryImpl @Inject constructor(
         val updatedBill = billEntity.copy(lastPaidDate = now, updatedAt = now)
         billDao.updateBill(updatedBill)
 
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "BILL",
+            entityId = billId,
+            action = "PAY",
+            details = "Paid bill ${billEntity.name}: recorded entry $entryId"
+        ))
+
         entry.copy(id = entryId)
+    }
+
+    override fun getBudgetsForMonth(monthYear: String): Flow<List<Budget>> {
+        return budgetDao.getBudgetsForMonth(monthYear).map { list -> list.map { it.toDomain() } }
+    }
+
+    override fun getBudget(categoryId: Long, monthYear: String): Flow<Budget?> {
+        return budgetDao.observeBudget(categoryId, monthYear).map { it?.toDomain() }
+    }
+
+    override suspend fun saveBudget(categoryId: Long, monthYear: String, limitPaisa: Long): Result<Long> = runCatching {
+        require(limitPaisa > 0) { "Budget limit must be greater than zero" }
+        val existing = budgetDao.getBudget(categoryId, monthYear)
+        val entity = BudgetEntity(
+            id = existing?.id ?: 0L,
+            categoryId = categoryId,
+            monthYear = monthYear,
+            limitPaisa = limitPaisa,
+            createdAt = existing?.createdAt ?: System.currentTimeMillis(),
+            updatedAt = System.currentTimeMillis()
+        )
+        val id = budgetDao.upsertBudget(entity)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "BUDGET",
+            entityId = id,
+            action = if (existing == null) "INSERT" else "UPDATE",
+            details = "Budget for cat $categoryId in $monthYear: $limitPaisa paisa"
+        ))
+        id
+    }
+
+    override suspend fun deleteBudget(categoryId: Long, monthYear: String): Result<Unit> = runCatching {
+        budgetDao.deleteBudget(categoryId, monthYear)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "BUDGET",
+            entityId = categoryId,
+            action = "DELETE",
+            details = "Deleted budget for cat $categoryId in $monthYear"
+        ))
+    }
+
+    override fun getAllRecurring(): Flow<List<RecurringEntry>> {
+        return recurringEntryDao.getAllRecurring().map { list -> list.map { it.toDomain() } }
+    }
+
+    override suspend fun saveRecurring(entry: RecurringEntry): Result<Long> = runCatching {
+        require(entry.amountPaisa > 0) { "Amount must be greater than zero" }
+        require(entry.categoryId > 0) { "Category must be specified" }
+        val now = System.currentTimeMillis()
+        val entity = RecurringEntryEntity(
+            id = entry.id,
+            amountPaisa = entry.amountPaisa,
+            type = entry.type,
+            categoryId = entry.categoryId,
+            note = entry.note,
+            frequency = entry.frequency,
+            nextDueDate = entry.nextDueDate,
+            isActive = entry.isActive,
+            createdAt = if (entry.createdAt == 0L) now else entry.createdAt,
+            updatedAt = now
+        )
+        val id = recurringEntryDao.insertRecurring(entity)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "RECURRING",
+            entityId = id,
+            action = if (entry.id == 0L) "INSERT" else "UPDATE",
+            details = "Recurring entry template ${entry.frequency} ${entry.amountPaisa} paisa"
+        ))
+        id
+    }
+
+    override suspend fun deleteRecurring(id: Long): Result<Unit> = runCatching {
+        recurringEntryDao.deleteRecurring(id)
+        auditLogDao.insertLog(AuditLogEntity(
+            entityType = "RECURRING",
+            entityId = id,
+            action = "DELETE",
+            details = "Deleted recurring template $id"
+        ))
+    }
+
+    private fun BudgetEntity.toDomain(): Budget {
+        return Budget(
+            id = id,
+            categoryId = categoryId,
+            monthYear = monthYear,
+            limitPaisa = limitPaisa,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
+    }
+
+    private fun RecurringEntryEntity.toDomain(): RecurringEntry {
+        return RecurringEntry(
+            id = id,
+            amountPaisa = amountPaisa,
+            type = type,
+            categoryId = categoryId,
+            note = note,
+            frequency = frequency,
+            nextDueDate = nextDueDate,
+            isActive = isActive,
+            createdAt = createdAt,
+            updatedAt = updatedAt
+        )
     }
 }

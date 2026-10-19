@@ -1,10 +1,12 @@
 package com.sijan.kharcha.data.repository
 
 import com.sijan.kharcha.domain.model.Bill
+import com.sijan.kharcha.domain.model.Budget
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
+import com.sijan.kharcha.domain.model.RecurringEntry
 import kotlinx.coroutines.flow.Flow
 
 interface LedgerRepository {
@@ -38,4 +40,13 @@ interface LedgerRepository {
     suspend fun updateBill(bill: Bill): Result<Unit>
     suspend fun deleteBill(id: Long): Result<Unit>
     suspend fun payBill(billId: Long, note: String? = null): Result<LedgerEntry>
+
+    fun getBudgetsForMonth(monthYear: String): Flow<List<Budget>>
+    fun getBudget(categoryId: Long, monthYear: String): Flow<Budget?>
+    suspend fun saveBudget(categoryId: Long, monthYear: String, limitPaisa: Long): Result<Long>
+    suspend fun deleteBudget(categoryId: Long, monthYear: String): Result<Unit>
+
+    fun getAllRecurring(): Flow<List<RecurringEntry>>
+    suspend fun saveRecurring(entry: RecurringEntry): Result<Long>
+    suspend fun deleteRecurring(id: Long): Result<Unit>
 }

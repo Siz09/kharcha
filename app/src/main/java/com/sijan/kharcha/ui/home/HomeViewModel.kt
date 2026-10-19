@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sijan.kharcha.data.preferences.UserPreferencesRepository
 import com.sijan.kharcha.data.repository.LedgerRepository
+import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.FinancialHealthStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -71,10 +72,29 @@ class HomeViewModel @Inject constructor(
                 isFutureMonth = isFuture
             )
 
+            val categoryExpenses = if (summary.totalExpensePaisa > 0L) {
+                entries.filter { it.type == EntryType.EXPENSE }
+                    .groupBy { it.categoryId }
+                    .map { (catId, catEntries) ->
+                        val sum = catEntries.sumOf { it.amountPaisa }
+                        val catName = categories.find { it.id == catId }?.name ?: "Other"
+                        HomeCategoryExpense(
+                            categoryId = catId,
+                            categoryName = catName,
+                            amountPaisa = sum,
+                            percentage = (sum.toFloat() / summary.totalExpensePaisa.toFloat()) * 100f
+                        )
+                    }
+                    .sortedByDescending { it.amountPaisa }
+            } else {
+                emptyList()
+            }
+
             HomeUiState(
                 monthlySummary = summary,
                 recentEntries = entries.take(10),
                 categoriesMap = categories.associateBy { it.id },
+                categoryExpenses = categoryExpenses,
                 selectedYear = year,
                 selectedMonth = month,
                 selectedMonthLabel = formatMonthLabel(year, month),

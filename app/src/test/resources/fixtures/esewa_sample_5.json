@@ -1,0 +1,8 @@
+{
+  "source": "esewa",
+  "expectedAmountPaisa": 197750,
+  "expectedDateEpochMillis": 1792353600000,
+  "expectedTransactionId": "TXN1122334455",
+  "expectedMerchant": "WorldLink Communications",
+  "expectedFeePaisa": 0
+}

@@ -1,0 +1,8 @@
+{
+  "source": "esewa",
+  "expectedAmountPaisa": 84500,
+  "expectedDateEpochMillis": 1792341910000,
+  "expectedTransactionId": "TXN9918273645",
+  "expectedMerchant": "Nepal Electricity Authority (NEA)",
+  "expectedFeePaisa": 500
+}

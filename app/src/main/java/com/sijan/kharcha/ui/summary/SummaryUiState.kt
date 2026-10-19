@@ -5,7 +5,8 @@ import com.sijan.kharcha.domain.model.Category
 data class CategorySpending(
     val category: Category,
     val amountPaisa: Long,
-    val percentage: Float
+    val percentage: Float,
+    val budgetLimitPaisa: Long? = null
 )
 
 data class SummaryUiState(

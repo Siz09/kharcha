@@ -47,7 +47,14 @@ class HomeViewModelTest {
         db = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
             .allowMainThreadQueries()
             .build()
-        repository = LedgerRepositoryImpl(db.categoryDao(), db.ledgerDao(), db.billDao())
+        repository = LedgerRepositoryImpl(
+            db.categoryDao(),
+            db.ledgerDao(),
+            db.billDao(),
+            db.budgetDao(),
+            db.auditLogDao(),
+            db.recurringEntryDao()
+        )
         preferencesRepo = UserPreferencesRepositoryImpl(context)
         viewModel = HomeViewModel(repository, preferencesRepo)
     }
@@ -180,5 +187,29 @@ class HomeViewModelTest {
         val febState = viewModel.uiState.first { it.selectedYear == 2024 && it.selectedMonth == 2 && it.rolloverEnabled }
         assertTrue(febState.rolloverEnabled)
         assertEquals(500000L, febState.openingBalancePaisa)
+    }
+
+    @Test
+    fun categoryExpensesBreakdownCalculatedForExpenseEntries() = runTest(testDispatcher) {
+        val initialState = viewModel.uiState.first { it.categoriesMap.isNotEmpty() }
+        val foodCat = initialState.categoriesMap.values.first { it.type == EntryType.EXPENSE }
+
+        val now = Calendar.getInstance(TimeZone.getTimeZone("UTC")).timeInMillis
+        repository.saveEntry(
+            LedgerEntry(
+                id = 0,
+                amountPaisa = 150000L,
+                type = EntryType.EXPENSE,
+                categoryId = foodCat.id,
+                date = now,
+                note = "Groceries"
+            )
+        )
+
+        val updatedState = viewModel.uiState.first { it.categoryExpenses.isNotEmpty() }
+        assertEquals(1, updatedState.categoryExpenses.size)
+        assertEquals(foodCat.name, updatedState.categoryExpenses.first().categoryName)
+        assertEquals(150000L, updatedState.categoryExpenses.first().amountPaisa)
+        assertEquals(100f, updatedState.categoryExpenses.first().percentage)
     }
 }

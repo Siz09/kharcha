@@ -403,7 +403,7 @@ fun ConfirmScanForm(
 
         // Date Field
         OutlinedTextField(
-            value = DateFormatter.formatDate(uiState.dateEpochMillis),
+            value = DateFormatter.formatDualDate(uiState.dateEpochMillis),
             onValueChange = {},
             readOnly = true,
             label = { Text(text = stringResource(R.string.field_date)) },

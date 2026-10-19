@@ -95,7 +95,7 @@ fun EntryRow(
             }
             Spacer(modifier = Modifier.height(2.dp))
             Text(
-                text = DateFormatter.formatDate(entry.date),
+                text = DateFormatter.formatDualDate(entry.date),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.outline
             )

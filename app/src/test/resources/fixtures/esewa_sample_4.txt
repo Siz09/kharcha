@@ -1,0 +1,12 @@
+eSewa
+Topup
+Transaction ID
+TXN4455667788
+Paid To
+Nepal Telecom (NTC Prepaid)
+Total Amount
+Rs. 500.00
+Service Charge
+Rs. 0.00
+Date & Time
+2026-10-18 18:20:00

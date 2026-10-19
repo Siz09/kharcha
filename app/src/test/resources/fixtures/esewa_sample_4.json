@@ -1,0 +1,8 @@
+{
+  "source": "esewa",
+  "expectedAmountPaisa": 50000,
+  "expectedDateEpochMillis": 1792347600000,
+  "expectedTransactionId": "TXN4455667788",
+  "expectedMerchant": "Nepal Telecom (NTC Prepaid)",
+  "expectedFeePaisa": 0
+}

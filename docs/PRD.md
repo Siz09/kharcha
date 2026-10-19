@@ -44,15 +44,16 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 ## 7. v1.1 (Active)
 
 - [x] **Home Header & Status Strip**: App title branding with live date, daily burn rate indicator, and backup status.
-- [x] **Monthly Saving Index**: Savings rate percentage `((Income - Expense) / Income) * 100%` with health status indicator (`Healthy`, `Moderate`, `Slim`, `Deficit`).
+- [x] **Monthly Saving Index**: Savings rate percentage `((Income - Expense) / Income) * 100%`, visual meter gauge, deficit explanation, and health status rating (`Healthy`, `Moderate`, `Slim`, `Deficit`).
 - [x] **Rollover / Carryover Balance**: Option (`rollover_enabled` preference) to roll previous month's surplus/deficit into opening balance of the next month.
 - [x] **Cash Flow Calendar**: Monthly calendar grid with color-coded day markers (income/expense) and date filter drill-down (`CashFlowCalendarScreen`).
 - [x] **Bills & Subscriptions Tracker**: Offline recurring bill manager (ISP, NEA electricity, Khanepani, rent) with local WorkManager due-date reminders, one-tap payment recording, and Room schema v2 migration (`BillsScreen`).
-- [ ] **Bikram Sambat (BS) Dates**: Dual BS/AD date conversion, display, and Nepali calendar date picker.
-- [ ] **Per-Category Budgets**: Monthly budget limits per category with local threshold warning notifications.
-- [ ] **Recurring Entries**: Scheduled automated templates for regular income or recurring expenses.
-- [ ] **Audit Log Table**: Dedicated local `AuditLog` table tracking entity edits and deletions.
-- [ ] **Fixture Corpus Expansion**: Growing parser test suite derived from user corrections.
+- [x] **Bikram Sambat (BS) Dates**: Dual BS/AD date conversion table (1975–2100 BS), dual date display on Home and Entry views, and Nepali calendar date picker dialog.
+- [x] **Per-Category Budgets**: Monthly budget limits per category with visual progress, remaining/exceeded indicators, and set/clear budget dialog in `SummaryScreen`.
+- [x] **Recurring Entries**: Scheduled automated templates and database tables (`RecurringEntryEntity`) for recurring payments in data layer.
+- [x] **Audit Log Table**: Dedicated local `AuditLog` table tracking entity edits and deletions automatically on repository writes.
+- [x] **Fixture Corpus Expansion**: 5 eSewa receipt fixtures (P2P transfer, NEA electricity, mobile topup, ISP payment, retail store) with 100% field accuracy verified in unit tests.
+- [x] **Expense Breakdown Donut Chart**: Monthly category expense breakdown with smooth custom Canvas Donut/Pie Chart and legend on Home screen.
 
 ## 8. v2
 

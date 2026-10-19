@@ -1,0 +1,12 @@
+eSewa
+Internet Bill
+Transaction ID
+TXN1122334455
+Paid To
+WorldLink Communications
+Total Amount
+Rs. 1,977.50
+Service Charge
+Rs. 0.00
+Date & Time
+2026-10-18 20:00:00

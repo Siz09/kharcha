@@ -1,0 +1,12 @@
+eSewa
+Send Money
+Transaction ID
+TXN8847192031
+Paid To
+Sujan Shrestha (9841234567)
+Total Amount
+Rs. 1,500.00
+Service Charge
+Rs. 0.00
+Date & Time
+2026-10-18 14:30:00

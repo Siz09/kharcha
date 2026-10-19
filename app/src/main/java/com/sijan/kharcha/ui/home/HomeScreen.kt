@@ -32,12 +32,24 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.style.TextOverflow
+import java.util.Locale
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sijan.kharcha.R
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
+import com.sijan.kharcha.ui.components.DateFormatter
 import com.sijan.kharcha.domain.model.FinancialHealthStatus
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.Money
@@ -105,12 +117,19 @@ fun HomeScreenContent(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        style = MaterialTheme.typography.headlineLarge,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = MaterialTheme.colorScheme.onBackground
-                    )
+                    Column {
+                        Text(
+                            text = stringResource(R.string.app_name),
+                            style = MaterialTheme.typography.headlineLarge,
+                            fontWeight = FontWeight.ExtraBold,
+                            color = MaterialTheme.colorScheme.onBackground
+                        )
+                        Text(
+                            text = DateFormatter.formatDualDate(System.currentTimeMillis()),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
                     IconButton(onClick = onNavigateToCalendar) {
                         Icon(
                             imageVector = Icons.Default.CalendarToday,
@@ -130,16 +149,21 @@ fun HomeScreenContent(
                 )
             }
             Spacer(modifier = Modifier.height(12.dp))
-            FinancialHealthRow(
-                financialHealth = uiState.financialHealth,
-                savingsRatePercent = uiState.savingsRatePercent,
-                dailyBurnRatePaisa = uiState.dailyBurnRatePaisa
-            )
-            Spacer(modifier = Modifier.height(12.dp))
             MonthlySummaryCard(
                 summary = uiState.monthlySummary,
                 openingBalancePaisa = uiState.openingBalancePaisa,
-                rolloverEnabled = uiState.rolloverEnabled
+                rolloverEnabled = uiState.rolloverEnabled,
+                dailyBurnRatePaisa = uiState.dailyBurnRatePaisa
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            MonthlySavingIndexCard(
+                financialHealth = uiState.financialHealth,
+                savingsRatePercent = uiState.savingsRatePercent
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            ExpenseBreakdownCard(
+                categoryExpenses = uiState.categoryExpenses,
+                totalExpensePaisa = uiState.monthlySummary.totalExpensePaisa
             )
         }
 
@@ -190,35 +214,53 @@ fun HomeScreenContent(
     }
 }
 
+private val PieChartColors = listOf(
+    Color(0xFF176B52), // Forest Green
+    Color(0xFFF2B544), // Accent Amber
+    Color(0xFF26A69A), // Teal
+    Color(0xFFE57373), // Coral Red
+    Color(0xFF5C6BC0), // Indigo
+    Color(0xFFAB47BC), // Purple
+    Color(0xFF78909C)  // Blue Grey
+)
+
 @Composable
-fun FinancialHealthRow(
+fun MonthlySavingIndexCard(
     financialHealth: FinancialHealthStatus,
     savingsRatePercent: Int?,
-    dailyBurnRatePaisa: Long,
     modifier: Modifier = Modifier
 ) {
     val colors = KharchaThemeDefaults.colors
-    val (statusBg, statusTextColor, statusTextRes) = when (financialHealth) {
-        FinancialHealthStatus.HEALTHY -> Triple(
-            colors.incomeContainer,
-            colors.income,
-            R.string.financial_health_healthy
-        )
-        FinancialHealthStatus.MODERATE -> Triple(
-            MaterialTheme.colorScheme.secondaryContainer,
-            MaterialTheme.colorScheme.onSecondaryContainer,
-            R.string.financial_health_moderate
-        )
-        FinancialHealthStatus.SLIM -> Triple(
-            colors.warningContainer,
-            colors.warning,
-            R.string.financial_health_slim
-        )
-        FinancialHealthStatus.DEFICIT -> Triple(
-            colors.errorContainer,
-            colors.error,
-            R.string.financial_health_deficit
-        )
+    val statusBg: Color
+    val statusTextColor: Color
+    val statusTextRes: Int
+    val descRes: Int
+
+    when (financialHealth) {
+        FinancialHealthStatus.HEALTHY -> {
+            statusBg = colors.incomeContainer
+            statusTextColor = colors.income
+            statusTextRes = R.string.financial_health_healthy
+            descRes = R.string.monthly_saving_index_healthy_desc
+        }
+        FinancialHealthStatus.MODERATE -> {
+            statusBg = MaterialTheme.colorScheme.secondaryContainer
+            statusTextColor = MaterialTheme.colorScheme.onSecondaryContainer
+            statusTextRes = R.string.financial_health_moderate
+            descRes = R.string.monthly_saving_index_moderate_desc
+        }
+        FinancialHealthStatus.SLIM -> {
+            statusBg = colors.warningContainer
+            statusTextColor = colors.warning
+            statusTextRes = R.string.financial_health_slim
+            descRes = R.string.monthly_saving_index_slim_desc
+        }
+        FinancialHealthStatus.DEFICIT -> {
+            statusBg = colors.errorContainer
+            statusTextColor = colors.error
+            statusTextRes = R.string.financial_health_deficit
+            descRes = R.string.monthly_saving_index_deficit_desc
+        }
     }
 
     val statusBadgeText = if (savingsRatePercent != null) {
@@ -234,45 +276,281 @@ fun FinancialHealthRow(
         )
     }
 
-    Row(
+    Card(
         modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
     ) {
-        Surface(
-            shape = MaterialTheme.shapes.small,
-            color = statusBg,
-            modifier = Modifier.semantics {
-                contentDescription = statusBadgeText
-            }
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
         ) {
             Row(
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Surface(
-                    shape = MaterialTheme.shapes.extraSmall,
-                    color = statusTextColor,
-                    modifier = Modifier.size(6.dp)
-                ) {}
                 Text(
-                    text = statusBadgeText,
-                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
-                    color = statusTextColor
+                    text = stringResource(R.string.monthly_saving_index_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
-            }
-        }
 
-        if (dailyBurnRatePaisa > 0L) {
+                Surface(
+                    shape = MaterialTheme.shapes.small,
+                    color = statusBg,
+                    modifier = Modifier.semantics {
+                        contentDescription = statusBadgeText
+                    }
+                ) {
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Surface(
+                            shape = MaterialTheme.shapes.extraSmall,
+                            color = statusTextColor,
+                            modifier = Modifier.size(6.dp)
+                        ) {}
+                        Text(
+                            text = statusBadgeText,
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
+                            color = statusTextColor
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
-                text = stringResource(
-                    R.string.financial_health_burn_format,
-                    Money.formatPaisa(dailyBurnRatePaisa)
-                ),
-                style = MaterialTheme.typography.labelMedium,
+                text = stringResource(descRes),
+                style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            SavingsIndexMeter(
+                financialHealth = financialHealth
+            )
+        }
+    }
+}
+
+@Composable
+private fun SavingsIndexMeter(
+    financialHealth: FinancialHealthStatus,
+    modifier: Modifier = Modifier
+) {
+    val colors = KharchaThemeDefaults.colors
+
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(10.dp)
+                .clip(MaterialTheme.shapes.small),
+            horizontalArrangement = Arrangement.spacedBy(3.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(
+                        if (financialHealth == FinancialHealthStatus.DEFICIT) colors.error
+                        else colors.error.copy(alpha = 0.25f)
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .background(
+                        if (financialHealth == FinancialHealthStatus.SLIM) colors.warning
+                        else colors.warning.copy(alpha = 0.25f)
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .weight(1.5f)
+                    .fillMaxHeight()
+                    .background(
+                        if (financialHealth == FinancialHealthStatus.MODERATE) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.primary.copy(alpha = 0.25f)
+                    )
+            )
+            Box(
+                modifier = Modifier
+                    .weight(2f)
+                    .fillMaxHeight()
+                    .background(
+                        if (financialHealth == FinancialHealthStatus.HEALTHY) colors.income
+                        else colors.income.copy(alpha = 0.25f)
+                    )
+            )
+        }
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(
+                text = stringResource(R.string.monthly_saving_index_meter_deficit),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (financialHealth == FinancialHealthStatus.DEFICIT) colors.error else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.monthly_saving_index_meter_slim),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (financialHealth == FinancialHealthStatus.SLIM) colors.warning else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.monthly_saving_index_meter_moderate),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (financialHealth == FinancialHealthStatus.MODERATE) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Text(
+                text = stringResource(R.string.monthly_saving_index_meter_healthy),
+                style = MaterialTheme.typography.labelSmall,
+                color = if (financialHealth == FinancialHealthStatus.HEALTHY) colors.income else MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+}
+
+@Composable
+fun ExpenseBreakdownCard(
+    categoryExpenses: List<HomeCategoryExpense>,
+    totalExpensePaisa: Long,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.home_expense_breakdown_title),
+                    style = MaterialTheme.typography.titleSmall,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                if (categoryExpenses.isNotEmpty()) {
+                    Text(
+                        text = stringResource(
+                            R.string.home_expense_breakdown_total_format,
+                            Money.formatPaisa(totalExpensePaisa)
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            if (categoryExpenses.isEmpty()) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = stringResource(R.string.home_expense_breakdown_empty),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Box(
+                        modifier = Modifier.size(120.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Canvas(modifier = Modifier.size(110.dp)) {
+                            var startAngle = -90f
+                            val strokeWidth = 18.dp.toPx()
+                            categoryExpenses.forEachIndexed { index, item ->
+                                val sweepAngle = (item.percentage / 100f) * 360f
+                                val color = PieChartColors[index % PieChartColors.size]
+                                drawArc(
+                                    color = color,
+                                    startAngle = startAngle,
+                                    sweepAngle = sweepAngle,
+                                    useCenter = false,
+                                    style = Stroke(width = strokeWidth, cap = StrokeCap.Butt)
+                                )
+                                startAngle += sweepAngle
+                            }
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        categoryExpenses.take(4).forEachIndexed { index, item ->
+                            val color = PieChartColors[index % PieChartColors.size]
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Surface(
+                                        shape = CircleShape,
+                                        color = color,
+                                        modifier = Modifier.size(8.dp)
+                                    ) {}
+                                    Text(
+                                        text = item.categoryName,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                }
+                                Text(
+                                    text = String.format(Locale.US, "%.0f%%", item.percentage),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    modifier = Modifier.padding(start = 4.dp)
+                                )
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -282,6 +560,7 @@ fun MonthlySummaryCard(
     summary: MonthlySummary,
     openingBalancePaisa: Long = 0L,
     rolloverEnabled: Boolean = false,
+    dailyBurnRatePaisa: Long = 0L,
     modifier: Modifier = Modifier
 ) {
     val totalAvailablePaisa = if (rolloverEnabled) {
@@ -301,15 +580,33 @@ fun MonthlySummaryCard(
                 .fillMaxWidth()
                 .padding(20.dp)
         ) {
-            Text(
-                text = if (rolloverEnabled) {
-                    stringResource(R.string.home_net_balance_with_rollover)
-                } else {
-                    stringResource(R.string.home_net_balance)
-                },
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (rolloverEnabled) {
+                        stringResource(R.string.home_net_balance_with_rollover)
+                    } else {
+                        stringResource(R.string.home_net_balance)
+                    },
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                if (dailyBurnRatePaisa > 0L) {
+                    Text(
+                        text = stringResource(
+                            R.string.financial_health_burn_format,
+                            Money.formatPaisa(dailyBurnRatePaisa)
+                        ),
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
 
             Spacer(modifier = Modifier.height(4.dp))
 
@@ -406,6 +703,9 @@ private fun HomeScreenPreview() {
                     categoriesMap = mapOf(
                         1L to Category(id = 1L, name = "Food & Dining", type = EntryType.EXPENSE),
                         2L to Category(id = 2L, name = "Salary", type = EntryType.INCOME)
+                    ),
+                    categoryExpenses = listOf(
+                        HomeCategoryExpense(1L, "Food & Dining", 150000L, 100f)
                     ),
                     savingsRatePercent = 62,
                     dailyBurnRatePaisa = 150000L,

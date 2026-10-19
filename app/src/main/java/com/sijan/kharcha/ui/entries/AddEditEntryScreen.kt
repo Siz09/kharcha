@@ -58,6 +58,7 @@ import com.sijan.kharcha.domain.parser.model.ValidationStatus
 import com.sijan.kharcha.ui.components.CategoryPicker
 import com.sijan.kharcha.ui.components.DateFormatter
 import com.sijan.kharcha.ui.components.FieldWithStatus
+import com.sijan.kharcha.ui.components.NepaliDatePickerDialog
 import com.sijan.kharcha.ui.scan.ReceiptPreviewCard
 import com.sijan.kharcha.ui.theme.KharchaTheme
 
@@ -117,6 +118,7 @@ fun AddEditEntryContent(
     modifier: Modifier = Modifier
 ) {
     var showDatePicker by remember { mutableStateOf(false) }
+    var showNepaliDatePicker by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -236,7 +238,7 @@ fun AddEditEntryContent(
 
                 // Date
                 OutlinedTextField(
-                    value = DateFormatter.formatDate(uiState.dateEpochMillis),
+                    value = DateFormatter.formatDualDate(uiState.dateEpochMillis),
                     onValueChange = {},
                     readOnly = true,
                     label = { Text(text = stringResource(R.string.field_date)) },
@@ -299,13 +301,29 @@ fun AddEditEntryContent(
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showDatePicker = false }) {
-                        Text(text = stringResource(R.string.action_cancel))
+                    Row {
+                        TextButton(onClick = {
+                            showDatePicker = false
+                            showNepaliDatePicker = true
+                        }) {
+                            Text(text = stringResource(R.string.nepali_date_picker_switch_bs))
+                        }
+                        TextButton(onClick = { showDatePicker = false }) {
+                            Text(text = stringResource(R.string.action_cancel))
+                        }
                     }
                 }
             ) {
                 DatePicker(state = datePickerState)
             }
+        }
+
+        if (showNepaliDatePicker) {
+            NepaliDatePickerDialog(
+                initialEpochMillis = uiState.dateEpochMillis,
+                onDateSelected = onDateChanged,
+                onDismissRequest = { showNepaliDatePicker = false }
+            )
         }
 
         if (uiState.showDeleteConfirmDialog) {

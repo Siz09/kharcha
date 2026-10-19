@@ -1,0 +1,8 @@
+{
+  "source": "esewa",
+  "expectedAmountPaisa": 150000,
+  "expectedDateEpochMillis": 1792333800000,
+  "expectedTransactionId": "TXN8847192031",
+  "expectedMerchant": "Sujan Shrestha (9841234567)",
+  "expectedFeePaisa": 0
+}

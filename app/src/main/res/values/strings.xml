@@ -218,4 +218,54 @@
     <string name="bills_notification_content">%1$s is due soon (%2$s)</string>
     <string name="cd_bills">Bills</string>
     <string name="cd_add_bill">Add new bill</string>
+
+    <!-- Nepali Date Picker -->
+    <string name="nepali_date_picker_title">Select Nepali Date (BS)</string>
+    <string name="nepali_date_picker_switch_ad">English (AD)</string>
+    <string name="nepali_date_picker_switch_bs">Nepali (BS)</string>
+    <string name="nepali_date_picker_year">Year (BS)</string>
+    <string name="nepali_date_picker_month">Month</string>
+    <string name="nepali_date_picker_day">Day</string>
+
+    <!-- Per-Category Budgets -->
+    <string name="budget_title">Category Budgets</string>
+    <string name="budget_set_dialog_title">Set Category Budget</string>
+    <string name="budget_limit_label">Monthly Budget (NPR)</string>
+    <string name="budget_spent_format">%1$s of %2$s spent</string>
+    <string name="budget_remaining_format">%s remaining</string>
+    <string name="budget_exceeded">Over budget by %s</string>
+    <string name="budget_no_budget">No budget set</string>
+    <string name="budget_status_header">Category Budgets</string>
+
+    <!-- Recurring Entries -->
+    <string name="recurring_title">Recurring Entries</string>
+    <string name="recurring_add">Add Recurring Entry</string>
+    <string name="recurring_frequency_daily">Daily</string>
+    <string name="recurring_frequency_weekly">Weekly</string>
+    <string name="recurring_frequency_monthly">Monthly</string>
+    <string name="recurring_frequency_yearly">Yearly</string>
+    <string name="recurring_next_due">Next: %s</string>
+    <string name="recurring_empty">No recurring entries scheduled</string>
+
+    <!-- Audit Log -->
+    <string name="audit_title">Audit Log</string>
+    <string name="audit_empty">No activity logged yet</string>
+
+    <!-- Monthly Saving Index Card -->
+    <string name="monthly_saving_index_title">Monthly Saving Index</string>
+    <string name="monthly_saving_index_deficit_desc">Expenses exceed income. Shows in red when spending is higher than earnings.</string>
+    <string name="monthly_saving_index_slim_desc" formatted="false">Savings are slim (0%–10%). Spending almost matches income.</string>
+    <string name="monthly_saving_index_moderate_desc" formatted="false">Moderate savings (10%–30%). On track with a healthy buffer.</string>
+    <string name="monthly_saving_index_healthy_desc" formatted="false">Healthy savings (>30%). Strong financial buffer.</string>
+    <string name="monthly_saving_index_no_income_desc">No income recorded for this month yet.</string>
+    <string name="monthly_saving_index_meter_deficit">Deficit</string>
+    <string name="monthly_saving_index_meter_slim">Slim</string>
+    <string name="monthly_saving_index_meter_moderate">Moderate</string>
+    <string name="monthly_saving_index_meter_healthy">Healthy</string>
+
+    <!-- Expense Breakdown Component -->
+    <string name="home_expense_breakdown_title">Expense Breakdown</string>
+    <string name="home_expense_breakdown_empty">No expenses recorded this month</string>
+    <string name="home_expense_breakdown_others">Others</string>
+    <string name="home_expense_breakdown_total_format">Total: %s</string>
 </resources>

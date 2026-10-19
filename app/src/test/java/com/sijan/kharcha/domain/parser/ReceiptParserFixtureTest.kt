@@ -26,44 +26,56 @@ class ReceiptParserFixtureTest {
     private val json = Json { ignoreUnknownKeys = true }
     private val parser = EsewaParser()
 
-    @Test
-    fun evaluateEsewaSample1FixtureAccuracy() {
-        val rawTextStream = javaClass.classLoader?.getResourceAsStream("fixtures/esewa_sample_1.txt")
-        assertNotNull("Fixture raw text must exist", rawTextStream)
+    private fun assertFixtureMatches(fixtureName: String) {
+        val rawTextStream = javaClass.classLoader?.getResourceAsStream("fixtures/$fixtureName.txt")
+        assertNotNull("Fixture raw text must exist for $fixtureName", rawTextStream)
         val rawText = rawTextStream!!.bufferedReader().use { it.readText() }
 
-        val jsonStream = javaClass.classLoader?.getResourceAsStream("fixtures/esewa_sample_1.json")
-        assertNotNull("Fixture json must exist", jsonStream)
+        val jsonStream = javaClass.classLoader?.getResourceAsStream("fixtures/$fixtureName.json")
+        assertNotNull("Fixture json must exist for $fixtureName", jsonStream)
         val jsonText = jsonStream!!.bufferedReader().use { it.readText() }
         val expected = json.decodeFromString<ExpectedFixture>(jsonText)
 
         val ocr = OcrResult(fullText = rawText)
-        assertTrue(parser.canParse(ocr))
+        assertTrue("Parser must recognize $fixtureName", parser.canParse(ocr))
 
         val result = parser.parse(ocr)
 
-        // Verify per-field accuracy
         assertEquals(expected.source, result.source)
-
-        // Amount accuracy (100% on sample)
         assertEquals(expected.expectedAmountPaisa, result.amountPaisa.value)
         assertEquals(ValidationStatus.VALID, result.amountPaisa.status)
-
-        // Transaction ID accuracy
         assertEquals(expected.expectedTransactionId, result.transactionId.value)
         assertEquals(ValidationStatus.VALID, result.transactionId.status)
-
-        // Date accuracy
         assertEquals(expected.expectedDateEpochMillis, result.dateEpochMillis.value)
         assertEquals(ValidationStatus.VALID, result.dateEpochMillis.status)
-
-        // Merchant accuracy
         assertEquals(expected.expectedMerchant, result.merchant.value)
-
-        // Fee accuracy
         assertEquals(expected.expectedFeePaisa, result.feePaisa.value)
+        assertTrue("Overall parse result must be valid for $fixtureName", result.isValid)
+    }
 
-        assertTrue("Overall parse result must be valid", result.isValid)
+    @Test
+    fun evaluateEsewaSample1FixtureAccuracy() {
+        assertFixtureMatches("esewa_sample_1")
+    }
+
+    @Test
+    fun evaluateEsewaSample2FixtureAccuracy() {
+        assertFixtureMatches("esewa_sample_2")
+    }
+
+    @Test
+    fun evaluateEsewaSample3FixtureAccuracy() {
+        assertFixtureMatches("esewa_sample_3")
+    }
+
+    @Test
+    fun evaluateEsewaSample4FixtureAccuracy() {
+        assertFixtureMatches("esewa_sample_4")
+    }
+
+    @Test
+    fun evaluateEsewaSample5FixtureAccuracy() {
+        assertFixtureMatches("esewa_sample_5")
     }
 
     @Test

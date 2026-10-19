@@ -3,6 +3,7 @@ package com.sijan.kharcha.ui.summary
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sijan.kharcha.data.repository.LedgerRepository
+import com.sijan.kharcha.domain.model.Budget
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
@@ -14,8 +15,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import javax.inject.Inject
@@ -41,9 +44,11 @@ class SummaryViewModel @Inject constructor(
                 startDate = startMillis,
                 endDate = endMillis
             )
+            val monthYearStr = String.format(Locale.US, "%04d-%02d", year, month)
+            val budgetsFlow = ledgerRepository.getBudgetsForMonth(monthYearStr)
 
-            combine(monthEntriesFlow, allCategories) { entries, categories ->
-                computeSummary(year, month, entries, categories)
+            combine(monthEntriesFlow, allCategories, budgetsFlow) { entries, categories, budgets ->
+                computeSummary(year, month, entries, categories, budgets)
             }
         }
         .stateIn(
@@ -81,6 +86,22 @@ class SummaryViewModel @Inject constructor(
         selectedMonthYear.value = Pair(now.get(Calendar.YEAR), now.get(Calendar.MONTH) + 1)
     }
 
+    fun setCategoryBudget(categoryId: Long, limitPaisa: Long) {
+        val (year, month) = selectedMonthYear.value
+        val monthYearStr = String.format(Locale.US, "%04d-%02d", year, month)
+        viewModelScope.launch {
+            ledgerRepository.saveBudget(categoryId, monthYearStr, limitPaisa)
+        }
+    }
+
+    fun deleteCategoryBudget(categoryId: Long) {
+        val (year, month) = selectedMonthYear.value
+        val monthYearStr = String.format(Locale.US, "%04d-%02d", year, month)
+        viewModelScope.launch {
+            ledgerRepository.deleteBudget(categoryId, monthYearStr)
+        }
+    }
+
     private fun calculateMonthBounds(year: Int, month: Int): Pair<Long, Long> {
         val cal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
             clear()
@@ -108,9 +129,11 @@ class SummaryViewModel @Inject constructor(
         year: Int,
         month: Int,
         entries: List<LedgerEntry>,
-        categories: List<Category>
+        categories: List<Category>,
+        budgets: List<Budget>
     ): SummaryUiState {
         val categoryMap = categories.associateBy { it.id }
+        val budgetMap = budgets.associate { it.categoryId to it.limitPaisa }
 
         var totalIncome = 0L
         var totalExpense = 0L
@@ -134,7 +157,8 @@ class SummaryViewModel @Inject constructor(
                 CategorySpending(
                     category = category,
                     amountPaisa = amount,
-                    percentage = percentage
+                    percentage = percentage,
+                    budgetLimitPaisa = budgetMap[catId]
                 )
             }
         }.sortedByDescending { it.amountPaisa }
@@ -161,6 +185,6 @@ class SummaryViewModel @Inject constructor(
         val formatter = SimpleDateFormat("MMMM yyyy", Locale.US).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }
-        return formatter.format(cal.time)
+        return formatter.format(Date(cal.timeInMillis))
     }
 }

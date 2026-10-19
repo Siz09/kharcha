@@ -1,0 +1,12 @@
+eSewa
+Bill Payment
+Transaction ID
+TXN9918273645
+Paid To
+Nepal Electricity Authority (NEA)
+Total Amount
+Rs. 845.00
+Service Charge
+Rs. 5.00
+Date & Time
+2026-10-18 16:45:10

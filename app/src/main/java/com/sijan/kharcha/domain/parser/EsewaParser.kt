@@ -162,11 +162,11 @@ class EsewaParser @Inject constructor() : ReceiptParser {
 
     // TODO(parser-spec): Expand merchant labels (e.g., utility bills, ISP payments)
     private fun extractMerchant(rawLines: List<String>, normalizedLines: List<String>): ParsedField<String> {
-        val merchantKeyRegex = Regex("(?i).*(paid\\s*to|recipient|merchant|bill\\s*details|to).*")
+        val merchantKeyRegex = Regex("(?i).*(paid\\s*to|recipient|merchant|bill\\s*details|\\bto\\b).*")
         for (i in normalizedLines.indices) {
             val line = normalizedLines[i]
             if (merchantKeyRegex.matches(line)) {
-                val inlineValue = line.replace(Regex("(?i).*(paid\\s*to|recipient|merchant|bill\\s*details|to)\\s*[:\\-]?"), "").trim()
+                val inlineValue = line.replace(Regex("(?i).*(paid\\s*to|recipient|merchant|bill\\s*details|\\bto\\b)\\s*[:\\-]?", RegexOption.IGNORE_CASE), "").trim()
                 if (inlineValue.isNotBlank()) {
                     return ParsedField(value = inlineValue, raw = rawLines[i], status = ValidationStatus.VALID)
                 }
