@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -47,8 +48,11 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -191,6 +195,7 @@ fun ConfirmScanContent(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(innerPadding)
+                    .imePadding()
                     .verticalScroll(rememberScrollState())
                     .padding(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -257,11 +262,30 @@ fun ReceiptPreviewCard(
 ) {
     if (receiptPath.isNullOrBlank()) return
 
-    val bitmap = remember(receiptPath) {
-        BitmapFactory.decodeFile(receiptPath)
+    val bitmap by produceState<android.graphics.Bitmap?>(initialValue = null, receiptPath) {
+        value = withContext(Dispatchers.IO) {
+            try {
+                val boundsOptions = BitmapFactory.Options().apply {
+                    inJustDecodeBounds = true
+                }
+                BitmapFactory.decodeFile(receiptPath, boundsOptions)
+                var sampleSize = 1
+                val targetHeight = 480
+                while ((boundsOptions.outHeight / sampleSize) > targetHeight) {
+                    sampleSize *= 2
+                }
+                val decodeOptions = BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                }
+                BitmapFactory.decodeFile(receiptPath, decodeOptions)
+            } catch (e: Exception) {
+                null
+            }
+        }
     }
 
-    if (bitmap != null) {
+    val currentBitmap = bitmap
+    if (currentBitmap != null) {
         Card(
             modifier = modifier.fillMaxWidth(),
             colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
@@ -275,7 +299,7 @@ fun ReceiptPreviewCard(
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Image(
-                    bitmap = bitmap.asImageBitmap(),
+                    bitmap = currentBitmap.asImageBitmap(),
                     contentDescription = stringResource(R.string.cd_receipt_preview),
                     modifier = Modifier
                         .fillMaxWidth()

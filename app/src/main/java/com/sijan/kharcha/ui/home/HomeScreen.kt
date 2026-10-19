@@ -23,12 +23,15 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -176,7 +179,8 @@ fun HomeScreenContent(
                 Text(
                     text = stringResource(R.string.home_recent_entries),
                     style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.semantics { heading() }
                 )
 
                 if (uiState.recentEntries.isNotEmpty()) {
@@ -214,15 +218,33 @@ fun HomeScreenContent(
     }
 }
 
-private val PieChartColors = listOf(
-    Color(0xFF176B52), // Forest Green
-    Color(0xFFF2B544), // Accent Amber
-    Color(0xFF26A69A), // Teal
-    Color(0xFFE57373), // Coral Red
-    Color(0xFF5C6BC0), // Indigo
-    Color(0xFFAB47BC), // Purple
-    Color(0xFF78909C)  // Blue Grey
-)
+@Composable
+private fun rememberPieChartColors(): List<Color> {
+    val isDark = isSystemInDarkTheme()
+    return remember(isDark) {
+        if (isDark) {
+            listOf(
+                Color(0xFF4DB6AC), // Teal 300
+                Color(0xFFFFD54F), // Amber 300
+                Color(0xFF81C784), // Light Green 300
+                Color(0xFFE57373), // Red 300
+                Color(0xFF7986CB), // Indigo 300
+                Color(0xFFBA68C8), // Purple 300
+                Color(0xFF90A4AE)  // Blue Grey 300
+            )
+        } else {
+            listOf(
+                Color(0xFF176B52), // Forest Green
+                Color(0xFFE5A020), // Accent Amber
+                Color(0xFF00796B), // Deep Teal
+                Color(0xFFD32F2F), // Red
+                Color(0xFF3949AB), // Indigo
+                Color(0xFF7B1FA2), // Purple
+                Color(0xFF546E7A)  // Blue Grey
+            )
+        }
+    }
+}
 
 @Composable
 fun MonthlySavingIndexCard(
@@ -296,7 +318,8 @@ fun MonthlySavingIndexCard(
                     text = stringResource(R.string.monthly_saving_index_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.semantics { heading() }
                 )
 
                 Surface(
@@ -431,6 +454,8 @@ fun ExpenseBreakdownCard(
     totalExpensePaisa: Long,
     modifier: Modifier = Modifier
 ) {
+    val pieChartColors = rememberPieChartColors()
+
     Card(
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(
@@ -451,7 +476,8 @@ fun ExpenseBreakdownCard(
                     text = stringResource(R.string.home_expense_breakdown_title),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.semantics { heading() }
                 )
 
                 if (categoryExpenses.isNotEmpty()) {
@@ -497,7 +523,7 @@ fun ExpenseBreakdownCard(
                             val strokeWidth = 18.dp.toPx()
                             categoryExpenses.forEachIndexed { index, item ->
                                 val sweepAngle = (item.percentage / 100f) * 360f
-                                val color = PieChartColors[index % PieChartColors.size]
+                                val color = pieChartColors[index % pieChartColors.size]
                                 drawArc(
                                     color = color,
                                     startAngle = startAngle,
@@ -515,7 +541,7 @@ fun ExpenseBreakdownCard(
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
                         categoryExpenses.take(4).forEachIndexed { index, item ->
-                            val color = PieChartColors[index % PieChartColors.size]
+                            val color = pieChartColors[index % pieChartColors.size]
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 verticalAlignment = Alignment.CenterVertically,

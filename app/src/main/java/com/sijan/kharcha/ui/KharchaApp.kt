@@ -54,6 +54,7 @@ fun KharchaApp(
     val currentDestination = navBackStackEntry?.destination
     val currentRoute = currentDestination?.route
 
+    val isTopLevelDestination = Screen.bottomNavItems.any { it.route == currentRoute }
     val shouldShowFab = currentRoute == Screen.Home.route || currentRoute == Screen.Entries.route
     var showScanSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -93,8 +94,9 @@ fun KharchaApp(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         bottomBar = {
-            NavigationBar {
-                Screen.bottomNavItems.forEach { screen ->
+            if (isTopLevelDestination) {
+                NavigationBar {
+                    Screen.bottomNavItems.forEach { screen ->
                     val isSelected = currentDestination?.hierarchy?.any { it.route == screen.route } == true
                     NavigationBarItem(
                         selected = isSelected,
@@ -119,7 +121,8 @@ fun KharchaApp(
                     )
                 }
             }
-        },
+        }
+    },
         floatingActionButton = {
             if (shouldShowFab) {
                 FloatingActionButton(
