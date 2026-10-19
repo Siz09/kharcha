@@ -49,9 +49,10 @@ fun EntryRow(
             .padding(horizontal = 16.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
+        val colors = com.sijan.kharcha.ui.theme.KharchaThemeDefaults.colors
         val tint = when (entry.type) {
-            EntryType.INCOME -> IncomeGreen
-            EntryType.EXPENSE -> ExpenseRed
+            EntryType.INCOME -> colors.income
+            EntryType.EXPENSE -> colors.expense
         }
         val iconRes = CategoryIconHelper.getIconRes(categoryName)
 

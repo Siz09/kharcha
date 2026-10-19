@@ -33,11 +33,45 @@ Each feature package holds its screen composable, its ViewModel, and its UI stat
 - Composables are stateless where possible. State is hoisted to the caller.
 - No business logic in composables.
 
-## 4. Theming
+## 4. Theming & Complete Color System
 
-- Material 3 with dynamic color enabled on Android 12+, and a fixed fallback palette.
-- Support light and dark themes.
-- Semantic colors for income and expense must not rely on color alone. Pair with a sign or label.
+Kharcha uses a **Forest Green + Warm Amber + Soft Neutral** palette. Green establishes trust and financial clarity; amber accents key actions; neutral surfaces keep numbers readable.
+
+### 4.1 Palette Tokens
+| Token Role | Light Theme | Dark Theme | Usage |
+|---|---|---|---|
+| **Primary** | `#176B52` | `#78D5B0` | Main CTA, active bottom navigation, primary actions |
+| **Primary Container** | `#D5F2E4` | `#204D3D` | Selected cards, active chips |
+| **On-Primary Container** | `#104B38` | `#C5F2DC` | Text/icons on primary containers |
+| **Accent Amber** | `#F2B544` | `#F2C66D` | Highlights, badges, secondary emphasis |
+| **Secondary** | `#53665C` | `#B8C5BB` | Supporting controls, metadata |
+| **Tertiary** | `#527A85` | `#A5D1DE` | Informational chips, non-financial accents |
+| **Background** | `#F7F8F5` | `#121714` | Main canvas (dark theme uses green-tinted neutral) |
+| **Surface** | `#FFFFFF` | `#1A211D` | Cards, forms, modal sheets |
+| **Surface Variant** | `#EDF1EC` | `#29342D` | Secondary surfaces, input fills |
+| **Outline** | `#737D76` | `#89958C` | Input borders, dividers |
+
+### 4.2 Financial & Semantic Status Tokens
+These remain stable across both themes (immune to dynamic color shifts):
+- **Income**: `#18794E` (Light) / `#70D6A3` (Dark) paired with `+` sign and label.
+- **Expense**: `#B54735` (Light) / `#FFB4A8` (Dark) paired with `-` sign and label.
+- **Warning**: `#835500` (Light) / `#F2C66D` (Dark) for duplicate IDs or review required.
+- **Error**: `#BA1A1A` (Light) / `#FFB4AB` (Dark) for invalid amounts or storage errors.
+- **Information**: `#245DB8` (Light) / `#A9C7FF` (Dark) for guidance notices.
+- **Neutral Status**: `#536159` (Light) / `#B8C5BB` (Dark).
+
+### 4.3 Receipt Confidence & Validation States
+- **Valid Field**: Pale green background, green check icon, normal text contrast.
+- **Needs Review**: Warm amber background, warning icon, plain-language reason.
+- **Invalid Field**: Pale red background, error icon, blocks saving until corrected.
+- **Possible Duplicate**: Pale blue information card with "View existing" vs "Save anyway" actions.
+
+### 4.4 Backup Status States
+- **Backed up**: Green status with timestamp of last successful write.
+- **Never backed up**: Neutral gray with prompt to configure.
+- **Backup running**: Blue progress indicator during active export.
+- **Backup failed**: Red status explaining failure with retry option.
+- **Folder access lost**: Amber warning prompting SAF directory re-selection.
 
 ## 5. Money and date display
 

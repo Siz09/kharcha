@@ -13,6 +13,8 @@ import com.sijan.kharcha.domain.model.Money
 import com.sijan.kharcha.ui.theme.ExpenseRed
 import com.sijan.kharcha.ui.theme.IncomeGreen
 import com.sijan.kharcha.ui.theme.KharchaTheme
+import com.sijan.kharcha.ui.theme.KharchaThemeDefaults
+
 
 @Composable
 fun AmountText(
@@ -25,12 +27,13 @@ fun AmountText(
     val isNegative = amountPaisa < 0
     val absPaisa = kotlin.math.abs(amountPaisa)
     val formatted = Money.formatPaisa(absPaisa)
+    val colors = KharchaThemeDefaults.colors
     val (displayText, textColor) = when (type) {
-        EntryType.INCOME -> "+$formatted" to IncomeGreen
-        EntryType.EXPENSE -> "-$formatted" to ExpenseRed
+        EntryType.INCOME -> "+$formatted" to colors.income
+        EntryType.EXPENSE -> "-$formatted" to colors.expense
         null -> {
             val text = if (isNegative) "-$formatted" else formatted
-            val color = if (isNegative) ExpenseRed else (colorOverride ?: MaterialTheme.colorScheme.onSurface)
+            val color = if (isNegative) colors.expense else (colorOverride ?: MaterialTheme.colorScheme.onSurface)
             text to color
         }
     }
