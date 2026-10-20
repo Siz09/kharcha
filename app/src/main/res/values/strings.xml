@@ -385,5 +385,18 @@
     <string name="app_lock_not_enrolled_error">No screen lock or biometric enrolled on this device</string>
     <string name="app_lock_no_hardware_error">Biometric security is not available on this device</string>
     <string name="app_lock_auth_failed">Authentication failed. Tap to try again.</string>
+
+    <!-- Shortcuts & Widget -->
+    <string name="shortcut_scan_short">Scan Receipt</string>
+    <string name="shortcut_scan_long">Scan eSewa or Paper Receipt</string>
+    <string name="shortcut_add_expense_short">Add Expense</string>
+    <string name="shortcut_add_expense_long">Record New Expense Entry</string>
+    <string name="shortcut_add_income_short">Add Income</string>
+    <string name="shortcut_add_income_long">Record New Income Entry</string>
+    <string name="widget_title">Kharcha Quick Balance</string>
+    <string name="widget_description">Glance current balance and launch quick entry</string>
+    <string name="widget_tap_to_view">Tap to open Kharcha</string>
+    <string name="widget_locked_placeholder">Rs. ••••••</string>
+    <string name="widget_this_month">This Month Net</string>
 </resources>
 
