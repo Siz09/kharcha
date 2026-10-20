@@ -17,6 +17,8 @@ import com.sijan.kharcha.data.db.migration.MIGRATION_2_3
 import com.sijan.kharcha.data.db.migration.MIGRATION_3_4
 import com.sijan.kharcha.data.db.migration.MIGRATION_4_5
 import com.sijan.kharcha.data.db.migration.MIGRATION_5_6
+import com.sijan.kharcha.data.repository.AnalyticsRepository
+import com.sijan.kharcha.data.repository.AnalyticsRepositoryImpl
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
 import com.sijan.kharcha.data.repository.SavingsGoalRepository
@@ -112,5 +114,11 @@ abstract class RepositoryModule {
     abstract fun bindSavingsGoalRepository(
         savingsGoalRepositoryImpl: SavingsGoalRepositoryImpl
     ): SavingsGoalRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAnalyticsRepository(
+        analyticsRepositoryImpl: AnalyticsRepositoryImpl
+    ): AnalyticsRepository
 }
 
