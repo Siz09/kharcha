@@ -110,6 +110,17 @@ class SettingsViewModelTest {
     }
 
     @Test
+    fun biometricLockPreferenceUpdates() = runTest(testDispatcher) {
+        viewModel.setBiometricLockEnabled(true)
+        val stateWithEnabled = viewModel.uiState.first { it.biometricLockEnabled }
+        assertTrue(stateWithEnabled.biometricLockEnabled)
+
+        viewModel.setBiometricLockEnabled(false)
+        val stateWithDisabled = viewModel.uiState.first { !it.biometricLockEnabled }
+        assertFalse(stateWithDisabled.biometricLockEnabled)
+    }
+
+    @Test
     fun restoreStagingValidatesAndConfirms() = runTest(testDispatcher) {
         // Seed some data and export
         val catId = db.categoryDao().insertCategory(

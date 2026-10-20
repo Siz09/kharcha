@@ -55,6 +55,7 @@ class SettingsViewModel @Inject constructor(
             lastBackupTimestamp = prefs.lastBackupTimestamp,
             rolloverEnabled = prefs.rolloverEnabled,
             smsDetectionEnabled = prefs.smsDetectionEnabled,
+            biometricLockEnabled = prefs.biometricLockEnabled,
             pendingRestoreSummary = summary,
             isRestoreDialogOpen = isRestoreOpen
         )
@@ -66,6 +67,10 @@ class SettingsViewModel @Inject constructor(
 
     fun setSmsDetectionEnabled(enabled: Boolean): Job = viewModelScope.launch {
         userPreferencesRepository.setSmsDetectionEnabled(enabled)
+    }
+
+    fun setBiometricLockEnabled(enabled: Boolean): Job = viewModelScope.launch {
+        userPreferencesRepository.setBiometricLockEnabled(enabled)
     }
 
     fun setTheme(theme: AppTheme): Job = viewModelScope.launch {

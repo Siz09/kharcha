@@ -12,6 +12,7 @@ data class SettingsUiState(
     val isRestoreDialogOpen: Boolean = false,
     val rolloverEnabled: Boolean = false,
     val smsDetectionEnabled: Boolean = true,
+    val biometricLockEnabled: Boolean = false,
     val appVersion: String = "1.0.0",
     val isLoading: Boolean = false
 )
