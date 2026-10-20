@@ -67,7 +67,7 @@ class AutoBackupWorker @AssistedInject constructor(
     companion object {
         const val WORK_NAME = "kharcha_auto_backup"
         const val LEGACY_WORK_NAME = "kharcha_daily_auto_backup"
-        const val MAX_BACKUP_ARCHIVES = 5
+        const val MAX_BACKUP_ARCHIVES = 3
 
         fun pruneOldBackups(
             contentResolver: ContentResolver,

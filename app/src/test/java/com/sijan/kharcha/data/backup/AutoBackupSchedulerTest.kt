@@ -25,7 +25,7 @@ class AutoBackupSchedulerTest {
     fun constantsMatchV3Specification() {
         assertEquals("kharcha_auto_backup", AutoBackupWorker.WORK_NAME)
         assertEquals("kharcha_daily_auto_backup", AutoBackupWorker.LEGACY_WORK_NAME)
-        assertEquals(5, AutoBackupWorker.MAX_BACKUP_ARCHIVES)
+        assertEquals(3, AutoBackupWorker.MAX_BACKUP_ARCHIVES)
     }
 
     @Test

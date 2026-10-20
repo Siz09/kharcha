@@ -65,6 +65,16 @@
                 tools:node="remove" />
         </provider>
 
+        <service
+            android:name=".data.notification.BankNotificationListenerService"
+            android:label="@string/notification_service_label"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
         <receiver
             android:name=".ui.widget.KharchaQuickBalanceWidget"
             android:exported="true">

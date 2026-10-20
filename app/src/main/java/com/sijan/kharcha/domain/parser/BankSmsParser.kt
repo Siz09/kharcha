@@ -13,8 +13,8 @@ class BankSmsParser @Inject constructor() {
 
     private val otpPattern = Regex("(?i).*(otp|verification code|one time password|do not share).*")
 
-    private val debitKeywords = Regex("(?i).*(debited|debited by|debited for|withdrawn|spent|transferred to|dr\\.?\\b|purchase at).*")
-    private val creditKeywords = Regex("(?i).*(credited|credited by|credited with|deposited|received from|cr\\.?\\b).*")
+    private val debitKeywords = Regex("(?i).*(debited|debited by|debited for|withdrawn|spent|transferred to|dr\\.?\\b|purchase at|paid|payment of|transfer to).*")
+    private val creditKeywords = Regex("(?i).*(credited|credited by|credited with|deposited|received from|received|cr\\.?\\b).*")
 
     private val amountRegex = Regex("(?i)(?:NPR|Rs\\.?|रु\\.?)\\s*([0-9,]+(?:\\.[0-9]{1,2})?)|([0-9,]+(?:\\.[0-9]{1,2})?)\\s*(?:NPR|Rs\\.?|रु\\.?)")
 
@@ -22,7 +22,7 @@ class BankSmsParser @Inject constructor() {
     private val accountTailRegex = Regex("(?i)(?:A/C|Acct|Account)(?:\\s*No\\.?)?\\s*[:\\-]?\\s*(?:\\.{2,}|x+|\\*+)?([0-9]{3,6})")
     private val remarksRegex = Regex("(?i)(?:Remarks|Info)\\s*[:\\-]?\\s*([A-Za-z0-9\\s&'\\-]+?)(?=\\s*(?:[.,;\\n]|Txn|Ref|Avail|Bal|$))")
     private val atRegex = Regex("(?i)\\bat\\s+([A-Za-z0-9\\s&'\\-]+?)(?=\\s*(?:[.,;\\n]|Ref|Txn|Avail|Bal|$))")
-    private val toForRegex = Regex("(?i)\\b(?:to|for|by)\\s+([A-Za-z0-9\\s&'\\-]+?)(?=\\s*(?:[.,;\\n]|Ref|Txn|Avail|Bal|$))")
+    private val toForRegex = Regex("(?i)\\b(?:to|for|by)\\s+([A-Za-z0-9\\s&'\\-]+?)(?=\\s*(?:[.,;\\n]|is\\s+successful|has\\s+been|Ref|Txn|Avail|Bal|$))")
 
     private val dateFormats = listOf(
         SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") },
@@ -92,6 +92,11 @@ class BankSmsParser @Inject constructor() {
         val upperBody = body.uppercase(Locale.US)
 
         return when {
+            upperSender.contains("ESEWA") || upperBody.contains("ESEWA") -> "eSewa"
+            upperSender.contains("KHALTI") || upperBody.contains("KHALTI") -> "Khalti"
+            upperSender.contains("FONEPAY") || upperBody.contains("FONEPAY") -> "Fonepay"
+            upperSender.contains("CZBIL") || upperSender.contains("CITIZEN") || upperBody.contains("CITIZENS BANK") || upperBody.contains("CITIZEN BANK") -> "Citizens Bank"
+            upperSender.contains("NMB") || upperBody.contains("NMB BANK") -> "NMB Bank"
             upperSender.contains("NABIL") || upperBody.contains("NABIL") -> "Nabil Bank"
             upperSender.contains("NICASIA") || upperBody.contains("NIC ASIA") -> "NIC Asia Bank"
             upperSender.contains("GLOBAL") || upperSender.contains("GIBL") || upperBody.contains("GLOBAL IME") -> "Global IME Bank"

@@ -80,6 +80,53 @@ class BankSmsParserTest {
     }
 
     @Test
+    fun parseCitizensBankDebitSmsSuccessfully() {
+        val sender = "CZBIL"
+        val body = "Dear Customer, your A/C ...8822 has been debited by NPR 1,450.00 on 2026-10-18. Remarks: Grocery Mart. Ref: CZB9911."
+
+        val result = parser.parse(sender, body)
+
+        assertNotNull("Citizens Bank debit SMS must be parsed", result)
+        assertEquals("Citizens Bank", result?.bankName)
+        assertEquals(145000L, result?.amountPaisa)
+        assertEquals(EntryType.EXPENSE, result?.type)
+        assertEquals("CZB9911", result?.transactionId)
+        assertEquals("...8822", result?.accountNumberTail)
+        assertEquals("Grocery Mart", result?.merchant)
+    }
+
+    @Test
+    fun parseNmbBankCreditSmsSuccessfully() {
+        val sender = "NMB"
+        val body = "Your A/C ...3344 is credited with NPR 25,000.00 on 18-Oct-2026. Info: Freelance Payout. Txn: NMB7788."
+
+        val result = parser.parse(sender, body)
+
+        assertNotNull("NMB Bank credit SMS must be parsed", result)
+        assertEquals("NMB Bank", result?.bankName)
+        assertEquals(2500000L, result?.amountPaisa)
+        assertEquals(EntryType.INCOME, result?.type)
+        assertEquals("NMB7788", result?.transactionId)
+        assertEquals("...3344", result?.accountNumberTail)
+        assertEquals("Freelance Payout", result?.merchant)
+    }
+
+    @Test
+    fun parseEsewaNotificationSuccessfully() {
+        val sender = "eSewa"
+        val body = "Payment of NPR 350.00 to Shandar Everest is successful. Ref: 1PD3U5L."
+
+        val result = parser.parse(sender, body)
+
+        assertNotNull("eSewa notification must be parsed", result)
+        assertEquals("eSewa", result?.bankName)
+        assertEquals(35000L, result?.amountPaisa)
+        assertEquals(EntryType.EXPENSE, result?.type)
+        assertEquals("1PD3U5L", result?.transactionId)
+        assertEquals("Shandar Everest", result?.merchant)
+    }
+
+    @Test
     fun otpMessagesAreRejected() {
         val sender = "NABIL"
         val body = "Your Nabil Bank one time password is 776655 for transaction of NPR 1,200.00. Do not share this OTP with anyone."
