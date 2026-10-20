@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_widget"
+    android:orientation="horizontal"
+    android:padding="16dp"
+    android:gravity="center_vertical">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_this_month"
+            android:textColor="#556052"
+            android:textSize="12sp"
+            android:fontFamily="sans-serif-medium" />
+
+        <TextView
+            android:id="@+id/widget_balance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Rs. 0.00"
+            android:textColor="#182017"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:fontFamily="sans-serif"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/widget_subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/widget_tap_to_view"
+            android:textColor="#768472"
+            android:textSize="11sp"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <ImageButton
+            android:id="@+id/widget_btn_add"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_widget_button"
+            android:src="@drawable/ic_shortcut_expense"
+            android:contentDescription="@string/shortcut_add_expense_short"
+            android:scaleType="centerInside" />
+
+        <Space
+            android:layout_width="8dp"
+            android:layout_height="wrap_content" />
+
+        <ImageButton
+            android:id="@+id/widget_btn_scan"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="@drawable/bg_widget_button"
+            android:src="@drawable/ic_shortcut_scan"
+            android:contentDescription="@string/shortcut_scan_short"
+            android:scaleType="centerInside" />
+    </LinearLayout>
+</LinearLayout>
