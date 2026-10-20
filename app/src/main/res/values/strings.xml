@@ -464,5 +464,23 @@
     <string name="document_close">Close</string>
     <string name="scan_pick_document">PDF / Word Statement</string>
     <string name="scan_source_document_desc">Official bank PDF statements or DOCX invoices</string>
+
+    <!-- Annual Financial Analytics & Historical Archiving -->
+    <string name="reports_tab_monthly">Monthly</string>
+    <string name="reports_tab_annual">Annual</string>
+    <string name="reports_calendar_bs">Nepali (BS)</string>
+    <string name="reports_calendar_ad">English (AD)</string>
+    <string name="reports_annual_title">Annual Analytics &amp; YTD</string>
+    <string name="reports_total_income">Total Income</string>
+    <string name="reports_total_expense">Total Expense</string>
+    <string name="reports_net_savings">Net Savings</string>
+    <string name="reports_savings_rate">Savings Rate: %1$d%%</string>
+    <string name="reports_daily_burn">Daily Burn: %1$s/day</string>
+    <string name="reports_yoy_change">YoY Expense: %1$s (%2$d%%)</string>
+    <string name="reports_monthly_trend">12-Month Flow</string>
+    <string name="reports_category_breakdown">Annual Category Breakdown</string>
+    <string name="reports_archive_button">Archive Year</string>
+    <string name="reports_archived_badge">Archived</string>
+    <string name="reports_archive_success">Annual summary archived</string>
 </resources>
 

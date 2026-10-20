@@ -54,7 +54,8 @@ class SpendingReportsViewModelTest {
         )
         analyticsRepository = AnalyticsRepositoryImpl(
             ledgerDao = db.ledgerDao(),
-            categoryDao = db.categoryDao()
+            categoryDao = db.categoryDao(),
+            annualArchiveSummaryDao = db.annualArchiveSummaryDao()
         )
         pdfGenerator = PdfStatementGenerator(context)
 
@@ -114,5 +115,23 @@ class SpendingReportsViewModelTest {
         viewModel.onPreviousMonth()
         assertEquals(2025, viewModel.selectedYear.value)
         assertEquals(12, viewModel.selectedMonth.value)
+    }
+
+    @Test
+    fun annualNavigation_switchesTabsAndCalendarSystems() = runTest(testDispatcher) {
+        assertEquals(0, viewModel.selectedReportTab.value)
+        viewModel.onSelectTab(1)
+        assertEquals(1, viewModel.selectedReportTab.value)
+
+        viewModel.onSetCalendarSystem(com.sijan.kharcha.domain.model.CalendarSystem.AD)
+        assertEquals(com.sijan.kharcha.domain.model.CalendarSystem.AD, viewModel.selectedCalendarSystem.value)
+        assertEquals(LocalDate.now().year, viewModel.selectedAnnualYear.value)
+
+        val initialYear = viewModel.selectedAnnualYear.value
+        viewModel.onPreviousAnnualYear()
+        assertEquals(initialYear - 1, viewModel.selectedAnnualYear.value)
+
+        viewModel.onNextAnnualYear()
+        assertEquals(initialYear, viewModel.selectedAnnualYear.value)
     }
 }

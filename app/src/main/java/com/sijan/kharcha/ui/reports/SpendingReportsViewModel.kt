@@ -7,6 +7,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sijan.kharcha.data.repository.AnalyticsRepository
 import com.sijan.kharcha.data.repository.LedgerRepository
+import com.sijan.kharcha.domain.calendar.BikramSambatConverter
+import com.sijan.kharcha.domain.model.AnnualAnalyticsSummary
+import com.sijan.kharcha.domain.model.CalendarSystem
 import com.sijan.kharcha.domain.model.SpendingAnalyticsSummary
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -34,11 +37,21 @@ class SpendingReportsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val now = LocalDate.now()
+    val selectedReportTab = MutableStateFlow(0) // 0: Monthly, 1: Annual
+
+    // Monthly State
     val selectedYear = MutableStateFlow(now.year)
     val selectedMonth = MutableStateFlow(now.monthValue)
 
+    // Annual State
+    val selectedCalendarSystem = MutableStateFlow(CalendarSystem.BS)
+    val selectedAnnualYear = MutableStateFlow(BikramSambatConverter.fromLocalDate(now).year)
+
     private val _isGeneratingPdf = MutableStateFlow(false)
     val isGeneratingPdf: StateFlow<Boolean> = _isGeneratingPdf.asStateFlow()
+
+    private val _isArchiving = MutableStateFlow(false)
+    val isArchiving: StateFlow<Boolean> = _isArchiving.asStateFlow()
 
     val analyticsSummary: StateFlow<SpendingAnalyticsSummary?> = combine(
         selectedYear,
@@ -50,6 +63,30 @@ class SpendingReportsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
     )
+
+    val annualAnalyticsSummary: StateFlow<AnnualAnalyticsSummary?> = combine(
+        selectedAnnualYear,
+        selectedCalendarSystem
+    ) { y, cal -> Pair(y, cal) }.flatMapLatest { (y, cal) ->
+        analyticsRepository.getAnnualAnalytics(y, cal)
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    fun onSelectTab(tabIndex: Int) {
+        selectedReportTab.value = tabIndex
+    }
+
+    fun onSetCalendarSystem(system: CalendarSystem) {
+        selectedCalendarSystem.value = system
+        if (system == CalendarSystem.BS) {
+            selectedAnnualYear.value = BikramSambatConverter.fromLocalDate(LocalDate.now()).year
+        } else {
+            selectedAnnualYear.value = LocalDate.now().year
+        }
+    }
 
     fun onPreviousMonth() {
         if (selectedMonth.value == 1) {
@@ -66,6 +103,28 @@ class SpendingReportsViewModel @Inject constructor(
             selectedMonth.value = 1
         } else {
             selectedMonth.value += 1
+        }
+    }
+
+    fun onPreviousAnnualYear() {
+        selectedAnnualYear.value -= 1
+    }
+
+    fun onNextAnnualYear() {
+        selectedAnnualYear.value += 1
+    }
+
+    fun archiveCurrentYear() {
+        viewModelScope.launch {
+            _isArchiving.value = true
+            try {
+                analyticsRepository.archiveCompletedYear(
+                    year = selectedAnnualYear.value,
+                    calendarSystem = selectedCalendarSystem.value
+                )
+            } finally {
+                _isArchiving.value = false
+            }
         }
     }
 

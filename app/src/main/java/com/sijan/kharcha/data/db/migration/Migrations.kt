@@ -275,6 +275,25 @@ val MIGRATION_7_8 = object : Migration(7, 8) {
     }
 }
 
+val MIGRATION_8_9 = object : Migration(8, 9) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `annual_archive_summaries` (
+                `year` INTEGER NOT NULL,
+                `calendarSystem` TEXT NOT NULL,
+                `totalIncomePaisa` INTEGER NOT NULL,
+                `totalExpensePaisa` INTEGER NOT NULL,
+                `netSavingsPaisa` INTEGER NOT NULL,
+                `categoryBreakdownJson` TEXT NOT NULL,
+                `monthlyTotalsJson` TEXT NOT NULL,
+                `entryCount` INTEGER NOT NULL,
+                `archivedAt` INTEGER NOT NULL,
+                PRIMARY KEY(`year`, `calendarSystem`)
+            )
+        """.trimIndent())
+    }
+}
+
 
 
 

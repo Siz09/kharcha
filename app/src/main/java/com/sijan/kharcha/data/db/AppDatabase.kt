@@ -5,6 +5,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 import com.sijan.kharcha.data.db.converters.Converters
 import com.sijan.kharcha.data.db.dao.AccountDao
+import com.sijan.kharcha.data.db.dao.AnnualArchiveSummaryDao
 import com.sijan.kharcha.data.db.dao.AuditLogDao
 import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
@@ -15,6 +16,7 @@ import com.sijan.kharcha.data.db.dao.SavingsGoalDao
 import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.dao.UtilityAccountDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
+import com.sijan.kharcha.data.db.entity.AnnualArchiveSummaryEntity
 import com.sijan.kharcha.data.db.entity.AuditLogEntity
 import com.sijan.kharcha.data.db.entity.BillEntity
 import com.sijan.kharcha.data.db.entity.BudgetEntity
@@ -42,7 +44,8 @@ import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
         UdharSettlementEntity::class,
         SavingsGoalEntity::class,
         SavingsContributionEntity::class,
-        UtilityAccountEntity::class
+        UtilityAccountEntity::class,
+        AnnualArchiveSummaryEntity::class
     ],
     version = AppDatabase.SCHEMA_VERSION,
     exportSchema = true
@@ -60,9 +63,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun udharDao(): UdharDao
     abstract fun savingsGoalDao(): SavingsGoalDao
     abstract fun utilityAccountDao(): UtilityAccountDao
+    abstract fun annualArchiveSummaryDao(): AnnualArchiveSummaryDao
 
     companion object {
         const val DATABASE_NAME = "kharcha.db"
-        const val SCHEMA_VERSION = 8
+        const val SCHEMA_VERSION = 9
     }
 }
