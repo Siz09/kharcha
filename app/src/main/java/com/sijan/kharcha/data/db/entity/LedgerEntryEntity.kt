@@ -36,7 +36,8 @@ import com.sijan.kharcha.domain.model.TaxCategory
         Index("accountId"),
         Index("toAccountId"),
         Index("date"),
-        Index("transactionId")
+        Index("transactionId"),
+        Index("festivalBudgetId")
     ]
 )
 data class LedgerEntryEntity(
@@ -57,6 +58,7 @@ data class LedgerEntryEntity(
     val taxCategory: TaxCategory? = null,
     val documentType: DocumentType? = null,
     val isReconciled: Boolean = false,
+    val festivalBudgetId: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -77,6 +79,7 @@ data class LedgerEntryEntity(
         taxCategory = taxCategory,
         documentType = documentType,
         isReconciled = isReconciled,
+        festivalBudgetId = festivalBudgetId,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -99,6 +102,7 @@ data class LedgerEntryEntity(
             taxCategory = entry.taxCategory,
             documentType = entry.documentType,
             isReconciled = entry.isReconciled,
+            festivalBudgetId = entry.festivalBudgetId,
             createdAt = entry.createdAt,
             updatedAt = entry.updatedAt
         )

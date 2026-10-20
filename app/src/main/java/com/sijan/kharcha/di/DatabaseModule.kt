@@ -10,6 +10,7 @@ import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategorizationRuleDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
+import com.sijan.kharcha.data.db.dao.FestivalBudgetDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.ReconciliationDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
@@ -27,10 +28,13 @@ import com.sijan.kharcha.data.db.migration.MIGRATION_7_8
 import com.sijan.kharcha.data.db.migration.MIGRATION_8_9
 import com.sijan.kharcha.data.db.migration.MIGRATION_9_10
 import com.sijan.kharcha.data.db.migration.MIGRATION_10_11
+import com.sijan.kharcha.data.db.migration.MIGRATION_11_12
 import com.sijan.kharcha.data.repository.AnalyticsRepository
 import com.sijan.kharcha.data.repository.AnalyticsRepositoryImpl
 import com.sijan.kharcha.data.repository.CategorizationRulesRepository
 import com.sijan.kharcha.data.repository.CategorizationRulesRepositoryImpl
+import com.sijan.kharcha.data.repository.FestivalBudgetRepository
+import com.sijan.kharcha.data.repository.FestivalBudgetRepositoryImpl
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
 import com.sijan.kharcha.data.repository.ReconciliationRepository
@@ -60,7 +64,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12).build()
     }
 
     @Provides
@@ -132,6 +136,11 @@ object DatabaseModule {
     fun provideCategorizationRuleDao(database: AppDatabase): CategorizationRuleDao {
         return database.categorizationRuleDao()
     }
+
+    @Provides
+    fun provideFestivalBudgetDao(database: AppDatabase): FestivalBudgetDao {
+        return database.festivalBudgetDao()
+    }
 }
 
 @Module
@@ -179,5 +188,11 @@ abstract class RepositoryModule {
     abstract fun bindCategorizationRulesRepository(
         categorizationRulesRepositoryImpl: CategorizationRulesRepositoryImpl
     ): CategorizationRulesRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindFestivalBudgetRepository(
+        festivalBudgetRepositoryImpl: FestivalBudgetRepositoryImpl
+    ): FestivalBudgetRepository
 }
 

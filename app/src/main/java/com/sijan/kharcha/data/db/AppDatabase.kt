@@ -11,6 +11,7 @@ import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategorizationRuleDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
+import com.sijan.kharcha.data.db.dao.FestivalBudgetDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.ReconciliationDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
@@ -26,6 +27,7 @@ import com.sijan.kharcha.data.db.entity.BillEntity
 import com.sijan.kharcha.data.db.entity.BudgetEntity
 import com.sijan.kharcha.data.db.entity.CategorizationRuleEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
+import com.sijan.kharcha.data.db.entity.FestivalBudgetEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryFtsEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntrySplitEntity
@@ -54,7 +56,8 @@ import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
         AnnualArchiveSummaryEntity::class,
         LedgerEntrySplitEntity::class,
         AccountReconciliationEntity::class,
-        CategorizationRuleEntity::class
+        CategorizationRuleEntity::class,
+        FestivalBudgetEntity::class
     ],
     version = AppDatabase.SCHEMA_VERSION,
     exportSchema = true
@@ -76,9 +79,10 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun splitDao(): SplitDao
     abstract fun reconciliationDao(): ReconciliationDao
     abstract fun categorizationRuleDao(): CategorizationRuleDao
+    abstract fun festivalBudgetDao(): FestivalBudgetDao
 
     companion object {
         const val DATABASE_NAME = "kharcha.db"
-        const val SCHEMA_VERSION = 11
+        const val SCHEMA_VERSION = 12
     }
 }

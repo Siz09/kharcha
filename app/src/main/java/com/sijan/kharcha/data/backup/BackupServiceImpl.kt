@@ -193,7 +193,10 @@ class BackupServiceImpl @Inject constructor(
         payload.entries.size
     }
 
-    override suspend fun exportArchive(outputStream: OutputStream): Result<ArchiveSummary> = withContext(Dispatchers.IO) {
+    override suspend fun exportArchive(
+        outputStream: OutputStream,
+        passphrase: CharArray?
+    ): Result<ArchiveSummary> = withContext(Dispatchers.IO) {
         runCatching {
             val payload = buildBackupPayload()
             val databaseJsonBytes = serializer.serializeToBytes(payload).getOrThrow()
@@ -244,7 +247,13 @@ class BackupServiceImpl @Inject constructor(
             val dateStr = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date(manifest.createdAt))
             val defaultFileName = "kharcha_backup_$dateStr.kharcha"
 
-            val countingOut = CountingOutputStream(outputStream)
+            val tempZipFile = if (passphrase != null && passphrase.isNotEmpty()) {
+                File(context.cacheDir, "export_temp_${System.currentTimeMillis()}.zip")
+            } else null
+
+            val targetZipStream = tempZipFile?.outputStream() ?: outputStream
+            val countingOut = CountingOutputStream(targetZipStream)
+
             ZipOutputStream(countingOut.buffered()).use { zipOut ->
                 // 1. manifest.json
                 val manifestEntry = ZipEntry("manifest.json")
@@ -271,6 +280,20 @@ class BackupServiceImpl @Inject constructor(
                 zipOut.flush()
             }
 
+            var finalSize = countingOut.bytesWritten
+
+            if (tempZipFile != null && passphrase != null && passphrase.isNotEmpty()) {
+                try {
+                    val encCountingOut = CountingOutputStream(outputStream)
+                    tempZipFile.inputStream().buffered().use { zipIn ->
+                        BackupCrypto.encrypt(zipIn, encCountingOut, passphrase)
+                    }
+                    finalSize = encCountingOut.bytesWritten
+                } finally {
+                    tempZipFile.delete()
+                }
+            }
+
             ArchiveSummary(
                 fileName = defaultFileName,
                 archiveVersion = manifest.archiveVersion,
@@ -278,7 +301,7 @@ class BackupServiceImpl @Inject constructor(
                 createdAt = manifest.createdAt,
                 totalEntries = manifest.totalEntries,
                 totalAssets = manifest.totalAssets,
-                archiveSizeBytes = countingOut.bytesWritten
+                archiveSizeBytes = finalSize
             )
         }
     }
@@ -461,7 +484,10 @@ class BackupServiceImpl @Inject constructor(
         )
     }
 
-    override suspend fun stageArchiveRestore(inputStream: InputStream): Result<BackupSummary> = withContext(Dispatchers.IO) {
+    override suspend fun stageArchiveRestore(
+        inputStream: InputStream,
+        passphrase: CharArray?
+    ): Result<BackupSummary> = withContext(Dispatchers.IO) {
         runCatching {
             val stagingDir = File(context.cacheDir, "restore_staging")
             if (stagingDir.exists()) {
@@ -469,10 +495,37 @@ class BackupServiceImpl @Inject constructor(
             }
             stagingDir.mkdirs()
 
+            val rawInputFile = File(stagingDir, "raw_incoming.bin")
+            rawInputFile.outputStream().buffered().use { out ->
+                inputStream.copyTo(out)
+            }
+
+            // Check if encrypted
+            val headerBytes = ByteArray(16)
+            rawInputFile.inputStream().use { it.read(headerBytes) }
+            val isEncrypted = BackupCrypto.isEncryptedArchive(headerBytes)
+
+            val zipFileToExtract = if (isEncrypted) {
+                if (passphrase == null || passphrase.isEmpty()) {
+                    stagingDir.deleteRecursively()
+                    throw IllegalArgumentException("Archive is password-protected. Passphrase required.")
+                }
+                val decryptedZip = File(stagingDir, "decrypted.zip")
+                rawInputFile.inputStream().buffered().use { encIn ->
+                    decryptedZip.outputStream().buffered().use { decOut ->
+                        BackupCrypto.decrypt(encIn, decOut, passphrase)
+                    }
+                }
+                rawInputFile.delete()
+                decryptedZip
+            } else {
+                rawInputFile
+            }
+
             val canonicalStagingPath = stagingDir.canonicalPath
 
             // 1. Unpack archive to staging directory with Zip Slip protection
-            ZipInputStream(inputStream.buffered()).use { zipIn ->
+            ZipInputStream(zipFileToExtract.inputStream().buffered()).use { zipIn ->
                 var entry = zipIn.nextEntry
                 while (entry != null) {
                     val targetFile = File(stagingDir, entry.name)
@@ -491,6 +544,7 @@ class BackupServiceImpl @Inject constructor(
                     entry = zipIn.nextEntry
                 }
             }
+            zipFileToExtract.delete()
 
             // 2. Validate manifest.json
             val manifestFile = File(stagingDir, "manifest.json")

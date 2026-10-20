@@ -355,6 +355,31 @@ val MIGRATION_10_11 = object : Migration(10, 11) {
     }
 }
 
+val MIGRATION_11_12 = object : Migration(11, 12) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `ledger_entries` ADD COLUMN `festivalBudgetId` INTEGER DEFAULT NULL")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_ledger_entries_festivalBudgetId` ON `ledger_entries` (`festivalBudgetId`)")
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `festival_budgets` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `name` TEXT NOT NULL,
+                `festivalType` TEXT NOT NULL,
+                `targetBudgetPaisa` INTEGER NOT NULL,
+                `startDateEpoch` INTEGER NOT NULL,
+                `endDateEpoch` INTEGER NOT NULL,
+                `notes` TEXT,
+                `isArchived` INTEGER NOT NULL DEFAULT 0,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL
+            )
+        """.trimIndent())
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_festival_budgets_festivalType` ON `festival_budgets` (`festivalType`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_festival_budgets_startDateEpoch` ON `festival_budgets` (`startDateEpoch`)")
+    }
+}
+
 
 
 

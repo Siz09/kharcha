@@ -17,6 +17,7 @@ data class LedgerEntry(
     val taxCategory: TaxCategory? = null,
     val documentType: DocumentType? = null,
     val isReconciled: Boolean = false,
+    val festivalBudgetId: Long? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {

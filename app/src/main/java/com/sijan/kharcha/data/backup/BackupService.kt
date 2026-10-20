@@ -27,15 +27,17 @@ interface BackupService {
     /**
      * Packages a full .kharcha ZIP archive containing manifest.json (with asset SHA-256 hashes),
      * database.json (complete Room tables snapshot), and assets/ (receipt images and document attachments).
+     * If passphrase is provided, encrypts the entire archive with AES-256-GCM.
      */
-    suspend fun exportArchive(outputStream: OutputStream): Result<ArchiveSummary>
+    suspend fun exportArchive(outputStream: OutputStream, passphrase: CharArray? = null): Result<ArchiveSummary>
 
     /**
      * Pre-flight staging and checksum integrity verification of a .kharcha ZIP archive.
      * Unpacks archive into an isolated staging cache directory, verifies manifest and SHA-256
      * hashes of all bundled assets, and deserializes database.json without touching Room database.
+     * If archive is encrypted, decrypts using provided passphrase before staging.
      */
-    suspend fun stageArchiveRestore(inputStream: InputStream): Result<BackupSummary>
+    suspend fun stageArchiveRestore(inputStream: InputStream, passphrase: CharArray? = null): Result<BackupSummary>
 
     /**
      * Executes atomic multi-table database restoration and moves verified staged assets

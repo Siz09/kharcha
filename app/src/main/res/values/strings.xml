@@ -526,5 +526,25 @@
     <string name="insights_title">Spending Insights</string>
     <string name="insights_empty">No unusual spending patterns detected.</string>
     <string name="insights_dismiss">Dismiss</string>
+
+    <!-- Festival Planning & Encrypted Backups -->
+    <string name="festival_title">Festival Planner</string>
+    <string name="festival_empty">No festival budgets planned. Create one for Dashain, Tihar, or other festivals to track seasonal spending.</string>
+    <string name="festival_add_btn">Add Festival Budget</string>
+    <string name="festival_name_label">Festival Name</string>
+    <string name="festival_name_hint">e.g. Dashain 2081, Tihar Lights</string>
+    <string name="festival_target_budget">Target Budget (NPR)</string>
+    <string name="festival_type_label">Festival Type</string>
+    <string name="festival_progress_format">%1$s of %2$s spent (%3$d%%)</string>
+    <string name="festival_remaining_format">%s remaining</string>
+    <string name="festival_over_format">Over budget by %s</string>
+    <string name="festival_tag_label">Link to Festival Budget</string>
+    <string name="backup_encrypt_label">Protect Backup with Passphrase</string>
+    <string name="backup_encrypt_desc">Encrypts your full archive with AES-256-GCM. You must remember this passphrase to restore.</string>
+    <string name="backup_passphrase_label">Backup Passphrase</string>
+    <string name="backup_passphrase_confirm">Confirm Passphrase</string>
+    <string name="backup_passphrase_mismatch">Passphrases do not match</string>
+    <string name="backup_passphrase_required">Passphrase required to decrypt this backup</string>
+    <string name="backup_decrypt_error">Incorrect passphrase or corrupted backup file</string>
 </resources>
 
