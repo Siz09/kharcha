@@ -12,4 +12,5 @@ interface UserPreferencesRepository {
     suspend fun setLastBackupTimestamp(timestamp: Long)
     suspend fun setRolloverEnabled(enabled: Boolean)
     suspend fun setSmsDetectionEnabled(enabled: Boolean)
+    suspend fun setBiometricLockEnabled(enabled: Boolean)
 }

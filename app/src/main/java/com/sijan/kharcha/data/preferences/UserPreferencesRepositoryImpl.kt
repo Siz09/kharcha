@@ -33,6 +33,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
         val LAST_BACKUP_TIMESTAMP = longPreferencesKey("last_backup_timestamp")
         val ROLLOVER_ENABLED = booleanPreferencesKey("rollover_enabled")
         val SMS_DETECTION_ENABLED = booleanPreferencesKey("sms_detection_enabled")
+        val BIOMETRIC_LOCK_ENABLED = booleanPreferencesKey("biometric_lock_enabled")
     }
 
     override val preferences: Flow<UserPreferences> = context.userDataStore.data
@@ -56,6 +57,7 @@ class UserPreferencesRepositoryImpl @Inject constructor(
             val lastBackupTimestamp = prefs[PreferencesKeys.LAST_BACKUP_TIMESTAMP]
             val rolloverEnabled = prefs[PreferencesKeys.ROLLOVER_ENABLED] ?: false
             val smsDetectionEnabled = prefs[PreferencesKeys.SMS_DETECTION_ENABLED] ?: true
+            val biometricLockEnabled = prefs[PreferencesKeys.BIOMETRIC_LOCK_ENABLED] ?: false
 
             UserPreferences(
                 theme = theme,
@@ -63,7 +65,8 @@ class UserPreferencesRepositoryImpl @Inject constructor(
                 autoBackupFolderUri = autoBackupFolderUri,
                 lastBackupTimestamp = lastBackupTimestamp,
                 rolloverEnabled = rolloverEnabled,
-                smsDetectionEnabled = smsDetectionEnabled
+                smsDetectionEnabled = smsDetectionEnabled,
+                biometricLockEnabled = biometricLockEnabled
             )
         }
 
@@ -104,6 +107,12 @@ class UserPreferencesRepositoryImpl @Inject constructor(
     override suspend fun setSmsDetectionEnabled(enabled: Boolean) {
         context.userDataStore.edit { prefs ->
             prefs[PreferencesKeys.SMS_DETECTION_ENABLED] = enabled
+        }
+    }
+
+    override suspend fun setBiometricLockEnabled(enabled: Boolean) {
+        context.userDataStore.edit { prefs ->
+            prefs[PreferencesKeys.BIOMETRIC_LOCK_ENABLED] = enabled
         }
     }
 }

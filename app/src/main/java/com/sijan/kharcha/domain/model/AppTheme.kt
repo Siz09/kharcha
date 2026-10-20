@@ -12,5 +12,6 @@ data class UserPreferences(
     val autoBackupFolderUri: String? = null,
     val lastBackupTimestamp: Long? = null,
     val rolloverEnabled: Boolean = false,
-    val smsDetectionEnabled: Boolean = true
+    val smsDetectionEnabled: Boolean = true,
+    val biometricLockEnabled: Boolean = false
 )
