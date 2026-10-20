@@ -29,4 +29,23 @@ interface BackupService {
      * database.json (complete Room tables snapshot), and assets/ (receipt images and document attachments).
      */
     suspend fun exportArchive(outputStream: OutputStream): Result<ArchiveSummary>
+
+    /**
+     * Pre-flight staging and checksum integrity verification of a .kharcha ZIP archive.
+     * Unpacks archive into an isolated staging cache directory, verifies manifest and SHA-256
+     * hashes of all bundled assets, and deserializes database.json without touching Room database.
+     */
+    suspend fun stageArchiveRestore(inputStream: InputStream): Result<BackupSummary>
+
+    /**
+     * Executes atomic multi-table database restoration and moves verified staged assets
+     * into app-private receipts and documents directories.
+     * If an error occurs, rolls back transaction and keeps existing data and assets untouched.
+     */
+    suspend fun confirmArchiveRestore(): Result<BackupSummary>
+
+    /**
+     * Cleans up any staging files if restore is cancelled or fails.
+     */
+    suspend fun clearRestoreStaging()
 }

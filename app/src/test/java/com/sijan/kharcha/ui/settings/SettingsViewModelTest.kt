@@ -210,4 +210,54 @@ class SettingsViewModelTest {
         val enabledState = viewModel.uiState.first { it.smsDetectionEnabled }
         assertTrue(enabledState.smsDetectionEnabled)
     }
+
+    @Test
+    fun restoreArchiveViaViewModelRestoresSuccessfully() = runTest(testDispatcher) {
+        val catId = db.categoryDao().insertCategory(
+            com.sijan.kharcha.data.db.entity.CategoryEntity(name = "Utilities", type = EntryType.EXPENSE)
+        )
+        db.ledgerDao().insertEntry(
+            com.sijan.kharcha.data.db.entity.LedgerEntryEntity(
+                amountPaisa = 45000L,
+                type = EntryType.EXPENSE,
+                categoryId = catId,
+                accountId = 1L,
+                date = System.currentTimeMillis()
+            )
+        )
+
+        val out = ByteArrayOutputStream()
+        backupService.exportArchive(out).getOrThrow()
+        val archiveBytes = out.toByteArray()
+
+        db.ledgerDao().deleteAllEntries()
+        db.categoryDao().deleteAllCategories()
+
+        var stagedReady = false
+        val stageJob = viewModel.stageRestore(
+            bytes = archiveBytes,
+            onReady = { stagedReady = true },
+            onError = {}
+        )
+        stageJob.join()
+        testScheduler.advanceUntilIdle()
+
+        assertTrue(stagedReady)
+        val state = viewModel.uiState.first { it.isRestoreDialogOpen }
+        assertTrue(state.isRestoreDialogOpen)
+        assertEquals(1, state.pendingRestoreSummary?.entryCount)
+
+        var restoreConfirmed = false
+        val confirmJob = viewModel.confirmRestore(
+            onSuccess = { restoreConfirmed = true },
+            onError = {}
+        )
+        confirmJob?.join()
+        testScheduler.advanceUntilIdle()
+
+        assertTrue(restoreConfirmed)
+        val restoredEntries = db.ledgerDao().getAllEntries().first()
+        assertEquals(1, restoredEntries.size)
+        assertEquals(45000L, restoredEntries[0].amountPaisa)
+    }
 }

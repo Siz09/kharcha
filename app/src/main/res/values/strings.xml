@@ -134,9 +134,10 @@
     <string name="settings_archive_export_success">Archive exported: %s</string>
     <string name="settings_export_json">Export JSON Backup</string>
     <string name="settings_export_csv">Export CSV</string>
-    <string name="settings_restore_json">Restore from JSON</string>
+    <string name="settings_restore_json">Restore Backup (.kharcha / JSON)</string>
     <string name="settings_restore_confirm_title">Restore Backup?</string>
     <string name="settings_restore_confirm_message">This backup contains %1$d categories and %2$d entries.\n\nRestoring will replace all current data on this device. This cannot be undone.</string>
+    <string name="settings_restore_confirm_archive_message">This archive contains %1$d categories, %2$d entries, and %3$d media attachments (schema v%4$d, exported %5$s).\n\nRestoring will replace all current data on this device. This cannot be undone.</string>
     <string name="settings_restore_action">Restore</string>
     <string name="settings_section_data">Data Management</string>
     <string name="settings_manage_categories">Manage Categories</string>

@@ -155,23 +155,25 @@ fun SettingsScreen(
         }
     }
 
-    // Restore JSON Launcher
+    // Restore Launcher (supports .kharcha ZIP archive and .json)
     val restoreJsonLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
         if (uri != null) {
             scope.launch {
-                val bytes = runCatching {
-                    context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                val stream = runCatching {
+                    context.contentResolver.openInputStream(uri)
                 }.getOrNull()
 
-                if (bytes != null) {
+                if (stream != null) {
                     viewModel.stageRestore(
-                        bytes = bytes,
+                        inputStream = stream,
                         onReady = {},
-                        onError = {
+                        onError = { errorMsg ->
                             scope.launch {
-                                snackbarHostState.showSnackbar(context.getString(R.string.settings_restore_failed))
+                                snackbarHostState.showSnackbar(
+                                    errorMsg ?: context.getString(R.string.settings_restore_failed)
+                                )
                             }
                         }
                     )
@@ -782,13 +784,24 @@ fun SettingsScreen(
                     Text(text = stringResource(R.string.settings_restore_confirm_title))
                 },
                 text = {
-                    Text(
-                        text = stringResource(
+                    val message = if (summary.assetCount > 0) {
+                        val dateStr = SimpleDateFormat("MMM dd, yyyy HH:mm", Locale.getDefault()).format(Date(summary.exportedAt))
+                        stringResource(
+                            R.string.settings_restore_confirm_archive_message,
+                            summary.categoryCount,
+                            summary.entryCount,
+                            summary.assetCount,
+                            summary.schemaVersion,
+                            dateStr
+                        )
+                    } else {
+                        stringResource(
                             R.string.settings_restore_confirm_message,
                             summary.categoryCount,
                             summary.entryCount
                         )
-                    )
+                    }
+                    Text(text = message)
                 },
                 confirmButton = {
                     TextButton(

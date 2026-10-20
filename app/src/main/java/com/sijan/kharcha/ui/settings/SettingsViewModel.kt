@@ -44,6 +44,7 @@ class SettingsViewModel @Inject constructor(
     private val isRestoreDialogOpen = MutableStateFlow(false)
     private val pendingRestoreSummary = MutableStateFlow<BackupSummary?>(null)
     private var pendingRestoreBytes: ByteArray? = null
+    private var pendingRestoreIsArchive: Boolean = false
 
     val uiState: StateFlow<SettingsUiState> = combine(
         userPreferencesRepository.preferences,
@@ -147,46 +148,87 @@ class SettingsViewModel @Inject constructor(
         backupService.exportCsv(outputStream)
     }
 
-    fun stageRestore(bytes: ByteArray, onReady: () -> Unit, onError: () -> Unit): Job = viewModelScope.launch {
-        val parseResult = withContext(Dispatchers.IO) {
-            serializer.deserialize(ByteArrayInputStream(bytes))
+    fun stageRestore(
+        inputStream: java.io.InputStream,
+        onReady: () -> Unit,
+        onError: (String?) -> Unit
+    ): Job = viewModelScope.launch {
+        val result = withContext(Dispatchers.IO) {
+            runCatching {
+                val bufferedStream = inputStream.buffered()
+                bufferedStream.mark(4)
+                val header = ByteArray(4)
+                val read = bufferedStream.read(header, 0, 4)
+                bufferedStream.reset()
+
+                val isZip = read == 4 &&
+                    header[0] == 0x50.toByte() && // 'P'
+                    header[1] == 0x4B.toByte() && // 'K'
+                    header[2] == 0x03.toByte() &&
+                    header[3] == 0x04.toByte()
+
+                if (isZip) {
+                    pendingRestoreIsArchive = true
+                    pendingRestoreBytes = null
+                    backupService.stageArchiveRestore(bufferedStream).getOrThrow()
+                } else {
+                    pendingRestoreIsArchive = false
+                    val bytes = bufferedStream.readBytes()
+                    pendingRestoreBytes = bytes
+                    val payload = serializer.deserialize(ByteArrayInputStream(bytes)).getOrThrow()
+                    BackupSummary(
+                        schemaVersion = payload.schemaVersion,
+                        exportedAt = payload.exportedAt,
+                        categoryCount = payload.categories.size,
+                        entryCount = payload.entries.size,
+                        assetCount = 0
+                    )
+                }
+            }
         }
 
-        parseResult.onSuccess { payload ->
-            pendingRestoreBytes = bytes
-            pendingRestoreSummary.value = BackupSummary(
-                schemaVersion = payload.schemaVersion,
-                exportedAt = payload.exportedAt,
-                categoryCount = payload.categories.size,
-                entryCount = payload.entries.size
-            )
+        result.onSuccess { summary ->
+            pendingRestoreSummary.value = summary
             isRestoreDialogOpen.value = true
             onReady()
-        }.onFailure {
-            onError()
+        }.onFailure { error ->
+            dismissRestoreDialog()
+            onError(error.message)
         }
     }
 
+    fun stageRestore(bytes: ByteArray, onReady: () -> Unit, onError: () -> Unit): Job =
+        stageRestore(ByteArrayInputStream(bytes), onReady, { onError() })
+
     fun confirmRestore(onSuccess: (BackupSummary) -> Unit, onError: () -> Unit): Job? {
-        val bytes = pendingRestoreBytes ?: run {
+        val summary = pendingRestoreSummary.value ?: run {
             onError()
             return null
         }
+        val isArchive = pendingRestoreIsArchive
+        val bytes = pendingRestoreBytes
 
         return viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
-                backupService.restoreBackup(ByteArrayInputStream(bytes))
+                if (isArchive) {
+                    backupService.confirmArchiveRestore()
+                } else {
+                    if (bytes != null) {
+                        backupService.restoreBackup(ByteArrayInputStream(bytes))
+                    } else {
+                        Result.failure(IllegalStateException("No restore payload"))
+                    }
+                }
             }
 
-            result.onSuccess { summary ->
+            result.onSuccess { res ->
                 isRestoreDialogOpen.value = false
                 pendingRestoreBytes = null
                 pendingRestoreSummary.value = null
-                onSuccess(summary)
+                pendingRestoreIsArchive = false
+                onSuccess(res)
             }.onFailure {
-                isRestoreDialogOpen.value = false
-                pendingRestoreBytes = null
-                pendingRestoreSummary.value = null
+                dismissRestoreDialog()
                 onError()
             }
         }
@@ -196,5 +238,9 @@ class SettingsViewModel @Inject constructor(
         isRestoreDialogOpen.value = false
         pendingRestoreBytes = null
         pendingRestoreSummary.value = null
+        pendingRestoreIsArchive = false
+        viewModelScope.launch {
+            backupService.clearRestoreStaging()
+        }
     }
 }

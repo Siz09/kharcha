@@ -44,6 +44,7 @@ import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -282,11 +283,10 @@ class BackupServiceImpl @Inject constructor(
         }
     }
 
-    override suspend fun restoreBackup(inputStream: InputStream): Result<BackupSummary> = runCatching {
-        // Step 1: Deserialize and validate payload before modifying database
-        val payload = serializer.deserialize(inputStream).getOrThrow()
-
-        // Step 2: Atomic transaction write
+    private suspend fun applyPayloadToDatabase(
+        payload: BackupPayload,
+        remappedAssetPaths: Map<String, String> = emptyMap()
+    ) {
         db.withTransaction {
             ledgerDao.deleteAllEntries()
             categoryDao.deleteAllCategories()
@@ -324,7 +324,6 @@ class BackupServiceImpl @Inject constructor(
                     )
                 }
             } else {
-                // Backward compatibility: default Cash account for legacy v1 backups
                 val now = System.currentTimeMillis()
                 accountDao.insertAccount(
                     AccountEntity(
@@ -340,6 +339,11 @@ class BackupServiceImpl @Inject constructor(
             }
 
             for (entry in payload.entries) {
+                val finalReceiptPath = if (entry.receiptPath != null) {
+                    val fileName = File(entry.receiptPath).name
+                    remappedAssetPaths[fileName] ?: entry.receiptPath
+                } else null
+
                 ledgerDao.insertEntry(
                     LedgerEntryEntity(
                         id = entry.id,
@@ -351,7 +355,7 @@ class BackupServiceImpl @Inject constructor(
                         note = entry.note,
                         date = entry.date,
                         source = entry.source,
-                        receiptPath = entry.receiptPath,
+                        receiptPath = finalReceiptPath,
                         rawOcrText = entry.rawOcrText,
                         transactionId = entry.transactionId,
                         isTaxDeductible = entry.isTaxDeductible,
@@ -439,13 +443,191 @@ class BackupServiceImpl @Inject constructor(
                 )
             }
         }
+    }
+
+    override suspend fun restoreBackup(inputStream: InputStream): Result<BackupSummary> = runCatching {
+        // Step 1: Deserialize and validate payload before modifying database
+        val payload = serializer.deserialize(inputStream).getOrThrow()
+
+        // Step 2: Atomic transaction write
+        applyPayloadToDatabase(payload)
 
         BackupSummary(
             schemaVersion = payload.schemaVersion,
             exportedAt = payload.exportedAt,
             categoryCount = payload.categories.size,
-            entryCount = payload.entries.size
+            entryCount = payload.entries.size,
+            assetCount = 0
         )
+    }
+
+    override suspend fun stageArchiveRestore(inputStream: InputStream): Result<BackupSummary> = withContext(Dispatchers.IO) {
+        runCatching {
+            val stagingDir = File(context.cacheDir, "restore_staging")
+            if (stagingDir.exists()) {
+                stagingDir.deleteRecursively()
+            }
+            stagingDir.mkdirs()
+
+            val canonicalStagingPath = stagingDir.canonicalPath
+
+            // 1. Unpack archive to staging directory with Zip Slip protection
+            ZipInputStream(inputStream.buffered()).use { zipIn ->
+                var entry = zipIn.nextEntry
+                while (entry != null) {
+                    val targetFile = File(stagingDir, entry.name)
+                    if (!targetFile.canonicalPath.startsWith(canonicalStagingPath)) {
+                        throw SecurityException("Zip Slip detected: invalid archive entry ${entry.name}")
+                    }
+                    if (entry.isDirectory) {
+                        targetFile.mkdirs()
+                    } else {
+                        targetFile.parentFile?.mkdirs()
+                        targetFile.outputStream().buffered().use { out ->
+                            zipIn.copyTo(out)
+                        }
+                    }
+                    zipIn.closeEntry()
+                    entry = zipIn.nextEntry
+                }
+            }
+
+            // 2. Validate manifest.json
+            val manifestFile = File(stagingDir, "manifest.json")
+            if (!manifestFile.exists()) {
+                stagingDir.deleteRecursively()
+                throw IllegalArgumentException("Invalid archive: manifest.json not found")
+            }
+
+            val manifest = serializer.deserializeManifest(manifestFile.readText(Charsets.UTF_8)).getOrElse { error ->
+                stagingDir.deleteRecursively()
+                throw IllegalArgumentException("Malformed manifest.json: ${error.message}", error)
+            }
+
+            // 3. Confirm schema version compatibility
+            if (manifest.schemaVersion > AppDatabase.SCHEMA_VERSION) {
+                stagingDir.deleteRecursively()
+                throw IllegalArgumentException(
+                    "Unsupported backup schema version: ${manifest.schemaVersion}. Current database schema is ${AppDatabase.SCHEMA_VERSION}."
+                )
+            }
+
+            // 4. Validate database.json
+            val dbFile = File(stagingDir, "database.json")
+            if (!dbFile.exists()) {
+                stagingDir.deleteRecursively()
+                throw IllegalArgumentException("Invalid archive: database.json not found")
+            }
+
+            val payload = dbFile.inputStream().use { stream ->
+                serializer.deserialize(stream).getOrElse { error ->
+                    stagingDir.deleteRecursively()
+                    throw IllegalArgumentException("Malformed database.json: ${error.message}", error)
+                }
+            }
+
+            // 5. Checksum verification of all assets
+            for (asset in manifest.assets) {
+                val assetFile = File(stagingDir, asset.relativePath)
+                if (!assetFile.exists() || !assetFile.isFile) {
+                    stagingDir.deleteRecursively()
+                    throw IllegalStateException("Missing asset file: ${asset.relativePath}")
+                }
+                if (assetFile.length() != asset.sizeBytes) {
+                    stagingDir.deleteRecursively()
+                    throw IllegalStateException(
+                        "Asset size mismatch for ${asset.relativePath}: expected ${asset.sizeBytes}, found ${assetFile.length()}"
+                    )
+                }
+                val sha256 = calculateSha256(assetFile)
+                if (!sha256.equals(asset.sha256, ignoreCase = true)) {
+                    stagingDir.deleteRecursively()
+                    throw IllegalStateException(
+                        "Asset checksum verification failed for ${asset.relativePath}: expected ${asset.sha256}, calculated $sha256"
+                    )
+                }
+            }
+
+            BackupSummary(
+                schemaVersion = manifest.schemaVersion,
+                exportedAt = manifest.createdAt,
+                categoryCount = payload.categories.size,
+                entryCount = payload.entries.size,
+                assetCount = manifest.totalAssets
+            )
+        }
+    }
+
+    override suspend fun confirmArchiveRestore(): Result<BackupSummary> = withContext(Dispatchers.IO) {
+        runCatching {
+            val stagingDir = File(context.cacheDir, "restore_staging")
+            if (!stagingDir.exists()) {
+                throw IllegalStateException("No staged restore directory found")
+            }
+
+            val manifestFile = File(stagingDir, "manifest.json")
+            val dbFile = File(stagingDir, "database.json")
+            if (!manifestFile.exists() || !dbFile.exists()) {
+                stagingDir.deleteRecursively()
+                throw IllegalStateException("Staged restore files missing")
+            }
+
+            val manifest = serializer.deserializeManifest(manifestFile.readText(Charsets.UTF_8)).getOrThrow()
+            val payload = dbFile.inputStream().use { serializer.deserialize(it).getOrThrow() }
+
+            val receiptsDir = File(context.filesDir, "receipts").apply { mkdirs() }
+            val documentsDir = File(context.filesDir, "documents").apply { mkdirs() }
+
+            // Build path remapping for restored assets
+            val remappedPaths = mutableMapOf<String, String>()
+            val stagedReceiptsDir = File(stagingDir, "assets/receipts")
+            if (stagedReceiptsDir.exists()) {
+                stagedReceiptsDir.listFiles()?.filter { it.isFile }?.forEach { srcFile ->
+                    val destFile = File(receiptsDir, srcFile.name)
+                    remappedPaths[srcFile.name] = destFile.absolutePath
+                }
+            }
+            val stagedDocsDir = File(stagingDir, "assets/documents")
+            if (stagedDocsDir.exists()) {
+                stagedDocsDir.listFiles()?.filter { it.isFile }?.forEach { srcFile ->
+                    val destFile = File(documentsDir, srcFile.name)
+                    remappedPaths[srcFile.name] = destFile.absolutePath
+                }
+            }
+
+            // Phase 2: Atomic database transaction
+            applyPayloadToDatabase(payload, remappedPaths)
+
+            // Phase 3: Move verified assets from staging to app-private storage
+            if (stagedReceiptsDir.exists()) {
+                stagedReceiptsDir.listFiles()?.filter { it.isFile }?.forEach { srcFile ->
+                    val destFile = File(receiptsDir, srcFile.name)
+                    srcFile.copyTo(destFile, overwrite = true)
+                }
+            }
+            if (stagedDocsDir.exists()) {
+                stagedDocsDir.listFiles()?.filter { it.isFile }?.forEach { srcFile ->
+                    val destFile = File(documentsDir, srcFile.name)
+                    srcFile.copyTo(destFile, overwrite = true)
+                }
+            }
+
+            // Clean up staging directory
+            stagingDir.deleteRecursively()
+
+            BackupSummary(
+                schemaVersion = manifest.schemaVersion,
+                exportedAt = manifest.createdAt,
+                categoryCount = payload.categories.size,
+                entryCount = payload.entries.size,
+                assetCount = manifest.totalAssets
+            )
+        }
+    }
+
+    override suspend fun clearRestoreStaging() = withContext(Dispatchers.IO) {
+        File(context.cacheDir, "restore_staging").deleteRecursively()
+        Unit
     }
 
     override suspend fun exportCsv(outputStream: OutputStream): Result<Int> = runCatching {
