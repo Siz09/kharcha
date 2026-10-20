@@ -24,6 +24,25 @@ android {
         }
     }
 
+    signingConfigs {
+        create("release") {
+            val keystorePath = (project.findProperty("KHARCHA_KEYSTORE_PATH") as? String)
+                ?: System.getenv("KHARCHA_KEYSTORE_PATH")
+                ?: "kharcha-release.jks"
+            val ksFile = rootProject.file(keystorePath)
+            if (ksFile.exists()) {
+                storeFile = ksFile
+                storePassword = (project.findProperty("KHARCHA_KEYSTORE_PASSWORD") as? String)
+                    ?: System.getenv("KHARCHA_KEYSTORE_PASSWORD")
+                keyAlias = (project.findProperty("KHARCHA_KEY_ALIAS") as? String)
+                    ?: System.getenv("KHARCHA_KEY_ALIAS")
+                    ?: "kharcha_release_key"
+                keyPassword = (project.findProperty("KHARCHA_KEY_PASSWORD") as? String)
+                    ?: System.getenv("KHARCHA_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -31,6 +50,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            val releaseSigning = signingConfigs.getByName("release")
+            if (releaseSigning.storeFile?.exists() == true) {
+                signingConfig = releaseSigning
+            }
         }
     }
 
@@ -62,6 +85,10 @@ android {
     sourceSets {
         getByName("test").assets.srcDir("$projectDir/schemas")
     }
+}
+
+configurations.all {
+    exclude(group = "com.google.android.datatransport", module = "transport-backend-cct")
 }
 
 ksp {

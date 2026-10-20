@@ -10,6 +10,9 @@
 .cxx
 *.apk
 *.aab
+*.jks
+*.keystore
+*.p12
 output-metadata.json
 .env*
 !*.example
