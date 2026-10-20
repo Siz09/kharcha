@@ -55,18 +55,18 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 - [x] **Fixture Corpus Expansion**: 5 eSewa receipt fixtures (P2P transfer, NEA electricity, mobile topup, ISP payment, retail store) with 100% field accuracy verified in unit tests.
 - [x] **Expense Breakdown Donut Chart**: Monthly category expense breakdown with smooth custom Canvas Donut/Pie Chart and legend on Home screen.
 
-## 8. v2
+## 8. v2 (Complete)
 
-- **Flexible ORM & Layout-Aware Extraction Engine**: Spatial anchor-matching engine to parse and remember varied statement/receipt layouts for digital wallets (eSewa, Khalti) and bank slips (Fonepay, commercial banks).
-- **Payment Source & Account Architecture**: Model explicit `AccountEntity` (Cash, eSewa, Khalti, Bank accounts) to track balances accurately and prepare for v3 reconciliation.
-- **On-Device Bank SMS Expense Detection**: Optional local `RECEIVE_SMS` receiver (zero internet) parsing debit SMS from Nepali banks and prompting user confirmation.
-- **Spending Reports & Deep Analytics**: Category breakdown charts, month-over-month trend analysis, day-of-week spend patterns, and printable offline PDF monthly statements.
-- **Udhar (Credit/Debt) Ledger**: Track borrowed and lent money with contact linking, due dates, and partial settlement logs.
-- **Savings Goals Tracker**: Goal buckets (e.g. "Dashain Trip", "Emergency Fund") with target amount and progress visualizer.
-- **Utility Account Number Vault**: Offline storage for NEA customer IDs, Khanepani meter numbers, and ISP account IDs.
-- **Tax Deductible Tagging**: Tag expenses qualifying for Nepali tax rebates (insurance, medical, education).
-- **Launcher Widgets & Shortcuts**: Home screen quick-add widget and Android App Shortcuts.
-- **Biometric Security Lock**: Fingerprint and Face Unlock via Android `BiometricPrompt`.
+- [x] **Flexible ORM & Layout-Aware Extraction Engine**: Spatial anchor-matching engine to parse and remember varied statement/receipt layouts for digital wallets (eSewa, Khalti) and bank slips (Fonepay, commercial banks).
+- [x] **Payment Source & Account Architecture**: Model explicit `AccountEntity` (Cash, eSewa, Khalti, Bank accounts) to track balances accurately and prepare for v3 reconciliation.
+- [x] **On-Device Bank SMS Expense Detection**: Optional local `RECEIVE_SMS` receiver (zero internet) parsing debit SMS from Nepali banks and prompting user confirmation.
+- [x] **Spending Reports & Deep Analytics**: Category breakdown charts, month-over-month trend analysis, day-of-week spend patterns, and printable offline PDF monthly statements.
+- [x] **Udhar (Credit/Debt) Ledger**: Track borrowed and lent money with contact linking, due dates, and partial settlement logs.
+- [x] **Savings Goals Tracker**: Goal buckets (e.g. "Dashain Trip", "Emergency Fund") with target amount and progress visualizer.
+- [x] **Utility Account Number Vault**: Offline storage for NEA customer IDs, Khanepani meter numbers, and ISP account IDs with quick clipboard copy.
+- [x] **Tax Deductible Tagging**: Tag expenses qualifying for Nepali tax rebates (insurance, medical, retirement) with statutory ceiling meters.
+- [x] **Launcher Widgets & Shortcuts**: Home screen quick-add widget and Android App Shortcuts.
+- [x] **Biometric Security Lock**: Fingerprint and Face Unlock via Android `BiometricPrompt`.
 
 ## 9. v3
 
