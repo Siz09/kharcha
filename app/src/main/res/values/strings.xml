@@ -398,5 +398,20 @@
     <string name="widget_tap_to_view">Tap to open Kharcha</string>
     <string name="widget_locked_placeholder">Rs. ••••••</string>
     <string name="widget_this_month">This Month Net</string>
+
+    <!-- Spending Reports & PDF Export -->
+    <string name="reports_title">Spending Analytics</string>
+    <string name="reports_mom_title">Month-over-Month Comparison</string>
+    <string name="reports_spending_increase">+%1$s (%2$d%%) vs last month</string>
+    <string name="reports_spending_decrease">-%1$s (%2$d%%) vs last month</string>
+    <string name="reports_spending_equal">Same as last month</string>
+    <string name="reports_day_of_week_title">Weekly Spending Concentration</string>
+    <string name="reports_top_merchants_title">Top Spending Notes / Merchants</string>
+    <string name="reports_peak_day_title">Peak Spending Day</string>
+    <string name="reports_export_pdf_button">Export PDF Statement</string>
+    <string name="reports_generating_pdf">Generating offline statement...</string>
+    <string name="reports_pdf_ready">Statement generated successfully</string>
+    <string name="reports_pdf_share_title">Kharcha Monthly Financial Statement</string>
+    <string name="reports_summary_view_analytics">View Deep Analytics</string>
 </resources>
 
