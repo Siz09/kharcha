@@ -248,5 +248,27 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
     }
 }
 
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `utility_accounts` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `utilityType` TEXT NOT NULL,
+                `providerName` TEXT NOT NULL,
+                `consumerId` TEXT NOT NULL,
+                `counterOrBranch` TEXT,
+                `accountHolderName` TEXT,
+                `notes` TEXT,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL
+            )
+        """.trimIndent())
+
+        db.execSQL("ALTER TABLE `ledger_entries` ADD COLUMN `isTaxDeductible` INTEGER NOT NULL DEFAULT 0")
+        db.execSQL("ALTER TABLE `ledger_entries` ADD COLUMN `taxCategory` TEXT DEFAULT NULL")
+    }
+}
+
+
 
 

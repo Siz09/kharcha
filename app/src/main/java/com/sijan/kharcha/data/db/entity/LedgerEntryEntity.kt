@@ -6,6 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
+import com.sijan.kharcha.domain.model.TaxCategory
 
 @Entity(
     tableName = "ledger_entries",
@@ -51,6 +52,8 @@ data class LedgerEntryEntity(
     val receiptPath: String? = null,
     val rawOcrText: String? = null,
     val transactionId: String? = null,
+    val isTaxDeductible: Boolean = false,
+    val taxCategory: TaxCategory? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -67,6 +70,8 @@ data class LedgerEntryEntity(
         receiptPath = receiptPath,
         rawOcrText = rawOcrText,
         transactionId = transactionId,
+        isTaxDeductible = isTaxDeductible,
+        taxCategory = taxCategory,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -85,6 +90,8 @@ data class LedgerEntryEntity(
             receiptPath = entry.receiptPath,
             rawOcrText = entry.rawOcrText,
             transactionId = entry.transactionId,
+            isTaxDeductible = entry.isTaxDeductible,
+            taxCategory = entry.taxCategory,
             createdAt = entry.createdAt,
             updatedAt = entry.updatedAt
         )

@@ -1,6 +1,7 @@
 package com.sijan.kharcha.data.backup.model
 
 import com.sijan.kharcha.domain.model.EntryType
+import com.sijan.kharcha.domain.model.TaxCategory
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -17,6 +18,8 @@ data class BackupEntry(
     val receiptPath: String? = null,
     val rawOcrText: String? = null,
     val transactionId: String? = null,
+    val isTaxDeductible: Boolean = false,
+    val taxCategory: TaxCategory? = null,
     val createdAt: Long = 0L,
     val updatedAt: Long = 0L
 )

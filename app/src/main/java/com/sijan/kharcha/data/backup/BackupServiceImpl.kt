@@ -9,12 +9,14 @@ import com.sijan.kharcha.data.backup.model.BackupSavingsContribution
 import com.sijan.kharcha.data.backup.model.BackupSavingsGoal
 import com.sijan.kharcha.data.backup.model.BackupUdhar
 import com.sijan.kharcha.data.backup.model.BackupUdharSettlement
+import com.sijan.kharcha.data.backup.model.BackupUtilityAccount
 import com.sijan.kharcha.data.db.AppDatabase
 import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.SavingsGoalDao
 import com.sijan.kharcha.data.db.dao.UdharDao
+import com.sijan.kharcha.data.db.dao.UtilityAccountDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
@@ -22,6 +24,7 @@ import com.sijan.kharcha.data.db.entity.SavingsContributionEntity
 import com.sijan.kharcha.data.db.entity.SavingsGoalEntity
 import com.sijan.kharcha.data.db.entity.UdharEntity
 import com.sijan.kharcha.data.db.entity.UdharSettlementEntity
+import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
 import com.sijan.kharcha.domain.model.AccountType
 import kotlinx.coroutines.flow.first
 import java.io.InputStream
@@ -41,6 +44,7 @@ class BackupServiceImpl @Inject constructor(
     private val accountDao: AccountDao,
     private val udharDao: UdharDao,
     private val savingsGoalDao: SavingsGoalDao,
+    private val utilityAccountDao: UtilityAccountDao,
     private val serializer: JsonBackupSerializer
 ) : BackupService {
 
@@ -81,6 +85,8 @@ class BackupServiceImpl @Inject constructor(
                 receiptPath = it.receiptPath,
                 rawOcrText = it.rawOcrText,
                 transactionId = it.transactionId,
+                isTaxDeductible = it.isTaxDeductible,
+                taxCategory = it.taxCategory,
                 createdAt = it.createdAt,
                 updatedAt = it.updatedAt
             )
@@ -138,6 +144,20 @@ class BackupServiceImpl @Inject constructor(
             )
         }
 
+        val utilityAccounts = utilityAccountDao.getAllUtilityAccounts().first().map {
+            BackupUtilityAccount(
+                id = it.id,
+                utilityType = it.utilityType,
+                providerName = it.providerName,
+                consumerId = it.consumerId,
+                counterOrBranch = it.counterOrBranch,
+                accountHolderName = it.accountHolderName,
+                notes = it.notes,
+                createdAt = it.createdAt,
+                updatedAt = it.updatedAt
+            )
+        }
+
         val payload = BackupPayload(
             schemaVersion = JsonBackupSerializer.CURRENT_SCHEMA_VERSION,
             exportedAt = System.currentTimeMillis(),
@@ -147,7 +167,8 @@ class BackupServiceImpl @Inject constructor(
             udhars = udhars,
             udharSettlements = settlements,
             savingsGoals = goals,
-            savingsContributions = contributions
+            savingsContributions = contributions,
+            utilityAccounts = utilityAccounts
         )
 
         serializer.serialize(payload, outputStream).getOrThrow()
@@ -167,6 +188,7 @@ class BackupServiceImpl @Inject constructor(
             udharDao.deleteAllUdhars()
             savingsGoalDao.deleteAllContributions()
             savingsGoalDao.deleteAllGoals()
+            utilityAccountDao.deleteAllUtilityAccounts()
 
             for (category in payload.categories) {
                 categoryDao.insertCategory(
@@ -225,6 +247,8 @@ class BackupServiceImpl @Inject constructor(
                         receiptPath = entry.receiptPath,
                         rawOcrText = entry.rawOcrText,
                         transactionId = entry.transactionId,
+                        isTaxDeductible = entry.isTaxDeductible,
+                        taxCategory = entry.taxCategory,
                         createdAt = entry.createdAt,
                         updatedAt = entry.updatedAt
                     )
@@ -287,6 +311,22 @@ class BackupServiceImpl @Inject constructor(
                         dateEpochMillis = contribution.dateEpochMillis,
                         notes = contribution.notes,
                         createdAt = contribution.createdAt
+                    )
+                )
+            }
+
+            for (ua in payload.utilityAccounts) {
+                utilityAccountDao.insertUtilityAccount(
+                    UtilityAccountEntity(
+                        id = ua.id,
+                        utilityType = ua.utilityType,
+                        providerName = ua.providerName,
+                        consumerId = ua.consumerId,
+                        counterOrBranch = ua.counterOrBranch,
+                        accountHolderName = ua.accountHolderName,
+                        notes = ua.notes,
+                        createdAt = ua.createdAt,
+                        updatedAt = ua.updatedAt
                     )
                 )
             }

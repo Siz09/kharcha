@@ -42,7 +42,7 @@ class BackupRoundtripTest {
                 )
             )
         }
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), JsonBackupSerializer())
+        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), db.utilityAccountDao(), JsonBackupSerializer())
     }
 
     @After
@@ -227,6 +227,60 @@ class BackupRoundtripTest {
         assertEquals(1, restoredContributions.size)
         assertEquals(4000000L, restoredContributions[0].amountPaisa)
         assertEquals("First deposit", restoredContributions[0].notes)
+    }
+
+    @Test
+    fun roundtripUtilityAccountsAndTaxTags() = runBlocking {
+        val catId = db.categoryDao().insertCategory(CategoryEntity(name = "Utilities", type = EntryType.EXPENSE))
+
+        // Insert Tax deductible entry
+        db.ledgerDao().insertEntry(
+            LedgerEntryEntity(
+                amountPaisa = 4000000L,
+                type = EntryType.EXPENSE,
+                categoryId = catId,
+                accountId = 1L,
+                note = "Life Insurance",
+                date = 1761800000000L,
+                isTaxDeductible = true,
+                taxCategory = com.sijan.kharcha.domain.model.TaxCategory.LIFE_INSURANCE
+            )
+        )
+
+        // Insert Utility Account
+        db.utilityAccountDao().insertUtilityAccount(
+            com.sijan.kharcha.data.db.entity.UtilityAccountEntity(
+                utilityType = com.sijan.kharcha.domain.model.UtilityType.NEA,
+                providerName = "NEA",
+                consumerId = "012.34.567",
+                counterOrBranch = "Ratnapark",
+                accountHolderName = "Sijan"
+            )
+        )
+
+        val outStream = ByteArrayOutputStream()
+        val exportResult = backupService.exportBackup(outStream)
+        assertTrue(exportResult.isSuccess)
+
+        // Clear DB
+        db.ledgerDao().deleteAllEntries()
+        db.utilityAccountDao().deleteAllUtilityAccounts()
+
+        // Restore
+        val inStream = ByteArrayInputStream(outStream.toByteArray())
+        val restoreResult = backupService.restoreBackup(inStream)
+        assertTrue(restoreResult.isSuccess)
+
+        val restoredEntries = db.ledgerDao().getAllEntries().first()
+        assertEquals(1, restoredEntries.size)
+        assertTrue(restoredEntries[0].isTaxDeductible)
+        assertEquals(com.sijan.kharcha.domain.model.TaxCategory.LIFE_INSURANCE, restoredEntries[0].taxCategory)
+
+        val restoredUtilities = db.utilityAccountDao().getAllUtilityAccounts().first()
+        assertEquals(1, restoredUtilities.size)
+        assertEquals(com.sijan.kharcha.domain.model.UtilityType.NEA, restoredUtilities[0].utilityType)
+        assertEquals("012.34.567", restoredUtilities[0].consumerId)
+        assertEquals("Ratnapark", restoredUtilities[0].counterOrBranch)
     }
 }
 

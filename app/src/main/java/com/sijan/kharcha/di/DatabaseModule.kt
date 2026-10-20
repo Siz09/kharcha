@@ -12,11 +12,13 @@ import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
 import com.sijan.kharcha.data.db.dao.SavingsGoalDao
 import com.sijan.kharcha.data.db.dao.UdharDao
+import com.sijan.kharcha.data.db.dao.UtilityAccountDao
 import com.sijan.kharcha.data.db.migration.MIGRATION_1_2
 import com.sijan.kharcha.data.db.migration.MIGRATION_2_3
 import com.sijan.kharcha.data.db.migration.MIGRATION_3_4
 import com.sijan.kharcha.data.db.migration.MIGRATION_4_5
 import com.sijan.kharcha.data.db.migration.MIGRATION_5_6
+import com.sijan.kharcha.data.db.migration.MIGRATION_6_7
 import com.sijan.kharcha.data.repository.AnalyticsRepository
 import com.sijan.kharcha.data.repository.AnalyticsRepositoryImpl
 import com.sijan.kharcha.data.repository.LedgerRepository
@@ -25,6 +27,8 @@ import com.sijan.kharcha.data.repository.SavingsGoalRepository
 import com.sijan.kharcha.data.repository.SavingsGoalRepositoryImpl
 import com.sijan.kharcha.data.repository.UdharRepository
 import com.sijan.kharcha.data.repository.UdharRepositoryImpl
+import com.sijan.kharcha.data.repository.UtilityRepository
+import com.sijan.kharcha.data.repository.UtilityRepositoryImpl
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -44,7 +48,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7).build()
     }
 
     @Provides
@@ -91,6 +95,11 @@ object DatabaseModule {
     fun provideSavingsGoalDao(database: AppDatabase): SavingsGoalDao {
         return database.savingsGoalDao()
     }
+
+    @Provides
+    fun provideUtilityAccountDao(database: AppDatabase): UtilityAccountDao {
+        return database.utilityAccountDao()
+    }
 }
 
 @Module
@@ -120,5 +129,11 @@ abstract class RepositoryModule {
     abstract fun bindAnalyticsRepository(
         analyticsRepositoryImpl: AnalyticsRepositoryImpl
     ): AnalyticsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindUtilityRepository(
+        utilityRepositoryImpl: UtilityRepositoryImpl
+    ): UtilityRepository
 }
 

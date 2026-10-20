@@ -13,6 +13,8 @@ data class LedgerEntry(
     val receiptPath: String? = null,
     val rawOcrText: String? = null,
     val transactionId: String? = null,
+    val isTaxDeductible: Boolean = false,
+    val taxCategory: TaxCategory? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
