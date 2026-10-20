@@ -47,6 +47,7 @@ import kotlinx.coroutines.launch
 fun KharchaApp(
     modifier: Modifier = Modifier,
     initialImageUri: Uri? = null,
+    initialSharedPayload: com.sijan.kharcha.data.share.StagedSharePayload? = null,
     initialSmsPrefill: com.sijan.kharcha.domain.model.SmsPrefillData? = null,
     initialShortcutAction: String? = null,
     onEntryClick: (Long) -> Unit = {}
@@ -86,10 +87,11 @@ fun KharchaApp(
         }
     }
 
-    // Handle initial shared image URI from intent
-    LaunchedEffect(initialImageUri) {
-        if (initialImageUri != null) {
-            navController.navigate(Screen.ConfirmScan.createRoute(initialImageUri.toString()))
+    // Handle initial shared image or document URI from intent
+    val effectiveSharedUri = initialSharedPayload?.stagedUri ?: initialImageUri
+    LaunchedEffect(effectiveSharedUri) {
+        if (effectiveSharedUri != null) {
+            navController.navigate(Screen.ConfirmScan.createRoute(effectiveSharedUri.toString()))
         }
     }
 

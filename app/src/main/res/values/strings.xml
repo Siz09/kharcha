@@ -447,5 +447,9 @@
     <string name="tax_ceiling_format">Ceiling: %1$s</string>
     <string name="tax_remaining_format">Remaining: %1$s</string>
     <string name="tax_view_breakdown">View Tax Deductions</string>
+
+    <!-- System Share Sheet -->
+    <string name="share_unsupported_type">Unsupported file type. Kharcha accepts images, PDF statements, and Word documents.</string>
+    <string name="share_staged_success">File prepared for ledger entry</string>
 </resources>
 

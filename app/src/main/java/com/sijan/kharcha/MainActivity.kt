@@ -41,11 +41,27 @@ class MainActivity : FragmentActivity() {
     private var authErrorMessage by mutableStateOf<String?>(null)
     private var isBiometricLockConfigured by mutableStateOf(false)
     private var shortcutAction by mutableStateOf<String?>(null)
+    private var sharedPayload by mutableStateOf<com.sijan.kharcha.data.share.StagedSharePayload?>(null)
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
+        handleIncomingIntent(intent)
+    }
+
+    private fun handleIncomingIntent(intent: Intent?) {
+        if (intent == null) return
         shortcutAction = intent.getStringExtra("shortcut_action")
+
+        val payload = com.sijan.kharcha.data.share.ShareIntentStager.stageFromIntent(this, intent)
+        if (payload != null) {
+            sharedPayload = payload
+        } else if (intent.action == Intent.ACTION_SEND || intent.action == Intent.ACTION_SEND_MULTIPLE) {
+            val docType = com.sijan.kharcha.data.share.ShareIntentStager.determineDocumentType(intent.type)
+            if (docType == com.sijan.kharcha.data.share.SharedDocumentType.UNSUPPORTED) {
+                android.widget.Toast.makeText(this, R.string.share_unsupported_type, android.widget.Toast.LENGTH_LONG).show()
+            }
+        }
     }
 
     private val processLifecycleObserver = object : DefaultLifecycleObserver {
@@ -69,11 +85,8 @@ class MainActivity : FragmentActivity() {
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleObserver)
 
-        shortcutAction = intent?.getStringExtra("shortcut_action")
-
-        val initialImageUri: Uri? = if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true) {
-            IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
-        } else null
+        handleIncomingIntent(intent)
+        com.sijan.kharcha.data.share.ShareIntentStager.cleanStagingDirectory(this)
 
         val initialSmsTransaction = if (intent?.hasExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_AMOUNT_PAISA) == true) {
             val amount = intent.getLongExtra(com.sijan.kharcha.data.sms.BankSmsNotifier.EXTRA_SMS_AMOUNT_PAISA, 0L)
@@ -121,7 +134,8 @@ class MainActivity : FragmentActivity() {
                     )
                 } else {
                     KharchaApp(
-                        initialImageUri = initialImageUri,
+                        initialImageUri = sharedPayload?.stagedUri,
+                        initialSharedPayload = sharedPayload,
                         initialSmsPrefill = initialSmsTransaction,
                         initialShortcutAction = shortcutAction
                     )
