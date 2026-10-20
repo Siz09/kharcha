@@ -91,6 +91,28 @@ fun SettingsScreen(
         }
     }
 
+    // Export .kharcha Archive Launcher
+    val exportArchiveLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        if (uri != null) {
+            scope.launch {
+                val result = runCatching {
+                    context.contentResolver.openOutputStream(uri)?.use { output ->
+                        viewModel.exportArchiveToStream(output).getOrThrow()
+                    } ?: throw IllegalStateException("Could not open output stream")
+                }
+                if (result.isSuccess) {
+                    val summary = result.getOrNull()
+                    val details = "${summary?.totalEntries ?: 0} entries, ${summary?.totalAssets ?: 0} assets"
+                    snackbarHostState.showSnackbar(context.getString(R.string.settings_archive_export_success, details))
+                } else {
+                    snackbarHostState.showSnackbar(context.getString(R.string.settings_backup_failed))
+                }
+            }
+        }
+    }
+
     // Export JSON Launcher
     val exportJsonLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("application/json")
@@ -624,9 +646,10 @@ fun SettingsScreen(
                             onClick = {
                                 viewModel.backupNow { result ->
                                     scope.launch {
-                                        result.onSuccess { fileName ->
+                                        result.onSuccess { summary ->
+                                            val details = "${summary.fileName} (${summary.totalAssets} assets)"
                                             snackbarHostState.showSnackbar(
-                                                context.getString(R.string.settings_backup_success, fileName)
+                                                context.getString(R.string.settings_backup_success, details)
                                             )
                                         }.onFailure {
                                             snackbarHostState.showSnackbar(
@@ -642,6 +665,19 @@ fun SettingsScreen(
                             Icon(imageVector = Icons.Default.Backup, contentDescription = null)
                             Spacer(modifier = Modifier.padding(horizontal = 4.dp))
                             Text(text = stringResource(R.string.settings_backup_now))
+                        }
+
+                        // Export Full Archive (.kharcha)
+                        OutlinedButton(
+                            onClick = {
+                                val dateStr = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+                                exportArchiveLauncher.launch("kharcha_backup_$dateStr.kharcha")
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(imageVector = Icons.Default.Folder, contentDescription = null)
+                            Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                            Text(text = stringResource(R.string.settings_export_archive))
                         }
 
                         // Export JSON / CSV

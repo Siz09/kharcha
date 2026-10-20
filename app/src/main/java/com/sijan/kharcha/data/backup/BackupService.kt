@@ -1,5 +1,6 @@
 package com.sijan.kharcha.data.backup
 
+import com.sijan.kharcha.data.backup.model.ArchiveSummary
 import java.io.InputStream
 import java.io.OutputStream
 
@@ -22,4 +23,10 @@ interface BackupService {
      * Returns total number of exported rows.
      */
     suspend fun exportCsv(outputStream: OutputStream): Result<Int>
+
+    /**
+     * Packages a full .kharcha ZIP archive containing manifest.json (with asset SHA-256 hashes),
+     * database.json (complete Room tables snapshot), and assets/ (receipt images and document attachments).
+     */
+    suspend fun exportArchive(outputStream: OutputStream): Result<ArchiveSummary>
 }

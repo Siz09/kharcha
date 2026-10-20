@@ -42,7 +42,7 @@ class BackupRoundtripTest {
                 )
             )
         }
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), db.utilityAccountDao(), JsonBackupSerializer())
+        backupService = BackupServiceImpl(context, db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), db.utilityAccountDao(), JsonBackupSerializer())
     }
 
     @After

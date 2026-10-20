@@ -15,22 +15,27 @@ class AutoBackupScheduler @Inject constructor(
     @ApplicationContext private val context: Context
 ) {
     fun schedulePeriodicBackup() {
+        // Cancel legacy daily work if scheduled
+        WorkManager.getInstance(context).cancelUniqueWork(AutoBackupWorker.LEGACY_WORK_NAME)
+
         val constraints = Constraints.Builder()
             .setRequiresBatteryNotLow(true)
+            .setRequiresStorageNotLow(true)
             .build()
 
-        val workRequest = PeriodicWorkRequestBuilder<AutoBackupWorker>(24, TimeUnit.HOURS)
+        val workRequest = PeriodicWorkRequestBuilder<AutoBackupWorker>(7, TimeUnit.DAYS)
             .setConstraints(constraints)
             .build()
 
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(
             AutoBackupWorker.WORK_NAME,
-            ExistingPeriodicWorkPolicy.KEEP,
+            ExistingPeriodicWorkPolicy.UPDATE,
             workRequest
         )
     }
 
     fun cancelPeriodicBackup() {
         WorkManager.getInstance(context).cancelUniqueWork(AutoBackupWorker.WORK_NAME)
+        WorkManager.getInstance(context).cancelUniqueWork(AutoBackupWorker.LEGACY_WORK_NAME)
     }
 }

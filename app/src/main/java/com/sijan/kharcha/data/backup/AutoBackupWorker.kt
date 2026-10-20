@@ -1,5 +1,6 @@
 package com.sijan.kharcha.data.backup
 
+import android.content.ContentResolver
 import android.content.Context
 import android.net.Uri
 import android.provider.DocumentsContract
@@ -32,7 +33,7 @@ class AutoBackupWorker @AssistedInject constructor(
         val treeUri = Uri.parse(treeUriStr)
 
         val dateStr = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-        val fileName = "kharcha_backup_$dateStr.json"
+        val fileName = "kharcha_backup_$dateStr.kharcha"
 
         return try {
             val treeDocId = DocumentsContract.getTreeDocumentId(treeUri)
@@ -40,13 +41,13 @@ class AutoBackupWorker @AssistedInject constructor(
             val fileDocUri = DocumentsContract.createDocument(
                 appContext.contentResolver,
                 parentDocUri,
-                "application/json",
+                "application/zip",
                 fileName
             ) ?: return Result.failure()
 
             val writeResult = runCatching {
                 appContext.contentResolver.openOutputStream(fileDocUri)?.use { output ->
-                    backupService.exportBackup(output).getOrThrow()
+                    backupService.exportArchive(output).getOrThrow()
                 } ?: throw IllegalStateException("Could not open output stream")
             }
 
@@ -55,7 +56,7 @@ class AutoBackupWorker @AssistedInject constructor(
                 return Result.retry()
             }
 
-            pruneOldBackups(treeUri, treeDocId, maxBackups = 5)
+            pruneOldBackups(appContext.contentResolver, treeUri, MAX_BACKUP_ARCHIVES)
             userPreferencesRepository.setLastBackupTimestamp(System.currentTimeMillis())
             Result.success()
         } catch (e: Exception) {
@@ -63,46 +64,53 @@ class AutoBackupWorker @AssistedInject constructor(
         }
     }
 
-    private fun pruneOldBackups(treeUri: Uri, treeDocId: String, maxBackups: Int) {
-        try {
-            val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, treeDocId)
-            val projection = arrayOf(
-                DocumentsContract.Document.COLUMN_DOCUMENT_ID,
-                DocumentsContract.Document.COLUMN_DISPLAY_NAME,
-                DocumentsContract.Document.COLUMN_LAST_MODIFIED
-            )
+    companion object {
+        const val WORK_NAME = "kharcha_auto_backup"
+        const val LEGACY_WORK_NAME = "kharcha_daily_auto_backup"
+        const val MAX_BACKUP_ARCHIVES = 5
 
-            val backups = mutableListOf<Triple<String, String, Long>>()
+        fun pruneOldBackups(
+            contentResolver: ContentResolver,
+            treeUri: Uri,
+            maxBackups: Int = MAX_BACKUP_ARCHIVES
+        ) {
+            try {
+                val treeDocId = DocumentsContract.getTreeDocumentId(treeUri)
+                val childrenUri = DocumentsContract.buildChildDocumentsUriUsingTree(treeUri, treeDocId)
+                val projection = arrayOf(
+                    DocumentsContract.Document.COLUMN_DOCUMENT_ID,
+                    DocumentsContract.Document.COLUMN_DISPLAY_NAME,
+                    DocumentsContract.Document.COLUMN_LAST_MODIFIED
+                )
 
-            appContext.contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
-                val idIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
-                val nameIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
-                val modifiedIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
+                val backups = mutableListOf<Triple<String, String, Long>>()
 
-                while (cursor.moveToNext()) {
-                    val id = cursor.getString(idIdx)
-                    val name = cursor.getString(nameIdx) ?: ""
-                    val modified = cursor.getLong(modifiedIdx)
+                contentResolver.query(childrenUri, projection, null, null, null)?.use { cursor ->
+                    val idIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DOCUMENT_ID)
+                    val nameIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_DISPLAY_NAME)
+                    val modifiedIdx = cursor.getColumnIndexOrThrow(DocumentsContract.Document.COLUMN_LAST_MODIFIED)
 
-                    if (name.startsWith("kharcha_backup_") && name.endsWith(".json")) {
-                        backups.add(Triple(id, name, modified))
+                    while (cursor.moveToNext()) {
+                        val id = cursor.getString(idIdx)
+                        val name = cursor.getString(nameIdx) ?: ""
+                        val modified = cursor.getLong(modifiedIdx)
+
+                        if (name.startsWith("kharcha_backup_") && (name.endsWith(".kharcha") || name.endsWith(".json"))) {
+                            backups.add(Triple(id, name, modified))
+                        }
                     }
                 }
-            }
 
-            if (backups.size > maxBackups) {
-                val toDelete = backups.sortedByDescending { it.third }.drop(maxBackups)
-                for ((id, _, _) in toDelete) {
-                    val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id)
-                    DocumentsContract.deleteDocument(appContext.contentResolver, docUri)
+                if (backups.size > maxBackups) {
+                    val toDelete = backups.sortedByDescending { it.third }.drop(maxBackups)
+                    for ((id, _, _) in toDelete) {
+                        val docUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, id)
+                        DocumentsContract.deleteDocument(contentResolver, docUri)
+                    }
                 }
+            } catch (ignored: Exception) {
+                // Best effort prune
             }
-        } catch (ignored: Exception) {
-            // Best effort prune
         }
-    }
-
-    companion object {
-        const val WORK_NAME = "kharcha_daily_auto_backup"
     }
 }

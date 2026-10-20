@@ -1,5 +1,6 @@
 package com.sijan.kharcha.data.backup
 
+import com.sijan.kharcha.data.backup.model.ArchiveManifest
 import com.sijan.kharcha.data.backup.model.BackupPayload
 import kotlinx.serialization.json.Json
 import java.io.InputStream
@@ -13,6 +14,28 @@ class JsonBackupSerializer @Inject constructor() {
     private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = false
+    }
+
+    /**
+     * Serializes BackupPayload into UTF-8 JSON bytes.
+     */
+    fun serializeToBytes(payload: BackupPayload): Result<ByteArray> = runCatching {
+        val jsonString = json.encodeToString(BackupPayload.serializer(), payload)
+        jsonString.toByteArray(Charsets.UTF_8)
+    }
+
+    /**
+     * Serializes ArchiveManifest into UTF-8 JSON.
+     */
+    fun serializeManifest(manifest: ArchiveManifest): String {
+        return json.encodeToString(ArchiveManifest.serializer(), manifest)
+    }
+
+    /**
+     * Deserializes UTF-8 JSON into ArchiveManifest.
+     */
+    fun deserializeManifest(jsonString: String): Result<ArchiveManifest> = runCatching {
+        json.decodeFromString(ArchiveManifest.serializer(), jsonString)
     }
 
     /**

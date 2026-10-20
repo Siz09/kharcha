@@ -44,7 +44,7 @@ import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
         SavingsContributionEntity::class,
         UtilityAccountEntity::class
     ],
-    version = 8,
+    version = AppDatabase.SCHEMA_VERSION,
     exportSchema = true
 )
 @TypeConverters(Converters::class)
@@ -63,5 +63,6 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val DATABASE_NAME = "kharcha.db"
+        const val SCHEMA_VERSION = 8
     }
 }

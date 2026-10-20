@@ -6,9 +6,11 @@ import android.provider.DocumentsContract
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.sijan.kharcha.data.backup.AutoBackupScheduler
+import com.sijan.kharcha.data.backup.AutoBackupWorker
 import com.sijan.kharcha.data.backup.BackupService
 import com.sijan.kharcha.data.backup.BackupSummary
 import com.sijan.kharcha.data.backup.JsonBackupSerializer
+import com.sijan.kharcha.data.backup.model.ArchiveSummary
 import com.sijan.kharcha.data.preferences.UserPreferencesRepository
 import com.sijan.kharcha.domain.model.AppTheme
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -94,7 +96,7 @@ class SettingsViewModel @Inject constructor(
         userPreferencesRepository.setRolloverEnabled(enabled)
     }
 
-    fun backupNow(onResult: (Result<String>) -> Unit) {
+    fun backupNow(onResult: (Result<ArchiveSummary>) -> Unit) {
         viewModelScope.launch {
             val result = withContext(Dispatchers.IO) {
                 runCatching {
@@ -104,27 +106,37 @@ class SettingsViewModel @Inject constructor(
                     val treeUri = Uri.parse(treeUriStr)
 
                     val dateStr = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
-                    val fileName = "kharcha_backup_$dateStr.json"
+                    val fileName = "kharcha_backup_$dateStr.kharcha"
 
                     val treeDocId = DocumentsContract.getTreeDocumentId(treeUri)
                     val parentDocUri = DocumentsContract.buildDocumentUriUsingTree(treeUri, treeDocId)
                     val fileDocUri = DocumentsContract.createDocument(
                         context.contentResolver,
                         parentDocUri,
-                        "application/json",
+                        "application/zip",
                         fileName
                     ) ?: throw IllegalStateException("Failed to create backup file in destination folder")
 
-                    context.contentResolver.openOutputStream(fileDocUri)?.use { output ->
-                        backupService.exportBackup(output).getOrThrow()
-                    } ?: throw IllegalStateException("Failed to open backup output stream")
+                    val summary = runCatching {
+                        context.contentResolver.openOutputStream(fileDocUri)?.use { output ->
+                            backupService.exportArchive(output).getOrThrow()
+                        } ?: throw IllegalStateException("Failed to open backup output stream")
+                    }.getOrElse { error ->
+                        DocumentsContract.deleteDocument(context.contentResolver, fileDocUri)
+                        throw error
+                    }
 
+                    AutoBackupWorker.pruneOldBackups(context.contentResolver, treeUri)
                     userPreferencesRepository.setLastBackupTimestamp(System.currentTimeMillis())
-                    fileName
+                    summary
                 }
             }
             onResult(result)
         }
+    }
+
+    suspend fun exportArchiveToStream(outputStream: OutputStream): Result<ArchiveSummary> = withContext(Dispatchers.IO) {
+        backupService.exportArchive(outputStream)
     }
 
     suspend fun exportJsonToStream(outputStream: OutputStream): Result<Int> = withContext(Dispatchers.IO) {

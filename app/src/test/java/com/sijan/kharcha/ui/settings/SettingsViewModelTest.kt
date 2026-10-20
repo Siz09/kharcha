@@ -65,7 +65,7 @@ class SettingsViewModelTest {
                 )
             )
         }
-        backupService = BackupServiceImpl(db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), db.utilityAccountDao(), serializer)
+        backupService = BackupServiceImpl(context, db, db.categoryDao(), db.ledgerDao(), db.accountDao(), db.udharDao(), db.savingsGoalDao(), db.utilityAccountDao(), serializer)
         viewModel = SettingsViewModel(
             context = context,
             userPreferencesRepository = preferencesRepo,

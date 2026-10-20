@@ -1,6 +1,10 @@
 package com.sijan.kharcha.data.backup
 
+import android.content.Context
 import androidx.room.withTransaction
+import com.sijan.kharcha.data.backup.model.ArchiveAsset
+import com.sijan.kharcha.data.backup.model.ArchiveManifest
+import com.sijan.kharcha.data.backup.model.ArchiveSummary
 import com.sijan.kharcha.data.backup.model.BackupAccount
 import com.sijan.kharcha.data.backup.model.BackupCategory
 import com.sijan.kharcha.data.backup.model.BackupEntry
@@ -26,18 +30,27 @@ import com.sijan.kharcha.data.db.entity.UdharEntity
 import com.sijan.kharcha.data.db.entity.UdharSettlementEntity
 import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
 import com.sijan.kharcha.domain.model.AccountType
+import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.FilterOutputStream
 import java.io.InputStream
 import java.io.OutputStream
+import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 import java.util.TimeZone
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class BackupServiceImpl @Inject constructor(
+    @ApplicationContext private val context: Context,
     private val db: AppDatabase,
     private val categoryDao: CategoryDao,
     private val ledgerDao: LedgerDao,
@@ -48,7 +61,7 @@ class BackupServiceImpl @Inject constructor(
     private val serializer: JsonBackupSerializer
 ) : BackupService {
 
-    override suspend fun exportBackup(outputStream: OutputStream): Result<Int> = runCatching {
+    private suspend fun buildBackupPayload(): BackupPayload {
         val categories = categoryDao.getAllCategories().first().map {
             BackupCategory(
                 id = it.id,
@@ -159,7 +172,7 @@ class BackupServiceImpl @Inject constructor(
             )
         }
 
-        val payload = BackupPayload(
+        return BackupPayload(
             schemaVersion = JsonBackupSerializer.CURRENT_SCHEMA_VERSION,
             exportedAt = System.currentTimeMillis(),
             categories = categories,
@@ -171,9 +184,102 @@ class BackupServiceImpl @Inject constructor(
             savingsContributions = contributions,
             utilityAccounts = utilityAccounts
         )
+    }
 
+    override suspend fun exportBackup(outputStream: OutputStream): Result<Int> = runCatching {
+        val payload = buildBackupPayload()
         serializer.serialize(payload, outputStream).getOrThrow()
-        entries.size
+        payload.entries.size
+    }
+
+    override suspend fun exportArchive(outputStream: OutputStream): Result<ArchiveSummary> = withContext(Dispatchers.IO) {
+        runCatching {
+            val payload = buildBackupPayload()
+            val databaseJsonBytes = serializer.serializeToBytes(payload).getOrThrow()
+
+            val receiptsDir = File(context.filesDir, "receipts")
+            val documentsDir = File(context.filesDir, "documents")
+
+            val assetList = mutableListOf<Pair<String, File>>()
+            if (receiptsDir.exists() && receiptsDir.isDirectory) {
+                receiptsDir.listFiles()?.filter { it.isFile }?.forEach { file ->
+                    assetList.add("assets/receipts/${file.name}" to file)
+                }
+            }
+            if (documentsDir.exists() && documentsDir.isDirectory) {
+                documentsDir.listFiles()?.filter { it.isFile }?.forEach { file ->
+                    assetList.add("assets/documents/${file.name}" to file)
+                }
+            }
+
+            val archiveAssets = assetList.map { (relPath, file) ->
+                ArchiveAsset(
+                    relativePath = relPath,
+                    sha256 = calculateSha256(file),
+                    sizeBytes = file.length()
+                )
+            }
+
+            val appVersion = try {
+                context.packageManager.getPackageInfo(context.packageName, 0).versionName ?: "1.0.0"
+            } catch (e: Exception) {
+                "1.0.0"
+            }
+
+            val manifest = ArchiveManifest(
+                archiveVersion = 1,
+                schemaVersion = AppDatabase.SCHEMA_VERSION,
+                createdAt = payload.exportedAt,
+                appVersion = appVersion,
+                deviceModel = "${android.os.Build.MANUFACTURER} ${android.os.Build.MODEL}".trim(),
+                totalEntries = payload.entries.size,
+                totalAccounts = payload.accounts.size,
+                totalCategories = payload.categories.size,
+                totalAssets = archiveAssets.size,
+                assets = archiveAssets
+            )
+
+            val manifestJsonBytes = serializer.serializeManifest(manifest).toByteArray(Charsets.UTF_8)
+            val dateStr = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date(manifest.createdAt))
+            val defaultFileName = "kharcha_backup_$dateStr.kharcha"
+
+            val countingOut = CountingOutputStream(outputStream)
+            ZipOutputStream(countingOut.buffered()).use { zipOut ->
+                // 1. manifest.json
+                val manifestEntry = ZipEntry("manifest.json")
+                zipOut.putNextEntry(manifestEntry)
+                zipOut.write(manifestJsonBytes)
+                zipOut.closeEntry()
+
+                // 2. database.json
+                val dbEntry = ZipEntry("database.json")
+                zipOut.putNextEntry(dbEntry)
+                zipOut.write(databaseJsonBytes)
+                zipOut.closeEntry()
+
+                // 3. assets
+                for ((relPath, file) in assetList) {
+                    val assetEntry = ZipEntry(relPath)
+                    zipOut.putNextEntry(assetEntry)
+                    file.inputStream().buffered().use { input ->
+                        input.copyTo(zipOut)
+                    }
+                    zipOut.closeEntry()
+                }
+                zipOut.finish()
+                zipOut.flush()
+            }
+
+            ArchiveSummary(
+                fileName = defaultFileName,
+                archiveVersion = manifest.archiveVersion,
+                schemaVersion = manifest.schemaVersion,
+                createdAt = manifest.createdAt,
+                totalEntries = manifest.totalEntries,
+                totalAssets = manifest.totalAssets,
+                archiveSizeBytes = countingOut.bytesWritten
+            )
+        }
     }
 
     override suspend fun restoreBackup(inputStream: InputStream): Result<BackupSummary> = runCatching {
@@ -368,5 +474,32 @@ class BackupServiceImpl @Inject constructor(
         }
 
         entries.size
+    }
+
+    private fun calculateSha256(file: File): String {
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().buffered().use { input ->
+            val buffer = ByteArray(8192)
+            var bytesRead: Int
+            while (input.read(buffer).also { bytesRead = it } != -1) {
+                digest.update(buffer, 0, bytesRead)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private class CountingOutputStream(out: OutputStream) : FilterOutputStream(out) {
+        var bytesWritten: Long = 0L
+            private set
+
+        override fun write(b: Int) {
+            out.write(b)
+            bytesWritten++
+        }
+
+        override fun write(b: ByteArray, off: Int, len: Int) {
+            out.write(b, off, len)
+            bytesWritten += len
+        }
     }
 }

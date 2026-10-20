@@ -125,10 +125,13 @@
     <string name="settings_backup_now">Back up now</string>
     <string name="settings_backup_folder">Backup Folder</string>
     <string name="settings_backup_folder_not_set">Tap to select backup folder</string>
-    <string name="settings_auto_backup">Daily Auto-backup</string>
-    <string name="settings_auto_backup_desc">Automatically back up to selected folder daily</string>
+    <string name="settings_auto_backup">Weekly Auto-backup</string>
+    <string name="settings_auto_backup_desc">Automatically back up to selected folder weekly (7-day interval)</string>
     <string name="settings_last_backup">Last backup: %s</string>
     <string name="settings_last_backup_never">Last backup: Never</string>
+    <string name="settings_export_archive">Full Archive (.kharcha)</string>
+    <string name="settings_export_archive_desc">Includes database, receipts, and documents</string>
+    <string name="settings_archive_export_success">Archive exported: %s</string>
     <string name="settings_export_json">Export JSON Backup</string>
     <string name="settings_export_csv">Export CSV</string>
     <string name="settings_restore_json">Restore from JSON</string>
