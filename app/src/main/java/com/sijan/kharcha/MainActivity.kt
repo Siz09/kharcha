@@ -3,30 +3,64 @@ package com.sijan.kharcha
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import androidx.activity.ComponentActivity
+import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.core.content.IntentCompat
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sijan.kharcha.data.preferences.UserPreferencesRepository
+import com.sijan.kharcha.data.security.BiometricAuthManager
+import com.sijan.kharcha.data.security.BiometricAuthResult
 import com.sijan.kharcha.domain.model.AppTheme
 import com.sijan.kharcha.domain.model.UserPreferences
 import com.sijan.kharcha.ui.KharchaApp
+import com.sijan.kharcha.ui.security.LockScreenOverlay
 import com.sijan.kharcha.ui.theme.KharchaTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : FragmentActivity() {
 
     @Inject
     lateinit var preferencesRepository: UserPreferencesRepository
 
+    @Inject
+    lateinit var biometricAuthManager: BiometricAuthManager
+
+    private var isAppUnlocked by mutableStateOf(false)
+    private var authErrorMessage by mutableStateOf<String?>(null)
+    private var isBiometricLockConfigured by mutableStateOf(false)
+
+    private val processLifecycleObserver = object : DefaultLifecycleObserver {
+        override fun onStop(owner: LifecycleOwner) {
+            if (isBiometricLockConfigured) {
+                isAppUnlocked = false
+                authErrorMessage = null
+            }
+        }
+
+        override fun onStart(owner: LifecycleOwner) {
+            if (isBiometricLockConfigured && !isAppUnlocked) {
+                requestUnlock()
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+
+        ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleObserver)
 
         val initialImageUri: Uri? = if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true) {
             IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
@@ -51,6 +85,19 @@ class MainActivity : ComponentActivity() {
                 initialValue = UserPreferences()
             )
 
+            isBiometricLockConfigured = prefs.biometricLockEnabled
+
+            LaunchedEffect(prefs.biometricLockEnabled) {
+                if (prefs.biometricLockEnabled) {
+                    window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    if (!isAppUnlocked) {
+                        requestUnlock()
+                    }
+                } else {
+                    window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                }
+            }
+
             val darkTheme = when (prefs.theme) {
                 AppTheme.SYSTEM -> isSystemInDarkTheme()
                 AppTheme.LIGHT -> false
@@ -58,10 +105,43 @@ class MainActivity : ComponentActivity() {
             }
 
             KharchaTheme(darkTheme = darkTheme) {
-                KharchaApp(
-                    initialImageUri = initialImageUri,
-                    initialSmsPrefill = initialSmsTransaction
-                )
+                if (prefs.biometricLockEnabled && !isAppUnlocked) {
+                    LockScreenOverlay(
+                        onUnlockClick = { requestUnlock() },
+                        errorMessage = authErrorMessage
+                    )
+                } else {
+                    KharchaApp(
+                        initialImageUri = initialImageUri,
+                        initialSmsPrefill = initialSmsTransaction
+                    )
+                }
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        ProcessLifecycleOwner.get().lifecycle.removeObserver(processLifecycleObserver)
+    }
+
+    private fun requestUnlock() {
+        biometricAuthManager.prompt(
+            activity = this,
+            title = getString(R.string.app_lock_prompt_title),
+            subtitle = getString(R.string.app_lock_prompt_subtitle)
+        ) { result ->
+            when (result) {
+                is BiometricAuthResult.Success -> {
+                    isAppUnlocked = true
+                    authErrorMessage = null
+                }
+                is BiometricAuthResult.Failure -> {
+                    authErrorMessage = getString(R.string.app_lock_auth_failed)
+                }
+                is BiometricAuthResult.Cancelled -> {
+                    // Kept locked; user can tap unlock button to retry
+                }
             }
         }
     }
