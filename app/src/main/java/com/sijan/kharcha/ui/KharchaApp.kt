@@ -48,6 +48,7 @@ fun KharchaApp(
     modifier: Modifier = Modifier,
     initialImageUri: Uri? = null,
     initialSmsPrefill: com.sijan.kharcha.domain.model.SmsPrefillData? = null,
+    initialShortcutAction: String? = null,
     onEntryClick: (Long) -> Unit = {}
 ) {
     val navController = rememberNavController()
@@ -105,6 +106,15 @@ fun KharchaApp(
                     source = initialSmsPrefill.source
                 )
             )
+        }
+    }
+
+    // Handle launcher app shortcuts
+    LaunchedEffect(initialShortcutAction) {
+        when (initialShortcutAction) {
+            "action_scan" -> showScanSheet = true
+            "action_add_expense" -> navController.navigate(Screen.AddEntry.createRoute(type = "EXPENSE"))
+            "action_add_income" -> navController.navigate(Screen.AddEntry.createRoute(type = "INCOME"))
         }
     }
 

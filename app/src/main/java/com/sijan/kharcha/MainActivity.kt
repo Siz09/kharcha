@@ -40,6 +40,13 @@ class MainActivity : FragmentActivity() {
     private var isAppUnlocked by mutableStateOf(false)
     private var authErrorMessage by mutableStateOf<String?>(null)
     private var isBiometricLockConfigured by mutableStateOf(false)
+    private var shortcutAction by mutableStateOf<String?>(null)
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        shortcutAction = intent.getStringExtra("shortcut_action")
+    }
 
     private val processLifecycleObserver = object : DefaultLifecycleObserver {
         override fun onStop(owner: LifecycleOwner) {
@@ -61,6 +68,8 @@ class MainActivity : FragmentActivity() {
         enableEdgeToEdge()
 
         ProcessLifecycleOwner.get().lifecycle.addObserver(processLifecycleObserver)
+
+        shortcutAction = intent?.getStringExtra("shortcut_action")
 
         val initialImageUri: Uri? = if (intent?.action == Intent.ACTION_SEND && intent.type?.startsWith("image/") == true) {
             IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
@@ -113,7 +122,8 @@ class MainActivity : FragmentActivity() {
                 } else {
                     KharchaApp(
                         initialImageUri = initialImageUri,
-                        initialSmsPrefill = initialSmsTransaction
+                        initialSmsPrefill = initialSmsTransaction,
+                        initialShortcutAction = shortcutAction
                     )
                 }
             }

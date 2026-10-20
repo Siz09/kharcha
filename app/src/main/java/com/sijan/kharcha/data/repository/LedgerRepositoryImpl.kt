@@ -1,5 +1,6 @@
 package com.sijan.kharcha.data.repository
 
+import android.content.Context
 import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.AuditLogDao
 import com.sijan.kharcha.data.db.dao.BillDao
@@ -24,6 +25,8 @@ import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
 import com.sijan.kharcha.domain.model.RecurringEntry
+import com.sijan.kharcha.ui.widget.KharchaWidgetUpdater
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -46,8 +49,13 @@ class LedgerRepositoryImpl @Inject constructor(
     private val budgetDao: BudgetDao,
     private val auditLogDao: AuditLogDao,
     private val recurringEntryDao: RecurringEntryDao,
-    private val accountDao: AccountDao
+    private val accountDao: AccountDao,
+    @ApplicationContext private val context: Context? = null
 ) : LedgerRepository {
+
+    private fun notifyWidgetUpdate() {
+        context?.let { KharchaWidgetUpdater.updateAllWidgets(it) }
+    }
 
     override fun getAllCategories(): Flow<List<Category>> {
         return categoryDao.getAllCategories().map { list -> list.map { it.toDomain() } }
@@ -272,6 +280,7 @@ class LedgerRepositoryImpl @Inject constructor(
             action = "TRANSFER",
             details = "Transferred $amountPaisa paisa from ${from.name} to ${to.name}"
         ))
+        notifyWidgetUpdate()
         entryId
     }
 
@@ -320,6 +329,7 @@ class LedgerRepositoryImpl @Inject constructor(
             action = "INSERT",
             details = "Added ${entry.type} entry: ${entry.amountPaisa} paisa"
         ))
+        notifyWidgetUpdate()
         id
     }
 
@@ -334,6 +344,7 @@ class LedgerRepositoryImpl @Inject constructor(
             action = "UPDATE",
             details = "Updated entry ${entry.id}: ${entry.amountPaisa} paisa"
         ))
+        notifyWidgetUpdate()
     }
 
     override suspend fun deleteEntry(id: Long): Result<Unit> = runCatching {
@@ -352,6 +363,7 @@ class LedgerRepositoryImpl @Inject constructor(
             action = "DELETE",
             details = "Deleted entry $id"
         ))
+        notifyWidgetUpdate()
     }
 
     override suspend fun checkDuplicateTransaction(transactionId: String): List<LedgerEntry> {
