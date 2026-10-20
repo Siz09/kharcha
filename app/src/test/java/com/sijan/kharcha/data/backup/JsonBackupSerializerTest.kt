@@ -107,4 +107,81 @@ class JsonBackupSerializerTest {
 
         assertFalse(result.isSuccess)
     }
+
+    @Test
+    fun deserializeLegacyKharchaExportFormatSucceeds() {
+        val legacyJson = """
+            {
+              "transactions": [
+                {
+                  "id": 108,
+                  "type": "expense",
+                  "amount": 320.00,
+                  "category": "Food & Drinks",
+                  "date": "2026-10-18",
+                  "note": "momos",
+                  "createdAt": 1792334769077,
+                  "paymentMethod": "eSewa Wallet",
+                  "remarks": "evening snack",
+                  "transactionCode": "TXN_LEGACY_01"
+                },
+                {
+                  "id": 109,
+                  "type": "income",
+                  "amount": 5000.50,
+                  "category": "Salary",
+                  "date": "2026-10-19",
+                  "note": "Consulting",
+                  "createdAt": 1792400000000,
+                  "imagePath": "receipt_test.jpg"
+                }
+              ],
+              "budgets": [],
+              "savingsGoals": []
+            }
+        """.trimIndent()
+
+        val inputStream = ByteArrayInputStream(legacyJson.toByteArray())
+        val result = serializer.deserialize(inputStream)
+
+        assertTrue(result.isSuccess)
+        val payload = result.getOrThrow()
+        assertEquals(1, payload.schemaVersion)
+        assertEquals(2, payload.entries.size)
+
+        val entry1 = payload.entries[0]
+        assertEquals(108L, entry1.id)
+        assertEquals(32000L, entry1.amountPaisa)
+        assertEquals(EntryType.EXPENSE, entry1.type)
+        assertEquals("momos (evening snack)", entry1.note)
+        assertEquals("TXN_LEGACY_01", entry1.transactionId)
+        assertTrue(entry1.rawOcrText?.contains("paymentMethod: eSewa Wallet") == true)
+
+        val entry2 = payload.entries[1]
+        assertEquals(109L, entry2.id)
+        assertEquals(500050L, entry2.amountPaisa)
+        assertEquals(EntryType.INCOME, entry2.type)
+        assertEquals("receipt_test.jpg", entry2.receiptPath)
+        assertEquals("scan", entry2.source)
+    }
+
+    @Test
+    fun deserializeRealLegacyExportFileSucceeds() {
+        val file = java.io.File("finance_data_export_1792409222899.json")
+        if (!file.exists()) return
+
+        file.inputStream().use { stream ->
+            val result = serializer.deserialize(stream)
+            assertTrue(result.isSuccess)
+            val payload = result.getOrThrow()
+            assertEquals(106, payload.entries.size)
+            assertTrue(payload.categories.isNotEmpty())
+            assertTrue(payload.accounts.isNotEmpty())
+
+            for (entry in payload.entries) {
+                assertTrue(entry.amountPaisa > 0L)
+                assertTrue(entry.id > 0L)
+            }
+        }
+    }
 }

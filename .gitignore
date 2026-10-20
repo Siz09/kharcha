@@ -21,3 +21,6 @@ output-metadata.json
 graphify-out/
 .agents/memory/
 .superpowers/
+finance_data_export*.json
+kharcha_backup*.json
+*.kharcha
