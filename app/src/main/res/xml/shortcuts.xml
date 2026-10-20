@@ -4,8 +4,8 @@
         android:shortcutId="shortcut_scan"
         android:enabled="true"
         android:icon="@drawable/ic_shortcut_scan"
-        android:shortLabel="@string/shortcut_scan_short"
-        android:longLabel="@string/shortcut_scan_long">
+        android:shortcutShortLabel="@string/shortcut_scan_short"
+        android:shortcutLongLabel="@string/shortcut_scan_long">
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.sijan.kharcha"
@@ -17,8 +17,8 @@
         android:shortcutId="shortcut_expense"
         android:enabled="true"
         android:icon="@drawable/ic_shortcut_expense"
-        android:shortLabel="@string/shortcut_add_expense_short"
-        android:longLabel="@string/shortcut_add_expense_long">
+        android:shortcutShortLabel="@string/shortcut_add_expense_short"
+        android:shortcutLongLabel="@string/shortcut_add_expense_long">
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.sijan.kharcha"
@@ -30,8 +30,8 @@
         android:shortcutId="shortcut_income"
         android:enabled="true"
         android:icon="@drawable/ic_shortcut_income"
-        android:shortLabel="@string/shortcut_add_income_short"
-        android:longLabel="@string/shortcut_add_income_long">
+        android:shortcutShortLabel="@string/shortcut_add_income_short"
+        android:shortcutLongLabel="@string/shortcut_add_income_long">
         <intent
             android:action="android.intent.action.VIEW"
             android:targetPackage="com.sijan.kharcha"
