@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="shortcut_scan"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_scan"
+        android:shortLabel="@string/shortcut_scan_short"
+        android:longLabel="@string/shortcut_scan_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sijan.kharcha"
+            android:targetClass="com.sijan.kharcha.MainActivity">
+            <extra android:name="shortcut_action" android:value="action_scan" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="shortcut_expense"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_expense"
+        android:shortLabel="@string/shortcut_add_expense_short"
+        android:longLabel="@string/shortcut_add_expense_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sijan.kharcha"
+            android:targetClass="com.sijan.kharcha.MainActivity">
+            <extra android:name="shortcut_action" android:value="action_add_expense" />
+        </intent>
+    </shortcut>
+    <shortcut
+        android:shortcutId="shortcut_income"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_income"
+        android:shortLabel="@string/shortcut_add_income_short"
+        android:longLabel="@string/shortcut_add_income_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.sijan.kharcha"
+            android:targetClass="com.sijan.kharcha.MainActivity">
+            <extra android:name="shortcut_action" android:value="action_add_income" />
+        </intent>
+    </shortcut>
+</shortcuts>
