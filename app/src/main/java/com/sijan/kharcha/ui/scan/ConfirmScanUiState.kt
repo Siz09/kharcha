@@ -3,6 +3,7 @@ package com.sijan.kharcha.ui.scan
 import android.net.Uri
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.LedgerEntry
+import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.domain.parser.model.ValidationStatus
 
 data class ConfirmScanUiState(
@@ -37,6 +38,10 @@ data class ConfirmScanUiState(
     val feeStatus: ValidationStatus = ValidationStatus.VALID,
 
     val remarks: String = "",
+
+    // Tax Deductible
+    val isTaxDeductible: Boolean = false,
+    val taxCategory: TaxCategory? = null,
 
     // Categories
     val categories: List<Category> = emptyList(),

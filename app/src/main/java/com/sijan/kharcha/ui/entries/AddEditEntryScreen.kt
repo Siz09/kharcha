@@ -2,6 +2,7 @@ package com.sijan.kharcha.ui.entries
 
 import android.content.res.Configuration
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,8 @@ import androidx.compose.material.icons.filled.CalendarToday
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
@@ -34,6 +37,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -47,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,6 +60,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sijan.kharcha.R
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
+import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.domain.parser.model.ValidationStatus
 import com.sijan.kharcha.ui.components.CategoryPicker
 import com.sijan.kharcha.ui.components.DateFormatter
@@ -96,6 +102,8 @@ fun AddEditEntryScreen(
         onDeleteDismissed = viewModel::onDeleteDismissed,
         onDeleteConfirmed = viewModel::onDeleteConfirmed,
         onAccountChanged = viewModel::onAccountChanged,
+        onTaxDeductibleChanged = viewModel::onTaxDeductibleChanged,
+        onTaxCategoryChanged = viewModel::onTaxCategoryChanged,
         onSaveClicked = viewModel::saveEntry,
         modifier = modifier
     )
@@ -111,6 +119,8 @@ fun AddEditEntryContent(
     onAmountChanged: (String) -> Unit,
     onCategorySelected: (Category) -> Unit,
     onAccountChanged: (Long) -> Unit = {},
+    onTaxDeductibleChanged: (Boolean) -> Unit = {},
+    onTaxCategoryChanged: (TaxCategory) -> Unit = {},
     onDateChanged: (Long) -> Unit,
     onNoteChanged: (String) -> Unit,
     onTransactionIdChanged: (String) -> Unit,
@@ -303,6 +313,75 @@ fun AddEditEntryContent(
                     label = stringResource(R.string.field_transaction_id),
                     placeholder = stringResource(R.string.field_transaction_id_hint)
                 )
+
+                // Tax Deductible Tagging (Expense only)
+                if (uiState.type == EntryType.EXPENSE) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(R.string.tax_deductible_label),
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                    Text(
+                                        text = stringResource(R.string.tax_deductible_desc),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Switch(
+                                    checked = uiState.isTaxDeductible,
+                                    onCheckedChange = onTaxDeductibleChanged
+                                )
+                            }
+
+                            if (uiState.isTaxDeductible) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = stringResource(R.string.tax_category_label),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .horizontalScroll(rememberScrollState()),
+                                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                                ) {
+                                    TaxCategory.entries.forEach { cat ->
+                                        FilterChip(
+                                            selected = uiState.taxCategory == cat,
+                                            onClick = { onTaxCategoryChanged(cat) },
+                                            label = {
+                                                val labelRes = when (cat) {
+                                                    TaxCategory.LIFE_INSURANCE -> R.string.tax_category_life_insurance
+                                                    TaxCategory.HEALTH_INSURANCE -> R.string.tax_category_health_insurance
+                                                    TaxCategory.MEDICAL -> R.string.tax_category_medical
+                                                    TaxCategory.RETIREMENT -> R.string.tax_category_retirement
+                                                    TaxCategory.DONATION -> R.string.tax_category_donation
+                                                    TaxCategory.OTHER -> R.string.tax_category_other
+                                                }
+                                                Text(text = stringResource(labelRes))
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
 
                 // Attached receipt image preview if editing a scanned entry
                 if (!uiState.receiptPath.isNullOrBlank()) {

@@ -7,6 +7,7 @@ import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.Money
+import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.domain.parser.model.ValidationStatus
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
@@ -114,7 +115,9 @@ class AddEditEntryViewModel @Inject constructor(
                         dateEpochMillis = entry.date,
                         note = entry.note,
                         transactionId = entry.transactionId ?: "",
-                        receiptPath = entry.receiptPath
+                        receiptPath = entry.receiptPath,
+                        isTaxDeductible = entry.isTaxDeductible,
+                        taxCategory = entry.taxCategory
                     )
                 }
                 loadCategoriesForType(entry.type, selectedId = entry.categoryId)
@@ -210,6 +213,19 @@ class AddEditEntryViewModel @Inject constructor(
         _uiState.update { it.copy(selectedAccountId = accountId) }
     }
 
+    fun onTaxDeductibleChanged(enabled: Boolean) {
+        _uiState.update {
+            it.copy(
+                isTaxDeductible = enabled,
+                taxCategory = if (enabled) (it.taxCategory ?: TaxCategory.LIFE_INSURANCE) else null
+            )
+        }
+    }
+
+    fun onTaxCategoryChanged(category: TaxCategory?) {
+        _uiState.update { it.copy(taxCategory = category) }
+    }
+
     fun onDeleteClicked() {
         _uiState.update { it.copy(showDeleteConfirmDialog = true) }
     }
@@ -258,7 +274,9 @@ class AddEditEntryViewModel @Inject constructor(
                     accountId = state.selectedAccountId,
                     note = state.note.trim(),
                     date = state.dateEpochMillis,
-                    transactionId = state.transactionId.trim().ifBlank { null }
+                    transactionId = state.transactionId.trim().ifBlank { null },
+                    isTaxDeductible = state.isTaxDeductible,
+                    taxCategory = if (state.isTaxDeductible) state.taxCategory else null
                 )
                 ledgerRepository.updateEntry(updated)
             } else {
@@ -270,7 +288,9 @@ class AddEditEntryViewModel @Inject constructor(
                     note = state.note.trim(),
                     date = state.dateEpochMillis,
                     source = "manual",
-                    transactionId = state.transactionId.trim().ifBlank { null }
+                    transactionId = state.transactionId.trim().ifBlank { null },
+                    isTaxDeductible = state.isTaxDeductible,
+                    taxCategory = if (state.isTaxDeductible) state.taxCategory else null
                 )
                 ledgerRepository.saveEntry(newEntry).map { Unit }
             }

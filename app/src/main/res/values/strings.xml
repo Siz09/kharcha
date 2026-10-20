@@ -413,5 +413,39 @@
     <string name="reports_pdf_ready">Statement generated successfully</string>
     <string name="reports_pdf_share_title">Kharcha Monthly Financial Statement</string>
     <string name="reports_summary_view_analytics">View Deep Analytics</string>
+
+    <!-- Utility Account Vault -->
+    <string name="utility_vault_title">Utility Account Vault</string>
+    <string name="utility_add_account">Add Utility Account</string>
+    <string name="utility_edit_account">Edit Utility Account</string>
+    <string name="utility_type_all">All</string>
+    <string name="utility_type_nea">Electricity (NEA)</string>
+    <string name="utility_type_khanepani">Water (Khanepani)</string>
+    <string name="utility_type_isp">Internet (ISP)</string>
+    <string name="utility_type_other">Other</string>
+    <string name="utility_provider_name">Provider Name</string>
+    <string name="utility_consumer_id">Consumer ID / Customer No.</string>
+    <string name="utility_counter">Counter / Branch</string>
+    <string name="utility_holder_name">Account Holder Name</string>
+    <string name="utility_notes">Notes</string>
+    <string name="utility_copied_toast">Consumer ID copied to clipboard</string>
+    <string name="utility_empty_title">No Utility Accounts</string>
+    <string name="utility_empty_subtitle">Save electricity, water, and internet IDs for one-tap copy during bill payments.</string>
+
+    <!-- Tax Deductions -->
+    <string name="tax_deductible_label">Tax Deductible</string>
+    <string name="tax_deductible_desc">Qualifies for personal income tax deduction under Nepal Income Tax Act</string>
+    <string name="tax_category_label">Tax Category</string>
+    <string name="tax_category_life_insurance">Life Insurance</string>
+    <string name="tax_category_health_insurance">Health Insurance</string>
+    <string name="tax_category_medical">Medical Expenses</string>
+    <string name="tax_category_retirement">Retirement / CIT / SSF</string>
+    <string name="tax_category_donation">Donation</string>
+    <string name="tax_category_other">Other</string>
+    <string name="tax_summary_title">Tax Deductions (FY %1$s)</string>
+    <string name="tax_total_eligible">Eligible Deductions: %1$s</string>
+    <string name="tax_ceiling_format">Ceiling: %1$s</string>
+    <string name="tax_remaining_format">Remaining: %1$s</string>
+    <string name="tax_view_breakdown">View Tax Deductions</string>
 </resources>
 

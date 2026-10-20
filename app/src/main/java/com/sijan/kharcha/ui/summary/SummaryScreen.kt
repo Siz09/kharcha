@@ -1,6 +1,7 @@
 package com.sijan.kharcha.ui.summary
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -36,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -47,6 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.sijan.kharcha.R
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.Money
+import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.ui.components.AmountText
 import com.sijan.kharcha.ui.components.EmptyState
 
@@ -224,6 +227,88 @@ fun SummaryScreen(
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                    }
+                }
+            }
+
+            // Tax Deduction Summary Card
+            uiState.fiscalYearTaxSummary?.let { taxSummary ->
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surface
+                        )
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.tax_summary_title, taxSummary.fiscalYearLabel),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = Money.formatPaisa(taxSummary.totalDeductiblePaisa),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            taxSummary.categorySummaries.filter { it.totalSpentPaisa > 0L }.forEach { catSummary ->
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween
+                                ) {
+                                    val catLabelRes = when (catSummary.category) {
+                                        TaxCategory.LIFE_INSURANCE -> R.string.tax_category_life_insurance
+                                        TaxCategory.HEALTH_INSURANCE -> R.string.tax_category_health_insurance
+                                        TaxCategory.MEDICAL -> R.string.tax_category_medical
+                                        TaxCategory.RETIREMENT -> R.string.tax_category_retirement
+                                        TaxCategory.DONATION -> R.string.tax_category_donation
+                                        TaxCategory.OTHER -> R.string.tax_category_other
+                                    }
+                                    Text(
+                                        text = stringResource(catLabelRes),
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    val amountStr = if (catSummary.legalCeilingPaisa != null) {
+                                        "${Money.formatPaisa(catSummary.eligibleDeductionPaisa)} / ${Money.formatPaisa(catSummary.legalCeilingPaisa)}"
+                                    } else {
+                                        Money.formatPaisa(catSummary.totalSpentPaisa)
+                                    }
+                                    Text(
+                                        text = amountStr,
+                                        style = MaterialTheme.typography.bodySmall,
+                                        fontWeight = FontWeight.Medium
+                                    )
+                                }
+
+                                if (catSummary.legalCeilingPaisa != null && catSummary.legalCeilingPaisa > 0L) {
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    val progress = minOf(1f, catSummary.totalSpentPaisa.toFloat() / catSummary.legalCeilingPaisa.toFloat())
+                                    LinearProgressIndicator(
+                                        progress = { progress },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .height(6.dp)
+                                            .clip(RoundedCornerShape(3.dp)),
+                                        color = if (catSummary.totalSpentPaisa >= catSummary.legalCeilingPaisa) {
+                                            MaterialTheme.colorScheme.primary
+                                        } else {
+                                            MaterialTheme.colorScheme.secondary
+                                        }
+                                    )
+                                }
+                            }
+                        }
                     }
                 }
             }

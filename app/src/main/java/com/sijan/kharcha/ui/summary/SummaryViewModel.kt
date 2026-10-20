@@ -7,6 +7,7 @@ import com.sijan.kharcha.domain.model.Budget
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
+import com.sijan.kharcha.domain.tax.TaxDeductionCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -164,6 +165,8 @@ class SummaryViewModel @Inject constructor(
             }
         }.sortedByDescending { it.amountPaisa }
 
+        val taxSummary = TaxDeductionCalculator.calculateFiscalYearSummary(entries)
+
         return SummaryUiState(
             year = year,
             month = month,
@@ -172,6 +175,7 @@ class SummaryViewModel @Inject constructor(
             totalExpensePaisa = totalExpense,
             balancePaisa = totalIncome - totalExpense,
             categorySpending = categorySpendingList,
+            fiscalYearTaxSummary = if (taxSummary.totalSpentPaisa > 0L) taxSummary else null,
             entryCount = entries.size,
             isLoading = false
         )

@@ -227,4 +227,28 @@ class AddEditEntryViewModelTest {
         assertEquals(1792332000000L, state.dateEpochMillis)
         assertEquals("TXN998811", state.transactionId)
     }
+
+    @Test
+    fun taxDeductibleTaggingSavesCorrectly() = runTest(testDispatcher) {
+        repository.seedDefaultCategories()
+        val catId = repository.getCategoriesByType(EntryType.EXPENSE).first().first().id
+
+        val viewModel = AddEditEntryViewModel(repository, SavedStateHandle())
+        viewModel.uiState.first { it.categories.isNotEmpty() }
+
+        viewModel.onAmountChanged("40000")
+        viewModel.onNoteChanged("Life Insurance Premium")
+        viewModel.onTaxDeductibleChanged(true)
+        viewModel.onTaxCategoryChanged(com.sijan.kharcha.domain.model.TaxCategory.LIFE_INSURANCE)
+
+        val eventDeferred = async { viewModel.events.first() }
+        viewModel.saveEntry()
+        val event = eventDeferred.await()
+
+        assertEquals(AddEditEntryEvent.SaveSuccess, event)
+        val entries = repository.getAllEntries().first()
+        assertEquals(1, entries.size)
+        assertTrue(entries[0].isTaxDeductible)
+        assertEquals(com.sijan.kharcha.domain.model.TaxCategory.LIFE_INSURANCE, entries[0].taxCategory)
+    }
 }

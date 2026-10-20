@@ -16,6 +16,7 @@ import com.sijan.kharcha.ui.scan.ConfirmScanScreen
 import com.sijan.kharcha.ui.settings.categories.CategoriesScreen
 import com.sijan.kharcha.ui.settings.SettingsScreen
 import com.sijan.kharcha.ui.summary.SummaryScreen
+import com.sijan.kharcha.ui.utility.UtilityVaultScreen
 
 @Composable
 fun KharchaNavHost(
@@ -84,6 +85,9 @@ fun KharchaNavHost(
                 },
                 onNavigateToSavings = {
                     navController.navigate(Screen.SavingsGoals.route)
+                },
+                onNavigateToUtilityVault = {
+                    navController.navigate(Screen.UtilityVault.route)
                 }
             )
         }
@@ -104,6 +108,11 @@ fun KharchaNavHost(
         }
         composable(Screen.Categories.route) {
             CategoriesScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+        composable(Screen.UtilityVault.route) {
+            UtilityVaultScreen(
                 onNavigateBack = { navController.popBackStack() }
             )
         }

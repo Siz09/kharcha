@@ -10,6 +10,7 @@ import com.sijan.kharcha.data.storage.ReceiptStorage
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.Money
+import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.domain.parser.ReceiptOcrScanner
 import com.sijan.kharcha.domain.parser.ReceiptProcessingPipeline
 import com.sijan.kharcha.domain.parser.model.OcrResult
@@ -255,6 +256,19 @@ class ConfirmScanViewModel @Inject constructor(
         _uiState.update { it.copy(selectedAccountId = accountId) }
     }
 
+    fun onTaxDeductibleChanged(enabled: Boolean) {
+        _uiState.update {
+            it.copy(
+                isTaxDeductible = enabled,
+                taxCategory = if (enabled) (it.taxCategory ?: TaxCategory.LIFE_INSURANCE) else null
+            )
+        }
+    }
+
+    fun onTaxCategoryChanged(category: TaxCategory?) {
+        _uiState.update { it.copy(taxCategory = category) }
+    }
+
     fun saveEntry() {
         val state = _uiState.value
         if (!state.isSaveEnabled) return
@@ -282,7 +296,9 @@ class ConfirmScanViewModel @Inject constructor(
                 source = "receipt:${state.source}",
                 receiptPath = state.receiptPath,
                 rawOcrText = state.rawOcrText,
-                transactionId = state.transactionId.trim().ifBlank { null }
+                transactionId = state.transactionId.trim().ifBlank { null },
+                isTaxDeductible = state.isTaxDeductible,
+                taxCategory = if (state.isTaxDeductible) state.taxCategory else null
             )
 
             val result = ledgerRepository.saveEntry(entry)

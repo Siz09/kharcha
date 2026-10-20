@@ -2,6 +2,7 @@ package com.sijan.kharcha.ui.entries
 
 import com.sijan.kharcha.domain.model.Category
 import com.sijan.kharcha.domain.model.EntryType
+import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.domain.parser.model.ValidationStatus
 
 data class AddEditEntryUiState(
@@ -24,6 +25,8 @@ data class AddEditEntryUiState(
     val receiptPath: String? = null,
     val accounts: List<com.sijan.kharcha.domain.model.Account> = emptyList(),
     val selectedAccountId: Long = 1L,
+    val isTaxDeductible: Boolean = false,
+    val taxCategory: TaxCategory? = null,
     val showDeleteConfirmDialog: Boolean = false,
     val isSaving: Boolean = false,
     val isDeleting: Boolean = false

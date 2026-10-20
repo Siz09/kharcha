@@ -1,6 +1,7 @@
 package com.sijan.kharcha.ui.summary
 
 import com.sijan.kharcha.domain.model.Category
+import com.sijan.kharcha.domain.model.FiscalYearTaxSummary
 
 data class CategorySpending(
     val category: Category,
@@ -17,6 +18,7 @@ data class SummaryUiState(
     val totalExpensePaisa: Long = 0L,
     val balancePaisa: Long = 0L,
     val categorySpending: List<CategorySpending> = emptyList(),
+    val fiscalYearTaxSummary: FiscalYearTaxSummary? = null,
     val entryCount: Int = 0,
     val isLoading: Boolean = true
 )

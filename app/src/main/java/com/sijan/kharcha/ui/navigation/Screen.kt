@@ -119,6 +119,12 @@ sealed class Screen(
         icon = Icons.Default.PieChart
     )
 
+    data object UtilityVault : Screen(
+        route = "utility_vault",
+        labelRes = R.string.utility_vault_title,
+        icon = Icons.Default.Receipt
+    )
+
     companion object {
         val bottomNavItems: List<Screen>
             get() = listOf(Home, Entries, Summary, Settings)
