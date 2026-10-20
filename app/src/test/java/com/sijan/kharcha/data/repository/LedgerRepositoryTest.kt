@@ -37,7 +37,9 @@ class LedgerRepositoryTest {
             db.budgetDao(),
             db.auditLogDao(),
             db.recurringEntryDao(),
-            db.accountDao()
+            db.accountDao(),
+            db.splitDao(),
+            db
         )
     }
 
@@ -224,5 +226,75 @@ class LedgerRepositoryTest {
 
         val deleteResult = repository.deleteAccount(cashAccount.id)
         assertTrue(deleteResult.isFailure)
+    }
+
+    @Test
+    fun saveSplitTransaction_persistsEntryAndSplitItems() = runBlocking {
+        repository.seedDefaultAccounts()
+        repository.seedDefaultCategories()
+
+        val cashAccount = repository.getAllAccounts().first().first { it.type == com.sijan.kharcha.domain.model.AccountType.CASH }
+        val foodCat = repository.getCategoriesByType(EntryType.EXPENSE).first().first { it.name == "Food & Dining" }
+        val shopCat = repository.getCategoriesByType(EntryType.EXPENSE).first().first { it.name == "Shopping" }
+
+        val entry = LedgerEntry(
+            amountPaisa = 100000L,
+            type = EntryType.EXPENSE,
+            categoryId = foodCat.id,
+            accountId = cashAccount.id,
+            date = 1000L,
+            note = "Supermarket Receipt"
+        )
+        val splits = listOf(
+            com.sijan.kharcha.domain.model.SplitItem(categoryId = foodCat.id, amountPaisa = 70000L, note = "Food"),
+            com.sijan.kharcha.domain.model.SplitItem(categoryId = shopCat.id, amountPaisa = 30000L, note = "Stationery")
+        )
+
+        val splitTxn = com.sijan.kharcha.domain.model.SplitTransaction(entry, splits)
+        val saveResult = repository.saveSplitTransaction(splitTxn)
+        assertTrue(saveResult.isSuccess)
+
+        val entryId = saveResult.getOrThrow()
+        val loadedSplits = repository.getSplitsForEntry(entryId).first()
+        assertEquals(2, loadedSplits.size)
+        assertEquals(70000L, loadedSplits[0].amountPaisa)
+        assertEquals(30000L, loadedSplits[1].amountPaisa)
+    }
+
+    @Test
+    fun importCsvEntries_insertsValidEntriesInSingleTransaction() = runBlocking {
+        repository.seedDefaultAccounts()
+        repository.seedDefaultCategories()
+
+        val cashAccount = repository.getAllAccounts().first().first { it.type == com.sijan.kharcha.domain.model.AccountType.CASH }
+
+        val rows = listOf(
+            com.sijan.kharcha.domain.parser.ParsedCsvRow(
+                rowNumber = 2,
+                amountPaisa = 150000L,
+                type = EntryType.EXPENSE,
+                dateEpochMillis = 2000L,
+                categoryName = "Food & Dining",
+                note = "Dinner",
+                transactionId = "TXN_CSV_1"
+            ),
+            com.sijan.kharcha.domain.parser.ParsedCsvRow(
+                rowNumber = 3,
+                amountPaisa = 50000L,
+                type = EntryType.EXPENSE,
+                dateEpochMillis = 3000L,
+                categoryName = "Transportation",
+                note = "Taxi",
+                transactionId = "TXN_CSV_2"
+            )
+        )
+
+        val importResult = repository.importCsvEntries(rows, cashAccount.id)
+        assertTrue(importResult.isSuccess)
+        assertEquals(2, importResult.getOrThrow())
+
+        val entries = repository.getAllEntries().first()
+        assertTrue(entries.any { it.transactionId == "TXN_CSV_1" })
+        assertTrue(entries.any { it.transactionId == "TXN_CSV_2" })
     }
 }

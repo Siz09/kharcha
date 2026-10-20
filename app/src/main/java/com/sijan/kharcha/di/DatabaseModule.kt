@@ -10,8 +10,10 @@ import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.dao.ReconciliationDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
 import com.sijan.kharcha.data.db.dao.SavingsGoalDao
+import com.sijan.kharcha.data.db.dao.SplitDao
 import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.dao.UtilityAccountDao
 import com.sijan.kharcha.data.db.migration.MIGRATION_1_2
@@ -22,10 +24,13 @@ import com.sijan.kharcha.data.db.migration.MIGRATION_5_6
 import com.sijan.kharcha.data.db.migration.MIGRATION_6_7
 import com.sijan.kharcha.data.db.migration.MIGRATION_7_8
 import com.sijan.kharcha.data.db.migration.MIGRATION_8_9
+import com.sijan.kharcha.data.db.migration.MIGRATION_9_10
 import com.sijan.kharcha.data.repository.AnalyticsRepository
 import com.sijan.kharcha.data.repository.AnalyticsRepositoryImpl
 import com.sijan.kharcha.data.repository.LedgerRepository
 import com.sijan.kharcha.data.repository.LedgerRepositoryImpl
+import com.sijan.kharcha.data.repository.ReconciliationRepository
+import com.sijan.kharcha.data.repository.ReconciliationRepositoryImpl
 import com.sijan.kharcha.data.repository.SavingsGoalRepository
 import com.sijan.kharcha.data.repository.SavingsGoalRepositoryImpl
 import com.sijan.kharcha.data.repository.UdharRepository
@@ -51,7 +56,7 @@ object DatabaseModule {
             context,
             AppDatabase::class.java,
             AppDatabase.DATABASE_NAME
-        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9).build()
+        ).addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10).build()
     }
 
     @Provides
@@ -108,6 +113,16 @@ object DatabaseModule {
     fun provideAnnualArchiveSummaryDao(database: AppDatabase): AnnualArchiveSummaryDao {
         return database.annualArchiveSummaryDao()
     }
+
+    @Provides
+    fun provideSplitDao(database: AppDatabase): SplitDao {
+        return database.splitDao()
+    }
+
+    @Provides
+    fun provideReconciliationDao(database: AppDatabase): ReconciliationDao {
+        return database.reconciliationDao()
+    }
 }
 
 @Module
@@ -143,5 +158,11 @@ abstract class RepositoryModule {
     abstract fun bindUtilityRepository(
         utilityRepositoryImpl: UtilityRepositoryImpl
     ): UtilityRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindReconciliationRepository(
+        reconciliationRepositoryImpl: ReconciliationRepositoryImpl
+    ): ReconciliationRepository
 }
 

@@ -56,6 +56,7 @@ data class LedgerEntryEntity(
     val isTaxDeductible: Boolean = false,
     val taxCategory: TaxCategory? = null,
     val documentType: DocumentType? = null,
+    val isReconciled: Boolean = false,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -75,6 +76,7 @@ data class LedgerEntryEntity(
         isTaxDeductible = isTaxDeductible,
         taxCategory = taxCategory,
         documentType = documentType,
+        isReconciled = isReconciled,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -96,6 +98,7 @@ data class LedgerEntryEntity(
             isTaxDeductible = entry.isTaxDeductible,
             taxCategory = entry.taxCategory,
             documentType = entry.documentType,
+            isReconciled = entry.isReconciled,
             createdAt = entry.createdAt,
             updatedAt = entry.updatedAt
         )

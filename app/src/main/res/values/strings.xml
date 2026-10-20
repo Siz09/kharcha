@@ -482,5 +482,33 @@
     <string name="reports_archive_button">Archive Year</string>
     <string name="reports_archived_badge">Archived</string>
     <string name="reports_archive_success">Annual summary archived</string>
+
+    <!-- Advanced Reconciliation & Split Transactions -->
+    <string name="reconcile_title">Reconcile Account</string>
+    <string name="reconcile_statement_date">Statement Date</string>
+    <string name="reconcile_statement_balance">Statement Balance (NPR)</string>
+    <string name="reconcile_computed_balance">Ledger Balance: %1$s</string>
+    <string name="reconcile_difference">Difference: %1$s</string>
+    <string name="reconcile_uncleared_entries">Uncleared Transactions (%1$d)</string>
+    <string name="reconcile_create_adjustment">Create balancing adjustment entry</string>
+    <string name="reconcile_confirm_btn">Reconcile Account</string>
+    <string name="reconcile_success">Account reconciled successfully</string>
+    <string name="split_title">Split Transaction</string>
+    <string name="split_add_line">Add Split</string>
+    <string name="split_category">Category</string>
+    <string name="split_amount">Amount</string>
+    <string name="split_total">Total Amount: %1$s</string>
+    <string name="split_allocated">Allocated: %1$s</string>
+    <string name="split_remaining">Remaining: %1$s</string>
+    <string name="split_mismatch_error">Allocated splits must equal total transaction amount</string>
+    <string name="csv_import_title">Import Statements (CSV)</string>
+    <string name="csv_import_analyzing">Analyzing CSV statement…</string>
+    <string name="csv_import_select_file">Choose CSV File</string>
+    <string name="csv_import_preview_title">Statement Preview</string>
+    <string name="csv_import_valid_rows">%1$d transactions ready to import</string>
+    <string name="csv_import_duplicate_rows">%1$d duplicate transactions detected (skipped)</string>
+    <string name="csv_import_error_rows">%1$d invalid rows</string>
+    <string name="csv_import_confirm_btn">Import %1$d Entries</string>
+    <string name="csv_import_success">Imported %1$d transactions successfully</string>
 </resources>
 

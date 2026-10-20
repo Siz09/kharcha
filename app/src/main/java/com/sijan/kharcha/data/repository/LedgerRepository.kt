@@ -63,4 +63,8 @@ interface LedgerRepository {
     fun getAllRecurring(): Flow<List<RecurringEntry>>
     suspend fun saveRecurring(entry: RecurringEntry): Result<Long>
     suspend fun deleteRecurring(id: Long): Result<Unit>
+
+    fun getSplitsForEntry(entryId: Long): Flow<List<com.sijan.kharcha.domain.model.SplitItem>>
+    suspend fun saveSplitTransaction(splitTransaction: com.sijan.kharcha.domain.model.SplitTransaction): Result<Long>
+    suspend fun importCsvEntries(rows: List<com.sijan.kharcha.domain.parser.ParsedCsvRow>, accountId: Long): Result<Int>
 }

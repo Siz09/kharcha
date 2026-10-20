@@ -11,11 +11,14 @@ import com.sijan.kharcha.data.db.dao.BillDao
 import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
+import com.sijan.kharcha.data.db.dao.ReconciliationDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
 import com.sijan.kharcha.data.db.dao.SavingsGoalDao
+import com.sijan.kharcha.data.db.dao.SplitDao
 import com.sijan.kharcha.data.db.dao.UdharDao
 import com.sijan.kharcha.data.db.dao.UtilityAccountDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
+import com.sijan.kharcha.data.db.entity.AccountReconciliationEntity
 import com.sijan.kharcha.data.db.entity.AnnualArchiveSummaryEntity
 import com.sijan.kharcha.data.db.entity.AuditLogEntity
 import com.sijan.kharcha.data.db.entity.BillEntity
@@ -23,6 +26,7 @@ import com.sijan.kharcha.data.db.entity.BudgetEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryFtsEntity
+import com.sijan.kharcha.data.db.entity.LedgerEntrySplitEntity
 import com.sijan.kharcha.data.db.entity.RecurringEntryEntity
 import com.sijan.kharcha.data.db.entity.SavingsContributionEntity
 import com.sijan.kharcha.data.db.entity.SavingsGoalEntity
@@ -45,7 +49,9 @@ import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
         SavingsGoalEntity::class,
         SavingsContributionEntity::class,
         UtilityAccountEntity::class,
-        AnnualArchiveSummaryEntity::class
+        AnnualArchiveSummaryEntity::class,
+        LedgerEntrySplitEntity::class,
+        AccountReconciliationEntity::class
     ],
     version = AppDatabase.SCHEMA_VERSION,
     exportSchema = true
@@ -64,9 +70,11 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun savingsGoalDao(): SavingsGoalDao
     abstract fun utilityAccountDao(): UtilityAccountDao
     abstract fun annualArchiveSummaryDao(): AnnualArchiveSummaryDao
+    abstract fun splitDao(): SplitDao
+    abstract fun reconciliationDao(): ReconciliationDao
 
     companion object {
         const val DATABASE_NAME = "kharcha.db"
-        const val SCHEMA_VERSION = 9
+        const val SCHEMA_VERSION = 10
     }
 }

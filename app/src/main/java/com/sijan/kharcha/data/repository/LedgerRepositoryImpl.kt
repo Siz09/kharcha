@@ -1,6 +1,8 @@
 package com.sijan.kharcha.data.repository
 
 import android.content.Context
+import androidx.room.withTransaction
+import com.sijan.kharcha.data.db.AppDatabase
 import com.sijan.kharcha.data.db.dao.AccountDao
 import com.sijan.kharcha.data.db.dao.AuditLogDao
 import com.sijan.kharcha.data.db.dao.BillDao
@@ -8,12 +10,14 @@ import com.sijan.kharcha.data.db.dao.BudgetDao
 import com.sijan.kharcha.data.db.dao.CategoryDao
 import com.sijan.kharcha.data.db.dao.LedgerDao
 import com.sijan.kharcha.data.db.dao.RecurringEntryDao
+import com.sijan.kharcha.data.db.dao.SplitDao
 import com.sijan.kharcha.data.db.entity.AccountEntity
 import com.sijan.kharcha.data.db.entity.AuditLogEntity
 import com.sijan.kharcha.data.db.entity.BillEntity
 import com.sijan.kharcha.data.db.entity.BudgetEntity
 import com.sijan.kharcha.data.db.entity.CategoryEntity
 import com.sijan.kharcha.data.db.entity.LedgerEntryEntity
+import com.sijan.kharcha.data.db.entity.LedgerEntrySplitEntity
 import com.sijan.kharcha.data.db.entity.RecurringEntryEntity
 import com.sijan.kharcha.domain.model.Account
 import com.sijan.kharcha.domain.model.AccountType
@@ -25,6 +29,9 @@ import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.MonthlySummary
 import com.sijan.kharcha.domain.model.RecurringEntry
+import com.sijan.kharcha.domain.model.SplitItem
+import com.sijan.kharcha.domain.model.SplitTransaction
+import com.sijan.kharcha.domain.parser.ParsedCsvRow
 import com.sijan.kharcha.ui.widget.KharchaWidgetUpdater
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -50,6 +57,8 @@ class LedgerRepositoryImpl @Inject constructor(
     private val auditLogDao: AuditLogDao,
     private val recurringEntryDao: RecurringEntryDao,
     private val accountDao: AccountDao,
+    private val splitDao: SplitDao? = null,
+    private val appDatabase: AppDatabase? = null,
     @ApplicationContext private val context: Context? = null
 ) : LedgerRepository {
 
@@ -563,6 +572,65 @@ class LedgerRepositoryImpl @Inject constructor(
             action = "DELETE",
             details = "Deleted recurring template $id"
         ))
+    }
+
+    override fun getSplitsForEntry(entryId: Long): Flow<List<SplitItem>> {
+        return splitDao?.getSplitsForEntry(entryId)?.map { list ->
+            list.map { it.toDomain() }
+        } ?: flowOf(emptyList())
+    }
+
+    override suspend fun saveSplitTransaction(splitTransaction: SplitTransaction): Result<Long> = runCatching {
+        if (splitTransaction.splits.isNotEmpty()) {
+            val totalSplits = splitTransaction.splits.sumOf { it.amountPaisa }
+            require(totalSplits == splitTransaction.entry.amountPaisa) {
+                "Sum of split amounts ($totalSplits) must strictly equal entry total (${splitTransaction.entry.amountPaisa})"
+            }
+        }
+
+        val entryId = saveEntry(splitTransaction.entry).getOrThrow()
+        if (splitTransaction.splits.isNotEmpty() && splitDao != null) {
+            splitDao.deleteSplitsForEntry(entryId)
+            val entities = splitTransaction.splits.map { LedgerEntrySplitEntity.fromDomain(it, entryId) }
+            splitDao.insertSplits(entities)
+        }
+        entryId
+    }
+
+    override suspend fun importCsvEntries(rows: List<ParsedCsvRow>, accountId: Long): Result<Int> = runCatching {
+        val categories = categoryDao.getAllCategories().first().associateBy { it.name.lowercase().trim() }
+        var importedCount = 0
+
+        val block: suspend () -> Int = {
+            for (row in rows) {
+                if (row.isDuplicate || row.errorMessage != null) continue
+
+                val catId = categories[row.categoryName.lowercase().trim()]?.id
+                    ?: categoryDao.insertCategory(CategoryEntity(name = row.categoryName, type = row.type))
+
+                val entry = LedgerEntryEntity(
+                    amountPaisa = row.amountPaisa,
+                    type = row.type,
+                    categoryId = catId,
+                    accountId = accountId,
+                    note = row.note,
+                    date = row.dateEpochMillis,
+                    source = "csv_import",
+                    transactionId = row.transactionId,
+                    createdAt = System.currentTimeMillis(),
+                    updatedAt = System.currentTimeMillis()
+                )
+                ledgerDao.insertEntry(entry)
+                importedCount++
+            }
+            importedCount
+        }
+
+        if (appDatabase != null) {
+            appDatabase.withTransaction { block() }
+        } else {
+            block()
+        }
     }
 
     private fun BudgetEntity.toDomain(): Budget {

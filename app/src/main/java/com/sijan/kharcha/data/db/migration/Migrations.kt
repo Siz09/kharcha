@@ -294,6 +294,45 @@ val MIGRATION_8_9 = object : Migration(8, 9) {
     }
 }
 
+val MIGRATION_9_10 = object : Migration(9, 10) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE `ledger_entries` ADD COLUMN `isReconciled` INTEGER NOT NULL DEFAULT 0")
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `ledger_entry_splits` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `entryId` INTEGER NOT NULL,
+                `categoryId` INTEGER NOT NULL,
+                `amountPaisa` INTEGER NOT NULL,
+                `note` TEXT,
+                FOREIGN KEY(`entryId`) REFERENCES `ledger_entries`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE,
+                FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT
+            )
+        """.trimIndent())
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_ledger_entry_splits_entryId` ON `ledger_entry_splits` (`entryId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_ledger_entry_splits_categoryId` ON `ledger_entry_splits` (`categoryId`)")
+
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `account_reconciliations` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `accountId` INTEGER NOT NULL,
+                `statementDate` INTEGER NOT NULL,
+                `statementBalancePaisa` INTEGER NOT NULL,
+                `computedBalancePaisa` INTEGER NOT NULL,
+                `differencePaisa` INTEGER NOT NULL,
+                `isReconciled` INTEGER NOT NULL,
+                `reconciledAt` INTEGER NOT NULL,
+                `notes` TEXT,
+                FOREIGN KEY(`accountId`) REFERENCES `accounts`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+        """.trimIndent())
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_account_reconciliations_accountId` ON `account_reconciliations` (`accountId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_account_reconciliations_statementDate` ON `account_reconciliations` (`statementDate`)")
+    }
+}
+
 
 
 
