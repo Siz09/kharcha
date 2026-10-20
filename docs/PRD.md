@@ -122,10 +122,17 @@ The v3 roadmap prioritizes zero data loss on updates, full document and asset ba
      - Archived and compacted historical partitions (`annual_archive_summaries`) pre-calculate annual totals and category distributions for instant loading.
      - Historical records remain fully accessible, filterable, and searchable on-demand.
 
-7. **Account Reconciliation, Split Transactions & Financial Planning**:
+7. **Advanced Reconciliation & Split Transactions**:
    - Account Reconciliation: Set opening balance, reconcile Kharcha records against actual bank/wallet/cash balances, and investigate discrepancies.
    - Split Transactions: Divide a single receipt or bill across multiple categories with strict validation (`sum(splits) == parent`).
    - Offline CSV Statement Import & Matching: Local CSV statement import with customizable column mappings and duplicate detection.
+
+8. **Deterministic Spending Insights & Smart Rules**:
+   - Explainable Spending Insights: Transparent, deterministic local financial observations without black-box AI.
+   - Personal Categorization Rules: Configurable deterministic text/merchant rules for category suggestions without silent auto-updates.
+
+9. **Encrypted Archive Extensions & Festival Planning**:
+   - Encrypted & Verifiable Backups: Optional passphrase-protected AES-GCM encryption on `.kharcha` archives with integrity validation.
    - Festival & Occasion Planning: Tailored seasonal budgeting for Dashain, Tihar, travel home, and school admissions.
 
 ## 10. Data accuracy requirements
