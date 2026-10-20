@@ -99,6 +99,9 @@ class ConfirmScanViewModelTest {
             override suspend fun scanImage(uri: Uri): Result<OcrResult> {
                 return Result.success(OcrResult(fullText = sampleEsewaOcr))
             }
+            override suspend fun scanBitmap(bitmap: android.graphics.Bitmap): Result<OcrResult> {
+                return Result.success(OcrResult(fullText = sampleEsewaOcr))
+            }
         }
 
         val viewModel = ConfirmScanViewModel(
@@ -132,6 +135,9 @@ class ConfirmScanViewModelTest {
         val imageUri = createTestImageFile()
         val fakeScanner = object : ReceiptOcrScanner {
             override suspend fun scanImage(uri: Uri): Result<OcrResult> {
+                return Result.success(OcrResult(fullText = sampleEsewaOcr))
+            }
+            override suspend fun scanBitmap(bitmap: android.graphics.Bitmap): Result<OcrResult> {
                 return Result.success(OcrResult(fullText = sampleEsewaOcr))
             }
         }
@@ -196,6 +202,9 @@ class ConfirmScanViewModelTest {
             override suspend fun scanImage(uri: Uri): Result<OcrResult> {
                 return Result.success(OcrResult(fullText = sampleEsewaOcr))
             }
+            override suspend fun scanBitmap(bitmap: android.graphics.Bitmap): Result<OcrResult> {
+                return Result.success(OcrResult(fullText = sampleEsewaOcr))
+            }
         }
 
         val viewModel = ConfirmScanViewModel(
@@ -234,6 +243,9 @@ class ConfirmScanViewModelTest {
             override suspend fun scanImage(uri: Uri): Result<OcrResult> {
                 return Result.success(OcrResult(fullText = sampleEsewaOcr))
             }
+            override suspend fun scanBitmap(bitmap: android.graphics.Bitmap): Result<OcrResult> {
+                return Result.success(OcrResult(fullText = sampleEsewaOcr))
+            }
         }
 
         val viewModel = ConfirmScanViewModel(
@@ -261,5 +273,64 @@ class ConfirmScanViewModelTest {
         val entries = repository.getAllEntries().first()
         assertEquals(1, entries.size)
         assertEquals(targetAccountId, entries[0].accountId)
+    }
+
+    @Test
+    fun processDocxDocumentExtractsTextAndSavesWithDocxDocumentType() = runTest(testDispatcher) {
+        val xmlContent = """
+            <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+            <w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+                <w:body>
+                    <w:p><w:r><w:t>eSewa</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>Payment Successful</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>Amount: Rs. 1,500.00</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>To: Nepal Electricity Authority</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>Transaction ID: TXN_ESEWA_998877</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>Date: 2026-03-15 14:30:00</w:t></w:r></w:p>
+                    <w:p><w:r><w:t>Service Fee: Rs. 5.00</w:t></w:r></w:p>
+                </w:body>
+            </w:document>
+        """.trimIndent()
+
+        val docxFile = File(context.cacheDir, "test_statement.docx")
+        java.util.zip.ZipOutputStream(docxFile.outputStream()).use { zip ->
+            val entry = java.util.zip.ZipEntry("word/document.xml")
+            zip.putNextEntry(entry)
+            zip.write(xmlContent.toByteArray(Charsets.UTF_8))
+            zip.closeEntry()
+        }
+
+        val fakeScanner = object : ReceiptOcrScanner {
+            override suspend fun scanImage(uri: Uri): Result<OcrResult> = Result.success(OcrResult(fullText = ""))
+            override suspend fun scanBitmap(bitmap: android.graphics.Bitmap): Result<OcrResult> = Result.success(OcrResult(fullText = ""))
+        }
+
+        val viewModel = ConfirmScanViewModel(
+            ledgerRepository = repository,
+            receiptStorage = storage,
+            pipeline = pipeline,
+            ocrScanner = fakeScanner,
+            savedStateHandle = SavedStateHandle(),
+            context = context
+        )
+
+        viewModel.uiState.first { it.categories.isNotEmpty() }
+        viewModel.processImage(Uri.fromFile(docxFile))
+
+        val state = viewModel.uiState.first { !it.isLoading && it.amountText.isNotEmpty() }
+        assertEquals(com.sijan.kharcha.domain.model.DocumentType.DOCX, state.documentType)
+        assertEquals("1500", state.amountText)
+        assertEquals("TXN_ESEWA_998877", state.transactionId)
+
+        val saveDeferred = async { viewModel.events.first() }
+        viewModel.saveEntry()
+        val saveEvent = saveDeferred.await()
+        assertEquals(ConfirmScanEvent.SaveSuccess, saveEvent)
+
+        val entries = repository.getAllEntries().first()
+        assertEquals(1, entries.size)
+        assertEquals(com.sijan.kharcha.domain.model.DocumentType.DOCX, entries[0].documentType)
+
+        docxFile.delete()
     }
 }

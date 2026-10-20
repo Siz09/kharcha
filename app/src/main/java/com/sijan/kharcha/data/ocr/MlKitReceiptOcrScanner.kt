@@ -30,31 +30,40 @@ class MlKitReceiptOcrScanner @Inject constructor(
     override suspend fun scanImage(imageUri: Uri): Result<OcrResult> = withContext(Dispatchers.IO) {
         runCatching {
             val inputImage = InputImage.fromFilePath(context, imageUri)
-            suspendCancellableCoroutine { continuation ->
-                recognizer.process(inputImage)
-                    .addOnSuccessListener { visionText ->
-                        val blocks = visionText.textBlocks.map { block ->
-                            val lines = block.lines.map { line ->
-                                val box = line.boundingBox?.let { rect ->
-                                    BoundingBox(rect.left, rect.top, rect.right, rect.bottom)
-                                }
-                                OcrLine(text = line.text, boundingBox = box)
-                            }
-                            val blockBox = block.boundingBox?.let { rect ->
-                                BoundingBox(rect.left, rect.top, rect.right, rect.bottom)
-                            }
-                            OcrBlock(text = block.text, lines = lines, boundingBox = blockBox)
-                        }
-                        val result = OcrResult(
-                            fullText = visionText.text,
-                            blocks = blocks
-                        )
-                        continuation.resume(result)
-                    }
-                    .addOnFailureListener { exception ->
-                        continuation.resumeWith(Result.failure(exception))
-                    }
-            }
+            processInputImage(inputImage)
         }
+    }
+
+    override suspend fun scanBitmap(bitmap: android.graphics.Bitmap): Result<OcrResult> = withContext(Dispatchers.IO) {
+        runCatching {
+            val inputImage = InputImage.fromBitmap(bitmap, 0)
+            processInputImage(inputImage)
+        }
+    }
+
+    private suspend fun processInputImage(inputImage: InputImage): OcrResult = suspendCancellableCoroutine { continuation ->
+        recognizer.process(inputImage)
+            .addOnSuccessListener { visionText ->
+                val blocks = visionText.textBlocks.map { block ->
+                    val lines = block.lines.map { line ->
+                        val box = line.boundingBox?.let { rect ->
+                            BoundingBox(rect.left, rect.top, rect.right, rect.bottom)
+                        }
+                        OcrLine(text = line.text, boundingBox = box)
+                    }
+                    val blockBox = block.boundingBox?.let { rect ->
+                        BoundingBox(rect.left, rect.top, rect.right, rect.bottom)
+                    }
+                    OcrBlock(text = block.text, lines = lines, boundingBox = blockBox)
+                }
+                val result = OcrResult(
+                    fullText = visionText.text,
+                    blocks = blocks
+                )
+                continuation.resume(result)
+            }
+            .addOnFailureListener { exception ->
+                continuation.resumeWith(Result.failure(exception))
+            }
     }
 }

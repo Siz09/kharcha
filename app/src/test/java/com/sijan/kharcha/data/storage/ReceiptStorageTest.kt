@@ -63,4 +63,28 @@ class ReceiptStorageTest {
         assertTrue(deleted)
         assertFalse(file.exists())
     }
+
+    @Test
+    fun saveDocumentSavesPdfToPrivateDirectory() {
+        runBlocking {
+            val samplePdfBytes = "%PDF-1.4 mock pdf statement".toByteArray()
+            val result = storage.saveDocument(samplePdfBytes, "pdf")
+
+            assertTrue(result.isSuccess)
+            val path = result.getOrThrow()
+            val file = File(path)
+
+            assertTrue(file.exists())
+            assertEquals(samplePdfBytes.size.toLong(), file.length())
+            assertTrue(path.contains("documents"))
+            assertTrue(path.endsWith(".pdf"))
+
+            val uri = storage.getDocumentUri(path)
+            assertNotNull(uri)
+            assertEquals("content", uri.scheme)
+            assertTrue(uri.authority?.contains("fileprovider") == true)
+
+            storage.deleteImage(path)
+        }
+    }
 }

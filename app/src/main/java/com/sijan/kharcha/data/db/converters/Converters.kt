@@ -2,6 +2,7 @@ package com.sijan.kharcha.data.db.converters
 
 import androidx.room.TypeConverter
 import com.sijan.kharcha.domain.model.AccountType
+import com.sijan.kharcha.domain.model.DocumentType
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.TaxCategory
 import com.sijan.kharcha.domain.model.UtilityType
@@ -41,6 +42,18 @@ class Converters {
     fun toTaxCategory(value: String?): TaxCategory? = value?.let {
         try {
             TaxCategory.valueOf(it)
+        } catch (_: IllegalArgumentException) {
+            null
+        }
+    }
+
+    @TypeConverter
+    fun fromDocumentType(type: DocumentType?): String? = type?.name
+
+    @TypeConverter
+    fun toDocumentType(value: String?): DocumentType? = value?.let {
+        try {
+            DocumentType.valueOf(it)
         } catch (_: IllegalArgumentException) {
             null
         }

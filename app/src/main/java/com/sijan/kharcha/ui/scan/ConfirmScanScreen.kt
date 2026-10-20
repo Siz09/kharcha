@@ -41,6 +41,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -266,42 +267,84 @@ fun ReceiptPreviewCard(
 ) {
     if (receiptPath.isNullOrBlank()) return
 
+    val file = remember(receiptPath) { java.io.File(receiptPath) }
+    val isPdf = remember(receiptPath) { receiptPath.endsWith(".pdf", ignoreCase = true) }
+    val isDocx = remember(receiptPath) {
+        receiptPath.endsWith(".docx", ignoreCase = true) || receiptPath.endsWith(".doc", ignoreCase = true)
+    }
+
+    val docxText by produceState<String?>(initialValue = null, receiptPath) {
+        if (isDocx) {
+            value = withContext(Dispatchers.IO) {
+                com.sijan.kharcha.data.document.DocxTextExtractor.extractText(file).getOrNull()?.fullText
+            }
+        }
+    }
+
     val bitmap by produceState<android.graphics.Bitmap?>(initialValue = null, receiptPath) {
         value = withContext(Dispatchers.IO) {
             try {
-                val boundsOptions = BitmapFactory.Options().apply {
-                    inJustDecodeBounds = true
-                }
-                BitmapFactory.decodeFile(receiptPath, boundsOptions)
-                var sampleSize = 1
-                val targetHeight = 480
-                while ((boundsOptions.outHeight / sampleSize) > targetHeight) {
-                    sampleSize *= 2
-                }
-                val decodeOptions = BitmapFactory.Options().apply {
-                    inSampleSize = sampleSize
-                }
-                BitmapFactory.decodeFile(receiptPath, decodeOptions)
-            } catch (e: Exception) {
+                if (isPdf) {
+                    com.sijan.kharcha.data.document.PdfRendererHelper.renderPage(file, 0, 800).getOrNull()
+                } else if (!isDocx) {
+                    val boundsOptions = BitmapFactory.Options().apply {
+                        inJustDecodeBounds = true
+                    }
+                    BitmapFactory.decodeFile(receiptPath, boundsOptions)
+                    var sampleSize = 1
+                    val targetHeight = 480
+                    while ((boundsOptions.outHeight / sampleSize) > targetHeight) {
+                        sampleSize *= 2
+                    }
+                    val decodeOptions = BitmapFactory.Options().apply {
+                        inSampleSize = sampleSize
+                    }
+                    BitmapFactory.decodeFile(receiptPath, decodeOptions)
+                } else null
+            } catch (_: Exception) {
                 null
             }
         }
     }
 
     val currentBitmap = bitmap
-    if (currentBitmap != null) {
-        Card(
-            modifier = modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(12.dp)) {
+    val hasContent = currentBitmap != null || (isDocx && !docxText.isNullOrBlank())
+    if (!hasContent) return
+
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
                 Text(
                     text = stringResource(R.string.confirm_scan_preview_title),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
-                Spacer(modifier = Modifier.height(8.dp))
+                if (isPdf) {
+                    Text(
+                        text = stringResource(R.string.document_pdf_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else if (isDocx) {
+                    Text(
+                        text = stringResource(R.string.document_docx_badge),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.secondary
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (currentBitmap != null) {
                 Image(
                     bitmap = currentBitmap.asImageBitmap(),
                     contentDescription = stringResource(R.string.cd_receipt_preview),
@@ -311,6 +354,18 @@ fun ReceiptPreviewCard(
                         .clip(RoundedCornerShape(8.dp)),
                     contentScale = ContentScale.Fit
                 )
+            } else if (isDocx && !docxText.isNullOrBlank()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surface,
+                    shape = RoundedCornerShape(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = docxText.orEmpty().take(300) + if ((docxText?.length ?: 0) > 300) "..." else "",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(10.dp)
+                    )
+                }
             }
         }
     }

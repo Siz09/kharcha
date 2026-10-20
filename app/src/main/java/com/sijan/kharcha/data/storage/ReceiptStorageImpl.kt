@@ -25,6 +25,13 @@ class ReceiptStorageImpl @Inject constructor(
             }
         }
 
+    private val documentsDir: File
+        get() = File(context.filesDir, "documents").apply {
+            if (!exists()) {
+                mkdirs()
+            }
+        }
+
     override suspend fun saveImage(inputStream: InputStream): Result<String> = withContext(Dispatchers.IO) {
         runCatching {
             val fileName = "receipt_${UUID.randomUUID()}.jpg"
@@ -60,6 +67,35 @@ class ReceiptStorageImpl @Inject constructor(
             file.delete()
         } else {
             true
+        }
+    }
+
+    override suspend fun saveDocument(inputStream: InputStream, extension: String): Result<String> = withContext(Dispatchers.IO) {
+        runCatching {
+            val ext = if (extension.startsWith(".")) extension else ".$extension"
+            val fileName = "doc_${UUID.randomUUID()}$ext"
+            val targetFile = File(documentsDir, fileName)
+            targetFile.outputStream().use { output ->
+                inputStream.copyTo(output)
+            }
+            targetFile.absolutePath
+        }
+    }
+
+    override suspend fun saveDocument(bytes: ByteArray, extension: String): Result<String> {
+        return saveDocument(ByteArrayInputStream(bytes), extension)
+    }
+
+    override fun getDocumentUri(filePath: String): Uri {
+        val file = File(filePath)
+        return try {
+            FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                file
+            )
+        } catch (e: IllegalArgumentException) {
+            Uri.parse("content://${context.packageName}.fileprovider/documents/${file.name}")
         }
     }
 }

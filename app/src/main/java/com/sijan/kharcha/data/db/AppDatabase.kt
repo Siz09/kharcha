@@ -44,7 +44,7 @@ import com.sijan.kharcha.data.db.entity.UtilityAccountEntity
         SavingsContributionEntity::class,
         UtilityAccountEntity::class
     ],
-    version = 7,
+    version = 8,
     exportSchema = true
 )
 @TypeConverters(Converters::class)

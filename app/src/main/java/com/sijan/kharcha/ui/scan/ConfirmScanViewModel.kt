@@ -5,8 +5,13 @@ import android.net.Uri
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.sijan.kharcha.data.document.DocxTextExtractor
+import com.sijan.kharcha.data.document.PdfRendererHelper
 import com.sijan.kharcha.data.repository.LedgerRepository
+import com.sijan.kharcha.data.share.ShareIntentStager
+import com.sijan.kharcha.data.share.SharedDocumentType
 import com.sijan.kharcha.data.storage.ReceiptStorage
+import com.sijan.kharcha.domain.model.DocumentType
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.Money
@@ -25,6 +30,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import java.io.File
 import java.io.IOException
 import java.util.Locale
 import javax.inject.Inject
@@ -85,21 +91,58 @@ class ConfirmScanViewModel @Inject constructor(
         }
     }
 
+    private data class ProcessedMediaResult(
+        val filePath: String,
+        val ocrResult: OcrResult,
+        val documentType: DocumentType,
+        val pageCount: Int
+    )
+
     fun processImage(uri: Uri) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, imageUri = uri) }
 
             try {
-                // 1. Copy image into app-private storage
-                val inputStream = context.contentResolver.openInputStream(uri)
-                    ?: throw IOException("Unable to open image stream for $uri")
-                val saveResult = receiptStorage.saveImage(inputStream)
-                val imagePath = saveResult.getOrThrow()
+                val mimeType = context.contentResolver.getType(uri)
+                val displayName = uri.lastPathSegment
+                val detectedType = ShareIntentStager.determineDocumentType(mimeType, displayName)
 
-                // 2. Perform OCR recognition
-                val ocrResult = ocrScanner.scanImage(uri).getOrElse {
-                    OcrResult(fullText = "")
+                val processed = when (detectedType) {
+                    SharedDocumentType.PDF -> {
+                        val inputStream = context.contentResolver.openInputStream(uri)
+                            ?: throw IOException("Unable to open PDF stream for $uri")
+                        val savedPath = receiptStorage.saveDocument(inputStream, "pdf").getOrThrow()
+                        val pdfFile = File(savedPath)
+                        val count = PdfRendererHelper.getPageCount(pdfFile)
+                        val pageBitmapResult = PdfRendererHelper.renderPage(pdfFile, 0)
+                        val ocr = pageBitmapResult.getOrNull()?.let { bmp ->
+                            ocrScanner.scanBitmap(bmp).getOrNull()
+                        } ?: OcrResult(fullText = "")
+                        ProcessedMediaResult(savedPath, ocr, DocumentType.PDF, count)
+                    }
+                    SharedDocumentType.DOCX, SharedDocumentType.DOC -> {
+                        val ext = if (detectedType == SharedDocumentType.DOC) "doc" else "docx"
+                        val inputStream = context.contentResolver.openInputStream(uri)
+                            ?: throw IOException("Unable to open document stream for $uri")
+                        val savedPath = receiptStorage.saveDocument(inputStream, ext).getOrThrow()
+                        val extracted = DocxTextExtractor.extractText(File(savedPath)).getOrNull()?.fullText.orEmpty()
+                        val ocr = OcrResult(fullText = extracted)
+                        val dt = if (detectedType == SharedDocumentType.DOC) DocumentType.DOC else DocumentType.DOCX
+                        ProcessedMediaResult(savedPath, ocr, dt, 1)
+                    }
+                    else -> {
+                        val inputStream = context.contentResolver.openInputStream(uri)
+                            ?: throw IOException("Unable to open image stream for $uri")
+                        val imagePath = receiptStorage.saveImage(inputStream).getOrThrow()
+                        val ocr = ocrScanner.scanImage(uri).getOrElse {
+                            OcrResult(fullText = "")
+                        }
+                        ProcessedMediaResult(imagePath, ocr, DocumentType.IMAGE, 1)
+                    }
                 }
+
+                val imagePath = processed.filePath
+                val ocrResult = processed.ocrResult
 
                 // 3. Run receipt parser pipeline
                 val parseResult = pipeline.process(ocrResult, imagePath)
@@ -131,6 +174,9 @@ class ConfirmScanViewModel @Inject constructor(
                     state.copy(
                         isLoading = false,
                         receiptPath = imagePath,
+                        documentType = processed.documentType,
+                        documentName = displayName,
+                        pdfPageCount = processed.pageCount,
                         rawOcrText = parseResult.rawOcrText,
                         source = parseResult.source,
                         amountText = initialAmountText,
@@ -295,6 +341,7 @@ class ConfirmScanViewModel @Inject constructor(
                 date = state.dateEpochMillis,
                 source = "receipt:${state.source}",
                 receiptPath = state.receiptPath,
+                documentType = state.documentType,
                 rawOcrText = state.rawOcrText,
                 transactionId = state.transactionId.trim().ifBlank { null },
                 isTaxDeductible = state.isTaxDeductible,

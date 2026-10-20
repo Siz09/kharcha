@@ -12,6 +12,7 @@ import com.sijan.kharcha.data.db.migration.MIGRATION_3_4
 import com.sijan.kharcha.data.db.migration.MIGRATION_4_5
 import com.sijan.kharcha.data.db.migration.MIGRATION_5_6
 import com.sijan.kharcha.data.db.migration.MIGRATION_6_7
+import com.sijan.kharcha.data.db.migration.MIGRATION_7_8
 import com.sijan.kharcha.data.storage.ReceiptStorageImpl
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
@@ -84,7 +85,8 @@ class AppUpgradeRetentionTest {
             MIGRATION_3_4,
             MIGRATION_4_5,
             MIGRATION_5_6,
-            MIGRATION_6_7
+            MIGRATION_6_7,
+            MIGRATION_7_8
         ).build()
 
         assertNotNull(db)

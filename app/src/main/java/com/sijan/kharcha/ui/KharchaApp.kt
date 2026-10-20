@@ -87,6 +87,15 @@ fun KharchaApp(
         }
     }
 
+    // Document picker launcher (PDF, DOCX, DOC)
+    val documentPickerLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        if (uri != null) {
+            navController.navigate(Screen.ConfirmScan.createRoute(uri.toString()))
+        }
+    }
+
     // Handle initial shared image or document URI from intent
     val effectiveSharedUri = initialSharedPayload?.stagedUri ?: initialImageUri
     LaunchedEffect(effectiveSharedUri) {
@@ -216,6 +225,15 @@ fun KharchaApp(
                             PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)
                         )
                     }
+                },
+                onPickDocument = {
+                    documentPickerLauncher.launch(
+                        arrayOf(
+                            "application/pdf",
+                            "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                            "application/msword"
+                        )
+                    )
                 },
                 onManualEntry = {
                     navController.navigate(Screen.AddEntry.route)

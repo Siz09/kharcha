@@ -87,6 +87,7 @@ class BackupServiceImpl @Inject constructor(
                 transactionId = it.transactionId,
                 isTaxDeductible = it.isTaxDeductible,
                 taxCategory = it.taxCategory,
+                documentType = it.documentType,
                 createdAt = it.createdAt,
                 updatedAt = it.updatedAt
             )
@@ -249,6 +250,7 @@ class BackupServiceImpl @Inject constructor(
                         transactionId = entry.transactionId,
                         isTaxDeductible = entry.isTaxDeductible,
                         taxCategory = entry.taxCategory,
+                        documentType = entry.documentType,
                         createdAt = entry.createdAt,
                         updatedAt = entry.updatedAt
                     )

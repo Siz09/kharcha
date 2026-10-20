@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -34,6 +35,7 @@ fun ScanSourceBottomSheet(
     onDismissRequest: () -> Unit,
     onPickFromGallery: () -> Unit,
     onScanWithCamera: () -> Unit,
+    onPickDocument: () -> Unit = {},
     onManualEntry: () -> Unit,
     modifier: Modifier = Modifier
 ) {
@@ -72,6 +74,16 @@ fun ScanSourceBottomSheet(
                 onClick = {
                     onDismissRequest()
                     onScanWithCamera()
+                }
+            )
+
+            ScanSourceOptionItem(
+                icon = Icons.Default.Description,
+                title = stringResource(R.string.scan_pick_document),
+                description = stringResource(R.string.scan_source_document_desc),
+                onClick = {
+                    onDismissRequest()
+                    onPickDocument()
                 }
             )
 

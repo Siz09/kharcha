@@ -10,6 +10,9 @@ data class ConfirmScanUiState(
     val isLoading: Boolean = false,
     val imageUri: Uri? = null,
     val receiptPath: String? = null,
+    val documentType: com.sijan.kharcha.domain.model.DocumentType = com.sijan.kharcha.domain.model.DocumentType.IMAGE,
+    val documentName: String? = null,
+    val pdfPageCount: Int = 0,
     val rawOcrText: String? = null,
     val source: String = "receipt",
 

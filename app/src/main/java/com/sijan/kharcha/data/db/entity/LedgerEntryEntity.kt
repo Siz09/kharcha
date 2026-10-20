@@ -4,6 +4,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
+import com.sijan.kharcha.domain.model.DocumentType
 import com.sijan.kharcha.domain.model.EntryType
 import com.sijan.kharcha.domain.model.LedgerEntry
 import com.sijan.kharcha.domain.model.TaxCategory
@@ -54,6 +55,7 @@ data class LedgerEntryEntity(
     val transactionId: String? = null,
     val isTaxDeductible: Boolean = false,
     val taxCategory: TaxCategory? = null,
+    val documentType: DocumentType? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val updatedAt: Long = System.currentTimeMillis()
 ) {
@@ -72,6 +74,7 @@ data class LedgerEntryEntity(
         transactionId = transactionId,
         isTaxDeductible = isTaxDeductible,
         taxCategory = taxCategory,
+        documentType = documentType,
         createdAt = createdAt,
         updatedAt = updatedAt
     )
@@ -92,6 +95,7 @@ data class LedgerEntryEntity(
             transactionId = entry.transactionId,
             isTaxDeductible = entry.isTaxDeductible,
             taxCategory = entry.taxCategory,
+            documentType = entry.documentType,
             createdAt = entry.createdAt,
             updatedAt = entry.updatedAt
         )

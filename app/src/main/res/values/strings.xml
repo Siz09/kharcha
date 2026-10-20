@@ -451,5 +451,14 @@
     <!-- System Share Sheet -->
     <string name="share_unsupported_type">Unsupported file type. Kharcha accepts images, PDF statements, and Word documents.</string>
     <string name="share_staged_success">File prepared for ledger entry</string>
+
+    <!-- Document Attachments & Viewer -->
+    <string name="document_pdf_badge">PDF Statement</string>
+    <string name="document_docx_badge">Word Document</string>
+    <string name="document_pages_count">%1$d pages</string>
+    <string name="document_view_full">View Document</string>
+    <string name="document_close">Close</string>
+    <string name="scan_pick_document">PDF / Word Statement</string>
+    <string name="scan_source_document_desc">Official bank PDF statements or DOCX invoices</string>
 </resources>
 
