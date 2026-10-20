@@ -70,13 +70,63 @@ Primary user: the developer, as a daily-use tool. Secondary: friends and family 
 
 ## 9. v3
 
-- **Account Reconciliation**: Set opening balance, reconcile Kharcha records against actual bank/wallet/cash balances, and investigate discrepancies.
-- **Offline Statement Import & Matching**: Local CSV statement import with customizable column mappings, duplicate detection, and explicit user-confirmed merge.
-- **Split Transactions**: Divide a single receipt/payment across multiple categories with strict validation (`sum(splits) == parent`).
-- **Explainable Spending Insights**: Transparent, deterministic local financial observations without black-box AI.
-- **Personal Categorization Rules**: Configurable deterministic text/merchant rules for category suggestions without silent auto-updates.
-- **Encrypted & Verifiable Backups**: Passphrase-protected AES-GCM backup archives with integrity validation and dry-run recovery check.
-- **Festival & Occasion Planning**: Tailored seasonal budgeting for Dashain, Tihar, travel home, and school admissions.
+The v3 roadmap prioritizes zero data loss on updates, full document and asset backup/restore, direct system-wide sharing, deep annual analytics with historical archiving, and account reconciliation.
+
+### Slices & Execution Order
+
+1. **APK Upgrade Data Retention & Signing Invariant**:
+   - Explicit guarantee: Updating the app APK never wipes, resets, or corrupts user data.
+   - Fixed `applicationId` (`com.sijan.kharcha`).
+   - Persistent signing configuration for release builds with documented key management to prevent signature mismatch (`INSTALL_FAILED_UPDATE_INCOMPATIBLE`).
+   - Zero destructive Room migrations (`fallbackToDestructiveMigration` forbidden; explicit migrations and schema exports required).
+   - App-private storage retention (`context.filesDir`) preserved by Android OS across package upgrades.
+
+2. **System Share Sheet Integration (Direct Ingestion from Gallery & Files)**:
+   - System-wide `ACTION_SEND` intent filter expansion for:
+     - Images: `image/*` (PNG, JPG, WEBP screenshots and photos from Gallery or camera).
+     - PDFs: `application/pdf` (official bank statements, eSewa receipts, invoices from email/files).
+     - Documents: `application/vnd.openxmlformats-officedocument.wordprocessingml.document` (DOCX) and `application/msword` (DOC).
+   - Direct launch into `ConfirmScanScreen` or entry creation with staged URI, without requiring the user to open Kharcha beforehand.
+   - If Biometric Lock is enabled, authenticate immediately on launch before revealing shared document contents.
+
+3. **Document Attachments & Offline Statement Viewer (PDF & DOCX Support)**:
+   - Secure app-private storage for PDF and DOCX attachments alongside receipt images.
+   - On-device native PDF page preview using Android's built-in `PdfRenderer` (zero internet, zero external web view dependencies).
+   - DOCX metadata and text extraction via lightweight on-device XML reader (`java.util.zip.ZipInputStream` parsing `word/document.xml`).
+   - Multi-format document linking in `LedgerEntryEntity` (`receiptPath`, `documentType`).
+
+4. **Full-Asset Backup Archive (`.kharcha` ZIP Bundle) & Weekly Auto-Backup**:
+   - Comprehensive compressed `.kharcha` ZIP archive containing:
+     - `manifest.json`: Schema version, archive version, creation timestamp, device info, SHA-256 hash list of all files.
+     - `database.json`: Complete serialized dump of all Room tables (Accounts, Categories, Ledger Entries, Bills, Recurring, Udhar, Savings Goals, Utility Accounts, Audit Logs).
+     - `assets/`: App-private receipt images, PDF statements, and DOCX invoices.
+   - Target destination via Android Storage Access Framework (`ACTION_OPEN_DOCUMENT_TREE`):
+     - Local device or SD card storage.
+     - Google Drive cloud directory (synced transparently by Android OS document provider with zero `android.permission.INTERNET`).
+   - Weekly auto-backup option via WorkManager (`PeriodicWorkRequestBuilder` with 7-day interval) and user choice (Automatic Weekly vs Manual Only).
+   - Automatic retention management keeping the latest 5 backup archives.
+
+5. **Lossless, Atomic, Multi-Table & Asset Restore**:
+   - Pre-flight validation: verifies archive integrity, manifest checksums, and Room schema version compatibility before touching database or storage.
+   - Atomic database restore: executes inside a single `db.withTransaction` block; rolls back completely on any deserialization or foreign-key error.
+   - Atomic asset unpacking: unpacks receipt images and document attachments to staging and commits only after full validation.
+   - Zero data corruption guarantee: if restore fails at any point, existing user data and assets remain 100% intact.
+
+6. **Annual Financial Analytics, YTD Summaries & Historical Archiving**:
+   - Year-to-Date (YTD) and Full-Year Analytics:
+     - Aggregates total earnings (income) and total spending (expenses) from the start of the year (Jan 1 / Baisakh 1 BS) to end of the year (Dec 31 / Chaitra end BS).
+     - Live YTD summary reflecting financial status up to the current moment.
+     - Detailed category breakdown visualizing where money came from (income categories) and where money went (expense categories).
+   - Historical Data Retention & Archiving:
+     - Prior years' data is **never** deleted.
+     - Archived and compacted historical partitions (`annual_archive_summaries`) pre-calculate annual totals and category distributions for instant loading.
+     - Historical records remain fully accessible, filterable, and searchable on-demand.
+
+7. **Account Reconciliation, Split Transactions & Financial Planning**:
+   - Account Reconciliation: Set opening balance, reconcile Kharcha records against actual bank/wallet/cash balances, and investigate discrepancies.
+   - Split Transactions: Divide a single receipt or bill across multiple categories with strict validation (`sum(splits) == parent`).
+   - Offline CSV Statement Import & Matching: Local CSV statement import with customizable column mappings and duplicate detection.
+   - Festival & Occasion Planning: Tailored seasonal budgeting for Dashain, Tihar, travel home, and school admissions.
 
 ## 10. Data accuracy requirements
 
