@@ -333,6 +333,28 @@ val MIGRATION_9_10 = object : Migration(9, 10) {
     }
 }
 
+val MIGRATION_10_11 = object : Migration(10, 11) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("""
+            CREATE TABLE IF NOT EXISTS `categorization_rules` (
+                `id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                `name` TEXT NOT NULL,
+                `pattern` TEXT NOT NULL,
+                `isRegex` INTEGER NOT NULL DEFAULT 0,
+                `categoryId` INTEGER NOT NULL,
+                `priority` INTEGER NOT NULL DEFAULT 0,
+                `isActive` INTEGER NOT NULL DEFAULT 1,
+                `createdAt` INTEGER NOT NULL,
+                `updatedAt` INTEGER NOT NULL,
+                FOREIGN KEY(`categoryId`) REFERENCES `categories`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE
+            )
+        """.trimIndent())
+
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_categorization_rules_categoryId` ON `categorization_rules` (`categoryId`)")
+        db.execSQL("CREATE INDEX IF NOT EXISTS `index_categorization_rules_priority` ON `categorization_rules` (`priority`)")
+    }
+}
+
 
 
 

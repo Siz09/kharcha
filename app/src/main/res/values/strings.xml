@@ -510,5 +510,21 @@
     <string name="csv_import_error_rows">%1$d invalid rows</string>
     <string name="csv_import_confirm_btn">Import %1$d Entries</string>
     <string name="csv_import_success">Imported %1$d transactions successfully</string>
+
+    <!-- Deterministic Spending Insights & Categorization Rules -->
+    <string name="rules_title">Categorization Rules</string>
+    <string name="rules_empty">No rules defined. Create rules to automatically categorize transactions based on notes or merchants.</string>
+    <string name="rules_add_btn">Add Rule</string>
+    <string name="rules_name_label">Rule Name</string>
+    <string name="rules_name_hint">e.g. Bhatbhateni, Petrol Refill</string>
+    <string name="rules_pattern_label">Keyword / Pattern</string>
+    <string name="rules_pattern_hint">e.g. bhatbhateni, petrol, cafe</string>
+    <string name="rules_regex_toggle">Use Regular Expression (Regex)</string>
+    <string name="rules_priority_label">Priority (Higher runs first)</string>
+    <string name="rules_apply_now">Apply to Past Entries</string>
+    <string name="rules_applied_success">%1$d transactions recategorized</string>
+    <string name="insights_title">Spending Insights</string>
+    <string name="insights_empty">No unusual spending patterns detected.</string>
+    <string name="insights_dismiss">Dismiss</string>
 </resources>
 
