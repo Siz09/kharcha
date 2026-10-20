@@ -155,6 +155,15 @@ class JsonBackupSerializer @Inject constructor() {
                 note = if (note.isBlank()) remarks else "$note ($remarks)"
             }
 
+            // Skip manual monthly rollover entries created as phantom income in legacy app
+            val isManualRollover = type == EntryType.INCOME && (
+                note.contains("previous month", ignoreCase = true) ||
+                note.contains("previous mounth", ignoreCase = true) ||
+                note.contains("leftover", ignoreCase = true) ||
+                note.contains("rollover", ignoreCase = true)
+            )
+            if (isManualRollover) continue
+
             val legacyMeta = mutableListOf<String>()
             val paymentMethod = obj["paymentMethod"]?.jsonPrimitive?.contentOrNull?.trim()
             if (!paymentMethod.isNullOrBlank()) legacyMeta.add("paymentMethod: $paymentMethod")

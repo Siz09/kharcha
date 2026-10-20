@@ -174,13 +174,16 @@ class JsonBackupSerializerTest {
             val result = serializer.deserialize(stream)
             assertTrue(result.isSuccess)
             val payload = result.getOrThrow()
-            assertEquals(106, payload.entries.size)
+            assertEquals(103, payload.entries.size)
             assertTrue(payload.categories.isNotEmpty())
             assertTrue(payload.accounts.isNotEmpty())
 
             for (entry in payload.entries) {
                 assertTrue(entry.amountPaisa > 0L)
                 assertTrue(entry.id > 0L)
+                // Ensure phantom rollovers were filtered
+                assertFalse(entry.note.contains("previous month", ignoreCase = true))
+                assertFalse(entry.note.contains("previous mounth", ignoreCase = true))
             }
         }
     }

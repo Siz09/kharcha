@@ -29,7 +29,18 @@ class MlKitReceiptOcrScanner @Inject constructor(
 
     override suspend fun scanImage(imageUri: Uri): Result<OcrResult> = withContext(Dispatchers.IO) {
         runCatching {
-            val inputImage = InputImage.fromFilePath(context, imageUri)
+            val inputImage = try {
+                InputImage.fromFilePath(context, imageUri)
+            } catch (e: Exception) {
+                val bitmap = if (imageUri.scheme == "file") {
+                    android.graphics.BitmapFactory.decodeFile(imageUri.path)
+                } else {
+                    context.contentResolver.openInputStream(imageUri)?.use { stream ->
+                        android.graphics.BitmapFactory.decodeStream(stream)
+                    }
+                } ?: throw e
+                InputImage.fromBitmap(bitmap, 0)
+            }
             processInputImage(inputImage)
         }
     }

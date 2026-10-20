@@ -134,8 +134,11 @@ class ConfirmScanViewModel @Inject constructor(
                         val inputStream = context.contentResolver.openInputStream(uri)
                             ?: throw IOException("Unable to open image stream for $uri")
                         val imagePath = receiptStorage.saveImage(inputStream).getOrThrow()
-                        val ocr = ocrScanner.scanImage(uri).getOrElse {
-                            OcrResult(fullText = "")
+                        val fileUri = Uri.fromFile(File(imagePath))
+                        val ocr = ocrScanner.scanImage(fileUri).getOrElse {
+                            ocrScanner.scanImage(uri).getOrElse {
+                                OcrResult(fullText = "")
+                            }
                         }
                         ProcessedMediaResult(imagePath, ocr, DocumentType.IMAGE, 1)
                     }
