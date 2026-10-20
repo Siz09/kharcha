@@ -59,14 +59,11 @@
             android:contentDescription="@string/shortcut_add_expense_short"
             android:scaleType="centerInside" />
 
-        <Space
-            android:layout_width="8dp"
-            android:layout_height="wrap_content" />
-
         <ImageButton
             android:id="@+id/widget_btn_scan"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginStart="8dp"
             android:background="@drawable/bg_widget_button"
             android:src="@drawable/ic_shortcut_scan"
             android:contentDescription="@string/shortcut_scan_short"
