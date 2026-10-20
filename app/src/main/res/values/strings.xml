@@ -373,5 +373,17 @@
     <string name="cd_savings_card">Savings goals summary and progress</string>
     <string name="home_savings_title">Savings Goals</string>
     <string name="home_savings_summary_format">%1$s of %2$s saved (%3$d%%)</string>
+
+    <!-- App Lock & Biometrics -->
+    <string name="security_title">Security</string>
+    <string name="app_lock_title">App Lock</string>
+    <string name="app_lock_description">Require fingerprint, face, or device PIN to open Kharcha</string>
+    <string name="app_lock_prompt_title">Unlock Kharcha</string>
+    <string name="app_lock_prompt_subtitle">Confirm your identity to access your ledger</string>
+    <string name="app_lock_unlock_button">Unlock Kharcha</string>
+    <string name="app_lock_locked_status">Kharcha is locked</string>
+    <string name="app_lock_not_enrolled_error">No screen lock or biometric enrolled on this device</string>
+    <string name="app_lock_no_hardware_error">Biometric security is not available on this device</string>
+    <string name="app_lock_auth_failed">Authentication failed. Tap to try again.</string>
 </resources>
 
