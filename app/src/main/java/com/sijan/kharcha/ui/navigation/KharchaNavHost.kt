@@ -11,6 +11,7 @@ import com.sijan.kharcha.ui.calendar.CashFlowCalendarScreen
 import com.sijan.kharcha.ui.entries.AddEditEntryScreen
 import com.sijan.kharcha.ui.entries.EntriesScreen
 import com.sijan.kharcha.ui.home.HomeScreen
+import com.sijan.kharcha.ui.reports.SpendingReportsScreen
 import com.sijan.kharcha.ui.scan.ConfirmScanScreen
 import com.sijan.kharcha.ui.settings.categories.CategoriesScreen
 import com.sijan.kharcha.ui.settings.SettingsScreen
@@ -59,7 +60,16 @@ fun KharchaNavHost(
             )
         }
         composable(Screen.Summary.route) {
-            SummaryScreen()
+            SummaryScreen(
+                onNavigateToReports = {
+                    navController.navigate(Screen.Reports.route)
+                }
+            )
+        }
+        composable(Screen.Reports.route) {
+            SpendingReportsScreen(
+                onNavigateBack = { navController.popBackStack() }
+            )
         }
         composable(Screen.Settings.route) {
             SettingsScreen(

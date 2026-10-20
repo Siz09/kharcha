@@ -113,6 +113,12 @@ sealed class Screen(
         icon = Icons.Default.Savings
     )
 
+    data object Reports : Screen(
+        route = "reports",
+        labelRes = R.string.reports_title,
+        icon = Icons.Default.PieChart
+    )
+
     companion object {
         val bottomNavItems: List<Screen>
             get() = listOf(Home, Entries, Summary, Settings)
