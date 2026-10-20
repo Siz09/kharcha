@@ -12,7 +12,7 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.sijan.kharcha"
+        applicationId = "com.sijan.kharcha2"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

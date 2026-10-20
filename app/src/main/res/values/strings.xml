@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Kharcha 2</string>
+    <string name="app_name">Kharcha2</string>
 
     <!-- Navigation -->
     <string name="nav_home">Home</string>
@@ -143,8 +143,8 @@
     <string name="settings_manage_categories">Manage Categories</string>
     <string name="settings_manage_categories_desc">Add, rename, or remove categories</string>
     <string name="settings_bills_desc">Track recurring bills and due dates</string>
-    <string name="settings_section_about">About Kharcha 2</string>
-    <string name="settings_about_desc">Kharcha 2 — 100% offline personal finance tracker for Nepal. Zero network access, all data stored locally on device.</string>
+    <string name="settings_section_about">About Kharcha2</string>
+    <string name="settings_about_desc">Kharcha2 — 100% offline personal finance tracker for Nepal. Zero network access, all data stored locally on device.</string>
     <string name="settings_app_version">Version %s</string>
     <string name="settings_backup_success">Backup created: %s</string>
     <string name="settings_backup_failed">Backup failed</string>

@@ -42,7 +42,7 @@ class AppUpgradeRetentionTest {
 
     @Test
     fun packageStability_applicationIdMatchesExpectedConstant() {
-        assertEquals("com.sijan.kharcha", context.packageName)
+        assertEquals("com.sijan.kharcha2", context.packageName)
     }
 
     @Test
